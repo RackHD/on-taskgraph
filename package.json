@@ -23,10 +23,12 @@
   },
   "homepage": "https://github.com/renasar/renasar-taskgraph",
   "dependencies": {
+    "di": "file:../../../../var/folders/kq/9dq9h4xn42xb683mfw_srffc0000gn/T/npm-38925-684e8d49/1421026414248-0.706353995250538/afd3cdf07dc2717dab9048876e23c7e094940d68",
+    "dot-object": "^0.6.0",
     "lodash": "^2.4.1",
     "node-uuid": "^1.4.2",
     "q": "^1.1.2",
-    "renasar-core": "file:../../../../var/folders/kq/9dq9h4xn42xb683mfw_srffc0000gn/T/npm-74843-0bc393d6/1420758960175-0.7428738661110401/eb1a16f063299157c5410a36ed360c71c1f2a0e5",
+    "renasar-core": "file:../../../../var/folders/kq/9dq9h4xn42xb683mfw_srffc0000gn/T/npm-40068-daab2820/1421027724501-0.17019749293103814/f824e436a7028c06a19b713784c59fe2ad7db5d9",
     "rx": "^2.3.22"
   }
 }
