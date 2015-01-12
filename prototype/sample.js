@@ -25,7 +25,7 @@ Scheduler.prototype.wrapData = function(taskData) {
             created: new Date(),
             started: null,
             completed: null
-0        }
+        }
     };
 };
 
@@ -96,4 +96,4 @@ var subscription = source.subscribe(function(data){scheduler.schedule(data)});
 
 
 arbitraryExampleEventGenerator(0, 0);
-*setTimeout(function(){console.log('test')}, 60000);
+setTimeout(function(){console.log('test')}, 60000);
