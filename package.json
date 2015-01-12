@@ -2,7 +2,7 @@
   "name": "renasar-taskgraph",
   "version": "1.0.0",
   "description": "",
-  "main": "lib/taskgraph.js",
+  "main": "lib",
   "scripts": {
     "test": "mocha spec/**/*-spec.js"
   },
