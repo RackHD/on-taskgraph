@@ -7,7 +7,7 @@ var uuid = require('node-uuid');
 
 
 function Scheduler(){
-    this.toRun = [];
+    this.scheduled = [];
     this.Running= {};
     this.runComplete = [];
     this.maxConcurrent = 3;
@@ -19,7 +19,7 @@ util.inherits(Scheduler, events.EventEmitter);
 
 Scheduler.prototype.wrapData = function(taskData) {
     return {
-        taskData:taskData,
+        work:taskData,
         id: uuid.v4(),
         stats: {
             created: new Date(),
@@ -32,13 +32,13 @@ Scheduler.prototype.wrapData = function(taskData) {
 Scheduler.prototype.schedule = function(data){
     var workItem = this.wrapData(data);
     console.log('SCHEDULING: '+ workItem.id + ', iteration: '+data.iteration + ', lastdelay:'+data.lastDelay);
-    this.toRun.push(workItem);
+    this.scheduled.push(workItem);
     this.emit('scheduled');
 };
 
 Scheduler.prototype.evaluateWork= function() {
     console.log('checkwork started')
-    if(this.toRun.length == 0){
+    if(this.scheduled.length == 0){
         console.log('no work ito be run');
         return;
     }
@@ -47,18 +47,18 @@ Scheduler.prototype.evaluateWork= function() {
         return;
     }
     this.currentlyRunning += 1;
-    var nextWorkItem = this.toRun.shift();
+    var nextWorkItem = this.scheduled.shift();
     nextWorkItem.stats.started = new Date();
     console.log('CHECKWORKRUNNING TASK: '+ nextWorkItem.id);
     this.Running[nextWorkItem.id] = nextWorkItem;
     var self = this;
     doArbitraryWork(function(){
         self.done(nextWorkItem,arguments[1]);
-    },nextWorkItem.taskData);
+    },nextWorkItem.work);
 };
 
 Scheduler.prototype.done = function(completedWorkItem, output) {
-    console.log('RUNCOMPLETE: ' + completedWorkItem.taskData.iteration );
+    console.log('RUNCOMPLETE: ' + completedWorkItem.work.iteration );
     delete this.Running[completedWorkItem.id];
     completedWorkItem.stats.finished = new Date();
     console.dir(completedWorkItem);

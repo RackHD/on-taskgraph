@@ -5,7 +5,7 @@ var util = require('util');
 var _ = require('lodash');
 var log = {info:console.log, debug:console.log};
 var Q = require('q');
-var graph = require('./../lib/taskgraph.js');
+var graph = require('./../lib/task-graph.js');
 
 var sampleWork = function (text, timeout){
     var deferred = Q.defer();
@@ -16,6 +16,30 @@ var sampleWork = function (text, timeout){
     }, timeout);
     return deferred.promise;
 };
+
+
+var logger = {info:console.log};
+var sampleWork = function (text, timeout){
+    var deferred = Q.defer();
+    logger.info(runId + ': starting some work, delaying ' + timeout + 'ms');
+    setTimeout(function(){
+        logger.info(runId + ': completed simulated task, resolving promise after '+timeout+'ms');
+        deferred.resolve({runId: runId, timeout: timeout});
+    }, timeout);
+    return deferred.promise;
+};
+
+var taskGraph = new TaskGraph({name: 'sample graph', nodeTimeout: 2000});
+var a = taskGraph.addTask([sampleWork, null, "a should run first",1000]);
+var b = taskGraph.addTask([sampleWork, null, "b should wait on a",1000]).waitOn(a);
+var c = taskGraph.addTask([sampleWork, null, "c should wait on b",1000]).waitOn(b);
+var d = taskGraph.addTask([sampleWork, null, "d should wait on b, c",1000]).waitOn(b,c);
+var e = taskGraph.addTask([sampleWork, null, "e should wait on b, c, d",1000]).waitOn([b,c,d]);
+taskGraph.run().then(function(result){
+    console.log(result);
+});
+
+
 
 
 var EventEmitter2 = require('eventemitter2').EventEmitter2;
