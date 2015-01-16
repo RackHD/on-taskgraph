@@ -1,5 +1,4 @@
 'use strict';
-require('./spec-helper');
 
 var util = require('util');
 var _ = require('lodash');
@@ -89,10 +88,7 @@ var jsonGraph = {
 var c = graphInstance.newNode([sampleWork, "c should wait on b",1000]).waitOn(b);
 var d = graphInstance.newNode([sampleWork, "d should wait on b, c",1000]).waitOn(b,c);
 var e = graphInstance.newNode([sampleWork, "e should wait on b, c, d",1000]).waitOn([b,c,d]);
-    }
 
-
-}
 
 var graphInstance = new Graph({name: 'sample graph', nodeTimeout: 2000});
 var a = graphInstance.newNode([sampleWork, "a should run first",1000]);
@@ -133,4 +129,3 @@ describe('Scheduler',function(){
         expect(scheduler).to.exist;
     });
 });
-
