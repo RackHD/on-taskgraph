@@ -6,15 +6,22 @@
 var di = require('di'),
     _ = require('lodash'),
     core = require('renasar-core')(di),
+    tasks = require('renasar-tasks'),
     injector = new di.Injector(
         _.flatten([
             core.injectables,
-            require('./lib/app'),
-            require('./lib/task-graph-runner')
+            tasks.injectables,
+            require('./lib/task-graph'),
+            require('./lib/task-graph-runner'),
+            require('./lib/task-graph-subscriptions'),
+            require('./lib/loader'),
+            require('./lib/scheduler'),
+            require('./lib/registry')
         ])
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
-    logger = injector.get('Logger').initialize('TaskGraph.Runner');
+    logger = injector.get('Logger').initialize('TaskGraph');
+
 
 taskGraphRunner.start()
     .then(function () {

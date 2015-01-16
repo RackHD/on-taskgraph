@@ -29,6 +29,7 @@
     "node-uuid": "^1.4.2",
     "q": "^1.1.2",
     "renasar-core": "git+ssh://git@github.com/renasar/renasar-core.git",
+    "renasar-tasks": "git+ssh://git@github.com/renasar/renasar-tasks.git",
     "rx": "^2.3.22"
   }
 }
