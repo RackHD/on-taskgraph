@@ -1,0 +1,11 @@
+description "run the renasar taskgraph service"
+
+start on started mongodb
+stop on runlevel [!2345]
+respawn
+
+script
+    echo Starting renasar taskgraph service
+    chdir /var/renasar/renasar-taskgraph
+    exec /usr/bin/nodejs /var/renasar/renasar-taskgraph/index.js
+end script

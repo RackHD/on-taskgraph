@@ -1,0 +1,17 @@
+Source: renasar-taskgraph
+Section: utilties
+Priority: optional
+Maintainer: Joe Heck <joseph.heck@renasar.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: http://www.renasar.com/
+
+Package: renasar-taskgraph
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ nodejs,
+ nodejs-legacy,
+ npm,
+ mongodb
+Description: renasar-taskgraph
+ Imaging Workflow taskgraph engine
