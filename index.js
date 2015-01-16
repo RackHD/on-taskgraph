@@ -23,13 +23,13 @@ var di = require('di'),
     logger = injector.get('Logger').initialize('TaskGraph');
 
 
-debugger;
 taskGraphService.start()
     .then(function () {
         logger.info('Task Graph Runner Started.');
     })
     .catch(function(error) {
-        console.error(error);
+        debugger;
+        console.error(error.stack);
         logger.error('Task Graph Runner Startup Error.', { error: error });
 
         process.nextTick(function() {

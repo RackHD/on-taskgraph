@@ -1,0 +1,14 @@
+{
+    "amqp": "amqp://localhost",
+    "port": 514,
+    "verbose": true,
+    "color": true,
+    "mongo": {
+        "host": "localhost",
+        "port": 27017,
+        "database": "pxe",
+        "user": "",
+        "password": ""
+    },
+    "statsdPrefix": "taskGraphRunner."
+}
