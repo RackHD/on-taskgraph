@@ -6,29 +6,28 @@
 var di = require('di'),
     _ = require('lodash'),
     core = require('renasar-core')(di),
+    tasks = require('renasar-tasks'),
     injector = new di.Injector(
         _.flatten([
             core.injectables,
-            //require('renasar-tasks'),
-            require('../renasar-tasks/lib/tasks/abstract-tasks/task'),
-            require('./lib/app'),
+            tasks.injectables,
             require('./lib/task-graph'),
-            require('./lib/graphs/graph-loader'),
             require('./lib/task-graph-runner'),
+            require('./lib/task-graph-subscriptions'),
+            require('./lib/loader'),
             require('./lib/scheduler'),
             require('./lib/registry')
         ])
     ),
-    taskGraphService = injector.get('TaskGraph'),
+    taskGraphRunner = injector.get('TaskGraph.Runner'),
     logger = injector.get('Logger').initialize('TaskGraph');
 
 
-taskGraphService.start()
+taskGraphRunner.start()
     .then(function () {
         logger.info('Task Graph Runner Started.');
     })
     .catch(function(error) {
-        debugger;
         console.error(error.stack);
         logger.error('Task Graph Runner Startup Error.', { error: error });
 
@@ -38,7 +37,7 @@ taskGraphService.start()
     });
 
 process.on('SIGINT', function() {
-    taskGraphService.stop()
+    taskGraphRunner.stop()
         .catch(function(error) {
             logger.error('Task Graph Runner Shutdown Error.', { error: error });
         })
