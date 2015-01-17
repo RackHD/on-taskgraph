@@ -28,7 +28,8 @@ taskGraphRunner.start()
         logger.info('Task Graph Runner Started.');
     })
     .catch(function(error) {
-        logger.error('Task Graph Runner Startup Error.', { error: error });
+        console.error('Task Graph Runner Startup Error.' + error.stack);
+        //logger.error('Task Graph Runner Startup Error.', { error: error });
 
         process.nextTick(function() {
             process.exit(1);
