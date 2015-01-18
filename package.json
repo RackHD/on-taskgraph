@@ -4,8 +4,8 @@
   "description": "",
   "main": "lib",
   "scripts": {
-      "doc": "jsdoc lib -r -d docs",
-      "test": "mocha $(find spec -name '*-spec.js') -R spec --require spec/helper.js"
+    "doc": "jsdoc lib -r -d docs",
+    "test": "mocha $(find spec -name '*-spec.js') -R spec --require spec/helper.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
     "di": "git+ssh://git@github.com/renasar/di.js.git",
     "dot-object": "^0.6.0",
     "lodash": "^2.4.1",
+    "lru-cache": "^2.5.0",
     "node-uuid": "^1.4.2",
     "q": "^1.1.2",
     "renasar-core": "git+ssh://git@github.com/renasar/renasar-core.git",
