@@ -15,7 +15,7 @@ describe("Task Graph", function () {
         return {
             run: function() {
                 console.log("RUNNING TEST JOB");
-                return Q.resolve();
+                return Q.delay(500);
             },
             cancel: function() {
                 return Q.resolve();
