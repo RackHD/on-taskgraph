@@ -12,9 +12,14 @@ var tasks = require('renasar-tasks');
 describe("Task Graph", function () {
     di.annotate(testJobFactory, new di.Provide('Job.test'));
     function testJobFactory() {
-        return function() {
-            console.log("RUNNING TEST JOB");
-            return Q.resolve();
+        return {
+            run: function() {
+                console.log("RUNNING TEST JOB");
+                return Q.resolve();
+            },
+            cancel: function() {
+                return Q.resolve();
+            }
         };
     }
     var baseTask = {
@@ -78,6 +83,11 @@ describe("Task Graph", function () {
             ])
         );
         this.registry = this.injector.get('TaskGraph.Registry');
+        return this.injector.get('TaskGraph.Runner').start();
+    });
+
+    after(function() {
+        // return this.injector.get('TaskGraph.Runner').stop();
     });
 
     it("should load a task graph data file", function() {
@@ -160,7 +170,7 @@ describe("Task Graph", function () {
         expect(graph.ready[0]).to.equal(taskWithDependencies);
     });
 
-    it("should run tasks", function() {
+    it("should run tasks", function(done) {
         var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
         var Task = this.injector.get('Task.Task');
         var loader = this.injector.get('TaskGraph.DataLoader');
@@ -169,7 +179,10 @@ describe("Task Graph", function () {
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
+        graph.on(graph.completeEventString, function() {
+            done();
+        });
+
         graph.start();
-        return graph.completed.should.be.fulfilled;
     });
 });
