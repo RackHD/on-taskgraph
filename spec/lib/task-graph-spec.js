@@ -13,6 +13,7 @@ describe("Task Graph", function () {
     di.annotate(testJobFactory, new di.Provide('Job.test'));
     function testJobFactory() {
         return function() {
+            console.log("RUNNING TEST JOB");
             return Q.resolve();
         };
     }
@@ -93,7 +94,7 @@ describe("Task Graph", function () {
         var loader = this.injector.get('TaskGraph.DataLoader');
         loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
         loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
-        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graphFactory = this.registry. fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
         graph._populateTaskDependencies();
@@ -169,5 +170,6 @@ describe("Task Graph", function () {
         var graph = graphFactory.create();
 
         graph.start();
+        return graph.completed.should.be.fulfilled;
     });
 });
