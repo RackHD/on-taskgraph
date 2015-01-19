@@ -162,7 +162,7 @@ describe("Task Graph", function () {
         expect(graph.ready[0]).to.equal(taskWithNoDependencies);
 
         graph.ready.shift();
-        taskWithNoDependencies.outcome = 'succeeded';
+        taskWithNoDependencies.state = 'succeeded';
 
         graph._findReadyTasks();
         expect(graph.ready).to.not.be.empty;
@@ -171,7 +171,7 @@ describe("Task Graph", function () {
     });
 
     it("should run tasks", function(done) {
-        var TaskGraph = this.injecter.get('TaskGraph.TaskGraph');
+        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
         var Task = this.injector.get('Task.Task');
         var loader = this.injector.get('TaskGraph.DataLoader');
         loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
