@@ -53,4 +53,26 @@ describe('Registry', function () {
         }).to.not.throw(Error);
         expect(self.registry.fetchActiveGraphs()).to.have.length(1);
     });
+
+    it("should filter active graphs by target id", function() {
+        var self = this;
+        //expect(self.registry.fetchActiveGraphs()).to.be.empty;
+        var graph = new MockGraph('testid1');
+        self.registry.putActiveGraph(graph, 'testtarget1');
+        //expect(self.registry.fetchActiveGraphs()).to.have.length(1);
+
+        var targetGraph = self.registry.fetchActiveGraphs({ target: 'testtarget1' });
+        expect(targetGraph).to.equal(graph);
+    });
+
+    it("should filter active graphs by graph id", function() {
+        var self = this;
+        //expect(self.registry.fetchActiveGraphs()).to.be.empty;
+        var graph = new MockGraph('testid1');
+        self.registry.putActiveGraph(graph, 'testtarget1');
+        //expect(self.registry.fetchActiveGraphs()).to.have.length(1);
+
+        var targetGraph = self.registry.fetchActiveGraphs({ instanceId: 'testid1' });
+        expect(targetGraph).to.equal(graph);
+    });
 });
