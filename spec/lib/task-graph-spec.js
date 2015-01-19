@@ -12,8 +12,9 @@ var tasks = require('renasar-tasks');
 describe("Task Graph", function () {
     di.annotate(testJobFactory, new di.Provide('Job.test'));
     function testJobFactory() {
-        function TestJob(options) {
+        function TestJob(options, context) {
             this.options = options;
+            this.context = context;
         }
         TestJob.prototype.run = function() {
             console.log("RUNNING TEST JOB");
@@ -23,8 +24,8 @@ describe("Task Graph", function () {
         TestJob.prototype.cancel = function() {
             return Q.resolve();
         };
-        TestJob.create = function(options) {
-            return new TestJob(options);
+        TestJob.create = function(options, context) {
+            return new TestJob(options, context);
         };
 
         return TestJob;
@@ -114,7 +115,7 @@ describe("Task Graph", function () {
         var graphFactory = this.registry. fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
-        graph._populateTaskDependencies();
+        graph._populateTaskData();
 
         expect(graph.tasks).to.be.ok;
         expect(_.keys(graph.tasks)).to.have.length(2);
@@ -149,7 +150,7 @@ describe("Task Graph", function () {
         loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
-        graph._populateTaskDependencies();
+        graph._populateTaskData();
 
         var taskWithDependencies,
             taskWithNoDependencies;
@@ -208,12 +209,12 @@ describe("Task Graph", function () {
         expect(graph).to.have.property('context');
         expect(graph.context).to.equal(context);
 
-        graph._populateTaskDependencies();
+        graph._populateTaskData();
         _.forEach(graph.tasks, function(task) {
             expect(task).to.have.property('parentContext');
             expect(task.parentContext).to.equal(context);
             task.instantiateJob();
-            expect(task.job.options).to.equal(context);
+            expect(task.job.context).to.equal(context);
         });
     });
 });
