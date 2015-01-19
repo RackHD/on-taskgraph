@@ -20,7 +20,7 @@ var di = require('di'),
         ])
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
-    logger = injector.get('Logger').initialize(taskGraphRunner);
+    logger = injector.get('Logger').initialize('TaskGraph');
 
 
 taskGraphRunner.start()
