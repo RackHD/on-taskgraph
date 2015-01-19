@@ -56,23 +56,23 @@ describe('Registry', function () {
 
     it("should filter active graphs by target id", function() {
         var self = this;
-        //expect(self.registry.fetchActiveGraphs()).to.be.empty;
+        expect(self.registry.fetchActiveGraphs()).to.be.empty;
         var graph = new MockGraph('testid1');
         self.registry.putActiveGraph(graph, 'testtarget1');
-        //expect(self.registry.fetchActiveGraphs()).to.have.length(1);
+        expect(self.registry.fetchActiveGraphs()).to.have.length(1);
 
-        var targetGraph = self.registry.fetchActiveGraphs({ target: 'testtarget1' });
+        var targetGraph = self.registry.fetchActiveGraph({ target: 'testtarget1' });
         expect(targetGraph).to.equal(graph);
     });
 
     it("should filter active graphs by graph id", function() {
         var self = this;
-        //expect(self.registry.fetchActiveGraphs()).to.be.empty;
+        expect(self.registry.fetchActiveGraphs()).to.be.empty;
         var graph = new MockGraph('testid1');
         self.registry.putActiveGraph(graph, 'testtarget1');
-        //expect(self.registry.fetchActiveGraphs()).to.have.length(1);
+        expect(self.registry.fetchActiveGraphs()).to.have.length(1);
 
-        var targetGraph = self.registry.fetchActiveGraphs({ instanceId: 'testid1' });
+        var targetGraph = self.registry.fetchActiveGraph({ instanceId: 'testid1' });
         expect(targetGraph).to.equal(graph);
     });
 });
