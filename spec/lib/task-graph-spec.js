@@ -12,15 +12,22 @@ var tasks = require('renasar-tasks');
 describe("Task Graph", function () {
     di.annotate(testJobFactory, new di.Provide('Job.test'));
     function testJobFactory() {
-        return {
-            run: function() {
-                console.log("RUNNING TEST JOB");
-                return Q.delay(500);
-            },
-            cancel: function() {
-                return Q.resolve();
-            }
+        function TestJob(options) {
+            this.options = options;
+        }
+        TestJob.prototype.run = function() {
+            console.log("RUNNING TEST JOB");
+            console.log("TEST JOB OPTIONS: " + this.options);
+            return Q.delay(500);
         };
+        TestJob.prototype.cancel = function() {
+            return Q.resolve();
+        };
+        TestJob.create = function(options) {
+            return new TestJob(options);
+        };
+
+        return TestJob;
     }
     var baseTask = {
         friendlyName: 'Test task',
@@ -184,5 +191,29 @@ describe("Task Graph", function () {
         });
 
         graph.start();
+    });
+
+    it("should share context object between tasks and jobs", function() {
+        var self = this;
+        var TaskGraph = self.injector.get('TaskGraph.TaskGraph');
+        var Task = self.injector.get('Task.Task');
+        var loader = self.injector.get('TaskGraph.DataLoader');
+        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
+        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
+        var graphFactory = self.registry.fetchGraph('Graph.test');
+        var context = { a: 1, b: 2 };
+        var graph = graphFactory.create({}, context);
+
+        // Don't worry about checking values because .to.equal checks by reference
+        expect(graph).to.have.property('context');
+        expect(graph.context).to.equal(context);
+
+        graph._populateTaskDependencies();
+        _.forEach(graph.tasks, function(task) {
+            expect(task).to.have.property('parentContext');
+            expect(task.parentContext).to.equal(context);
+            task.instantiateJob();
+            expect(task.job.options).to.equal(context);
+        });
     });
 });
