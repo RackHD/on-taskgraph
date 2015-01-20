@@ -74,7 +74,7 @@ describe("Task Graph", function () {
                     'test-1': 'finished'
                 }
             }
-        ],
+        ]
     };
 
     before(function() {

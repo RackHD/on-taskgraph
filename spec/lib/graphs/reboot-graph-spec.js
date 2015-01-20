@@ -7,7 +7,7 @@ describe(__filename, function () {
     var base = require('./base-graph-spec');
 
     base.before(function (context) {
-        context.taskdefinition = helper.require('/lib/graphs/noop-graph.js');
+        context.taskdefinition = helper.require('/lib/graphs/reboot-graph.js');
     });
 
     describe('graph', function () {
