@@ -13,6 +13,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
  nodejs-legacy,
  npm,
  mongodb,
- snmp
+ snmp,
+ ipmitool
+Suggests: python-pywbem, ansible, apt-mirror, amtterm
 Description: renasar-taskgraph
  Imaging Workflow taskgraph engine
