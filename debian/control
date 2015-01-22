@@ -12,6 +12,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
  nodejs,
  nodejs-legacy,
  npm,
- mongodb
+ mongodb,
+ snmp
 Description: renasar-taskgraph
  Imaging Workflow taskgraph engine
