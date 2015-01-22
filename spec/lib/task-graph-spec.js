@@ -78,6 +78,7 @@ describe("Task Graph", function () {
     };
 
     before(function() {
+        this.timeout(5000);
         this.injector = helper.baseInjector.createChild(
             _.flatten([
                 tasks.injectables,
