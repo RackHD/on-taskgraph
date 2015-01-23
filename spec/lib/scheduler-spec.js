@@ -41,46 +41,46 @@ describe("Scheduler", function() {
 
 
             scheduler.should.have.property('status')
-            .that.is.a('function').with.length(0);
+                .that.is.a('function').with.length(0);
 
             scheduler.should.have.property('wrapData')
-            .that.is.a('function').with.length(3);
+                .that.is.a('function').with.length(3);
 
             scheduler.should.have.property('requestShutdown')
-            .that.is.a('function').with.length(0);
+                .that.is.a('function').with.length(0);
 
             scheduler.should.have.property('schedule')
-            .that.is.a('function').with.length(3);
+                .that.is.a('function').with.length(3);
 
             scheduler.should.have.property('isQueueEmpty')
-            .that.is.a('function').with.length(0);
+                .that.is.a('function').with.length(0);
 
             scheduler.should.have.property('isRunningMaxTasks')
-            .that.is.a('function').with.length(0);
+                .that.is.a('function').with.length(0);
 
             scheduler.should.have.property('evaluateWork')
-            .that.is.a('function').with.length(0);
+                .that.is.a('function').with.length(0);
 
              scheduler.should.have.property('fetchNext')
-            .that.is.a('function').with.length(0);
+                .that.is.a('function').with.length(0);
 
              scheduler.should.have.property('runWork')
-            .that.is.a('function').with.length(1);
+                .that.is.a('function').with.length(1);
 
              scheduler.should.have.property('_createWorkItemSubscription')
-            .that.is.a('function').with.length(1);
+                .that.is.a('function').with.length(1);
 
              scheduler.should.have.property('removeSubscription')
-            .that.is.a('function').with.length(1);
+                .that.is.a('function').with.length(1);
 
              scheduler.should.have.property('doneRunning')
-            .that.is.a('function').with.length(2);
+                .that.is.a('function').with.length(2);
 
              scheduler.should.have.property('start')
-            .that.is.a('function').with.length(0);
+                .that.is.a('function').with.length(0);
 
              scheduler.should.have.property('stop')
-            .that.is.a('function').with.length(0);
+                .that.is.a('function').with.length(0);
 
 
         });
@@ -140,16 +140,16 @@ describe("Scheduler", function() {
             }
 
             scheduler.currentlyRunning
-            .should.equal(scheduler.options.concurrentTasks);
+                .should.equal(scheduler.options.concurrentTasks);
 
             scheduler.stats.maxConcurrentExceeded
-            .should.equal(2);
+                .should.equal(2);
         });
 
         it("should update running map as tasks are launched",function(){
 
             Object.keys(scheduler.running)
-            .should.have.length(scheduler.options.concurrentTasks);
+                .should.have.length(scheduler.options.concurrentTasks);
         });
 
         it("should forget about tasks when they are doneRunning", function(){
@@ -173,7 +173,7 @@ describe("Scheduler", function() {
             scheduler.requestShutdown();
 
             cancelStub.callCount
-            .should.equal(scheduler.options.concurrentTasks);
+                .should.equal(scheduler.options.concurrentTasks);
 
         });
 
