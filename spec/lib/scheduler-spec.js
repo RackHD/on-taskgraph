@@ -4,7 +4,9 @@
 'use strict';
 
 require('../helper');
-var di = require('di'),
+var _ = require('lodash');
+
+/*var di = require('di'),
     _ = require('lodash'),
     core = require('renasar-core')(di),
     injector = new di.Injector(
@@ -20,12 +22,22 @@ var di = require('di'),
     uuid = injector.get('uuid'),
     Q = injector.get('Q'),
     scheduleFactory = require('../../lib/scheduler.js');
+*/
+
 
 
 describe("Scheduler", function() {
+    var injector;
+    var scheduler;
 
     describe("Scheduler object", function(){
-          var scheduler = new scheduleFactory(
+        before(function() {
+            injector = helper.baseInjector.createChild(
+                _.flatten([require('../../lib/scheduler')]));
+
+            scheduler = injector.get('TaskGraph.Scheduler');
+        });
+/*        var scheduler = scheduleFactory(
             schedulerProtocol,
             eventsProtocol,
             taskProtocol,
@@ -36,6 +48,7 @@ describe("Scheduler", function() {
             Q,
             _
         );
+*/
 
         it("should implement the scheduler interface", function(){
 
@@ -87,9 +100,19 @@ describe("Scheduler", function() {
     });
 
     describe("Scheduler in action", function() {
-        var scheduler;
+        var uuid,
+            taskProtocol;
+
         beforeEach(function(){
-            scheduler = new scheduleFactory(
+            injector = helper.baseInjector.createChild(
+                _.flatten([require('../../lib/scheduler')]));
+
+
+            scheduler = injector.get('TaskGraph.Scheduler');
+            uuid = injector.get('uuid');
+            taskProtocol = injector.get('Protocol.Task');
+
+/*            scheduler = scheduleFactory(
                 schedulerProtocol,
                 eventsProtocol,
                 taskProtocol,
@@ -100,7 +123,7 @@ describe("Scheduler", function() {
                 Q,
                 _
             );
-
+*/
 
             scheduler.wrapData = function pseudoWrapData(taskId, taskName)  {
                 return {
@@ -129,7 +152,9 @@ describe("Scheduler", function() {
         });
 
         afterEach(function(){
-            scheduler = {};
+            scheduler._createWorkItemSubscription.restore();
+            scheduler.removeSubscription.restore();
+            scheduler.log.restore();
         });
 
         it("should not exceed max number of concurrent tasks", function() {
@@ -164,9 +189,9 @@ describe("Scheduler", function() {
         });
 
         it("should shut down on request and cancel all running tasks", function(){
-            for(var i = 0; i < scheduler.options.concurrentTasks; i+=1 ) {
+             _.range(scheduler.options.concurrentTasks).forEach(function() {
                 scheduler.schedule(uuid.v4(),'testTask');
-            }
+            });
 
             var cancelStub = sinon.stub(taskProtocol, 'cancel');
 
