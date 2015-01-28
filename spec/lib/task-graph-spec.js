@@ -11,21 +11,24 @@ var tasks = require('renasar-tasks');
 
 describe("Task Graph", function () {
     di.annotate(testJobFactory, new di.Provide('Job.test'));
-    function testJobFactory() {
-        function TestJob(options, context) {
-            this.options = options;
-            this.context = context;
+    di.annotate(testJobFactory, new di.Inject('Job.Base', 'Logger', 'Util', 'uuid'));
+    function testJobFactory(BaseJob, Logger, util, uuid) {
+        var logger = Logger.initialize(testJobFactory);
+        function TestJob(options, context, taskId) {
+            options = options || {};
+            context = context || {};
+            taskId = taskId || uuid.v4();
+            TestJob.super_.call(this, logger, options, context, taskId);
         }
-        TestJob.prototype.run = function() {
+        util.inherits(TestJob, BaseJob);
+
+        TestJob.prototype._run = function() {
+            var self = this;
             console.log("RUNNING TEST JOB");
-            console.log("TEST JOB OPTIONS: " + this.options);
-            return Q.delay(500);
-        };
-        TestJob.prototype.cancel = function() {
-            return Q.resolve();
-        };
-        TestJob.create = function(options, context) {
-            return new TestJob(options, context);
+            console.log("TEST JOB OPTIONS: " + self.options);
+            Q.delay(500).then(function() {
+                self._done();
+            });
         };
 
         return TestJob;
@@ -92,6 +95,8 @@ describe("Task Graph", function () {
             ])
         );
         this.registry = this.injector.get('TaskGraph.Registry');
+        this.TaskGraph = this.injector.get('TaskGraph.TaskGraph');
+        this.Task = this.injector.get('Task.Task');
         return this.injector.get('TaskGraph.Runner').start();
     });
 
@@ -100,19 +105,16 @@ describe("Task Graph", function () {
     });
 
     it("should load a task graph data file", function() {
-        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
-        var graph = TaskGraph.create(graphDefinition);
+        var graph = this.TaskGraph.create(graphDefinition);
 
         expect(graph.options.injectableName).to.equal(graphDefinition.injectableName);
         expect(graph.options.tasks).to.deep.equal(graphDefinition.tasks);
     });
 
     it("should populate the dependencies of its tasks", function() {
-        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
-        var Task = this.injector.get('Task.Task');
         var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
+        loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
+        loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         var graphFactory = this.registry. fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
@@ -144,11 +146,9 @@ describe("Task Graph", function () {
     });
 
     it("should find ready tasks", function() {
-        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
-        var Task = this.injector.get('Task.Task');
         var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
+        loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
+        loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
@@ -180,11 +180,10 @@ describe("Task Graph", function () {
     });
 
     it("should run tasks", function(done) {
-        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
-        var Task = this.injector.get('Task.Task');
+        this.timeout(5000);
         var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
+        loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
+        loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
@@ -197,11 +196,9 @@ describe("Task Graph", function () {
 
     it("should share context object between tasks and jobs", function() {
         var self = this;
-        var TaskGraph = self.injector.get('TaskGraph.TaskGraph');
-        var Task = self.injector.get('Task.Task');
         var loader = self.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
+        loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
+        loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         var graphFactory = self.registry.fetchGraph('Graph.test');
         var context = { a: 1, b: 2 };
         var graph = graphFactory.create({}, context);
