@@ -42,6 +42,7 @@ describe("Task Graph", function () {
             'option2',
             'option3',
         ],
+        requiredProperties: {},
         properties: {
             test: {
                 type: 'null'
@@ -97,11 +98,246 @@ describe("Task Graph", function () {
         this.registry = this.injector.get('TaskGraph.Registry');
         this.TaskGraph = this.injector.get('TaskGraph.TaskGraph');
         this.Task = this.injector.get('Task.Task');
+        this.loader = this.injector.get('TaskGraph.DataLoader');
+        this.loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
+        this.loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         return this.injector.get('TaskGraph.Runner').start();
     });
 
     after(function() {
         // return this.injector.get('TaskGraph.Runner').stop();
+    });
+
+    describe("Validation", function() {
+        it("should get a base task", function() {
+            var graphFactory = this.registry.fetchGraph('Graph.test');
+            var graph = graphFactory.create();
+
+            var firstTask = graph.options.tasks[0];
+            var taskDefinition = this.registry.fetchTask(firstTask.taskName).definition;
+            var _baseTask = graph._getBaseTask(taskDefinition);
+
+            expect(_baseTask).to.be.an.object;
+            expect(_baseTask.injectableName).to.equal(taskDefinition.implementsTask);
+        });
+
+        it("should validate a task definition", function() {
+            var graphFactory = this.registry.fetchGraph('Graph.test');
+            var graph = graphFactory.create();
+
+            var firstTask = graph.options.tasks[0];
+            var taskDefinition = this.registry.fetchTask(firstTask.taskName).definition;
+
+            expect(function() {
+                graph._validateTaskDefinition(taskDefinition);
+            }).to.not.throw(Error);
+
+            _.forEach(_.keys(taskDefinition), function(key) {
+                expect(function() {
+                    var _definition = _.omit(taskDefinition, key);
+                    graph._validateTaskDefinition(_definition);
+                }).to.throw(Error);
+            });
+
+            _.forEach(_.keys(taskDefinition), function(key) {
+                expect(function() {
+                    var _definition = _.cloneDeep(taskDefinition);
+                    // Assert bad types, we won't expect any of our values to be
+                    // functions
+                    _definition[key] = function() {};
+                    graph._validateTaskDefinition(_definition);
+                }).to.throw(/required/);
+            });
+        });
+
+        it("should validate task properties", function() {
+            var baseTask1 = {
+                friendlyName: 'base test task properties 1',
+                injectableName: 'Task.Base.testProperties1',
+                runJob: 'Job.test',
+                requiredOptions: [],
+                requiredProperties: {},
+                properties: {
+                    test: {
+                        type: 'null'
+                    },
+                    fresh: {
+                        fruit: {
+                            slices: 'sugary'
+                        }
+                    },
+                    fried: {
+                        chicken: {
+                            and: {
+                                waffles: 'yum'
+                            }
+                        }
+                    }
+                }
+            };
+            var baseTask2 = {
+                friendlyName: 'base test task properties 2',
+                injectableName: 'Task.Base.testProperties2',
+                runJob: 'Job.test',
+                requiredOptions: [],
+                requiredProperties: {
+                    // test multiple levels of nesting
+                    'pancakes': 'syrup',
+                    'spam.eggs': 'monty',
+                    'fresh.fruit.slices': 'sugary',
+                    'fried.chicken.and.waffles': 'yum',
+                    'coffee.with.cream.and.sugar': 'wake up'
+                },
+                properties: {
+                    test: {
+                        type: 'null'
+                    }
+                }
+            };
+            var baseTask3 = {
+                friendlyName: 'base test task properties 3',
+                injectableName: 'Task.Base.testProperties3',
+                runJob: 'Job.test',
+                requiredOptions: [],
+                requiredProperties: {
+                    'does.not.exist': 'negative'
+                },
+                properties: {
+                    test: {
+                        type: 'null'
+                    }
+                }
+            };
+            var testTask1 = {
+                friendlyName: 'test properties task 1',
+                implementsTask: 'Task.Base.testProperties1',
+                injectableName: 'Task.testProperties1',
+                options: {},
+                properties: {
+                    test: {
+                        unit: 'properties',
+                    },
+                    pancakes: 'syrup',
+                    spam: {
+                        eggs: 'monty'
+                    },
+                    coffee: {
+                        'with': {
+                            cream: {
+                                and: {
+                                    sugar: 'wake up'
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var testTask2 = {
+                friendlyName: 'test properties task 2',
+                implementsTask: 'Task.Base.testProperties2',
+                injectableName: 'Task.testProperties2',
+                options: {},
+                properties: {
+                    test: {
+                        foo: 'bar'
+                    }
+                }
+            };
+            var testTask3 = {
+                friendlyName: 'test properties task 3',
+                implementsTask: 'Task.Base.testProperties3',
+                injectableName: 'Task.testProperties3',
+                options: {},
+                properties: {
+                    test: {
+                        bar: 'baz'
+                    }
+                }
+            };
+            var graphDefinitionValid = {
+                injectableName: 'Graph.testPropertiesValid',
+                tasks: [
+                    {
+                        label: 'test-1',
+                        taskName: 'Task.testProperties1'
+                    },
+                    {
+                        label: 'test-2',
+                        taskName: 'Task.testProperties2',
+                        waitOn: {
+                            'test-1': 'finished'
+                        }
+                    }
+                ]
+            };
+            var graphDefinitionInvalid = {
+                injectableName: 'Graph.testPropertiesInvalid',
+                tasks: [
+                    {
+                        label: 'test-1',
+                        taskName: 'Task.testProperties1'
+                    },
+                    {
+                        label: 'test-2',
+                        taskName: 'Task.testProperties2',
+                        waitOn: {
+                            'test-1': 'finished'
+                        }
+                    },
+                    {
+                        label: 'test-3',
+                        taskName: 'Task.testProperties3',
+                        waitOn: {
+                            'test-2': 'finished'
+                        }
+                    }
+                ]
+            };
+            this.loader.loadTasks([
+                    baseTask1, baseTask2, baseTask3,
+                    testTask1, testTask2, testTask3
+                ], this.Task.createRegistryObject);
+            this.loader.loadGraphs([graphDefinitionValid, graphDefinitionInvalid],
+                    this.TaskGraph.createRegistryObject);
+            var graphFactory = this.registry.fetchGraph('Graph.testPropertiesValid');
+            var graph = graphFactory.create();
+
+            var firstTask = graph.options.tasks[0];
+            var taskDefinition = this.registry.fetchTask(firstTask.taskName).definition;
+
+            var context = {};
+            expect(function() {
+                graph._validateProperties(taskDefinition, context);
+            }).to.not.throw(Error);
+            expect(context).to.have.property('properties')
+                .that.deep.equals(taskDefinition.properties);
+
+            var secondTask = graph.options.tasks[1];
+            var taskDefinition2 = this.registry.fetchTask(secondTask.taskName).definition;
+            expect(function() {
+                graph._validateProperties(taskDefinition2, context);
+            }).to.not.throw(Error);
+
+            graphFactory = this.registry.fetchGraph('Graph.testPropertiesInvalid');
+            var invalidGraph = graphFactory.create();
+
+            var thirdTask = invalidGraph.options.tasks[2];
+            taskDefinition = this.registry.fetchTask(thirdTask.taskName).definition;
+
+            context = {};
+            expect(function() {
+                graph._validateProperties(taskDefinition, context);
+            }).to.throw(Error);
+        });
+
+        it("should validate a graph", function() {
+            var graphFactory = this.registry.fetchGraph('Graph.test');
+            var graph = graphFactory.create();
+
+            expect(function() {
+                graph.validate();
+            }).to.not.throw(Error);
+        });
     });
 
     it("should load a task graph data file", function() {
@@ -112,9 +348,6 @@ describe("Task Graph", function () {
     });
 
     it("should populate the dependencies of its tasks", function() {
-        var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         var graphFactory = this.registry. fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
@@ -146,9 +379,6 @@ describe("Task Graph", function () {
     });
 
     it("should find ready tasks", function() {
-        var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
@@ -181,9 +411,6 @@ describe("Task Graph", function () {
 
     it("should run tasks", function(done) {
         this.timeout(5000);
-        var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
@@ -196,9 +423,6 @@ describe("Task Graph", function () {
 
     it("should share context object between tasks and jobs", function() {
         var self = this;
-        var loader = self.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
         var graphFactory = self.registry.fetchGraph('Graph.test');
         var context = { a: 1, b: 2 };
         var graph = graphFactory.create({}, context);
