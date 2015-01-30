@@ -4,6 +4,7 @@
 'use strict';
 
 require('../helper');
+
 var di = require('di');
 var _ = require('lodash');
 var Q = require('q');
@@ -528,7 +529,7 @@ describe("Task Graph", function () {
 
         var serialized = graph.serialize();
 
-        return waterline.graphobjects.create(serialized)
+        return graph.persist()
         .then(function() {
             return waterline.graphobjects.findOne({ instanceId: serialized.instanceId });
         })
