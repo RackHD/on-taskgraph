@@ -65,6 +65,7 @@ describe("Task Graph", function () {
         }
     };
     var graphDefinition = {
+        friendlyName: 'Test Graph',
         injectableName: 'Graph.test',
         tasks: [
             {
@@ -422,8 +423,7 @@ describe("Task Graph", function () {
     });
 
     it("should share context object between tasks and jobs", function() {
-        var self = this;
-        var graphFactory = self.registry.fetchGraph('Graph.test');
+        var graphFactory = this.registry.fetchGraph('Graph.test');
         var context = { a: 1, b: 2 };
         var graph = graphFactory.create({}, context);
 
@@ -438,5 +438,47 @@ describe("Task Graph", function () {
             task.instantiateJob();
             expect(task.job.context).to.equal(context);
         });
+    });
+
+    it("should serialize", function() {
+        function literalCompare(objA, objB) {
+            _.forEach(objA, function(v, k) {
+                if (typeof v === 'object' && !(v instanceof Date)) {
+                    literalCompare(v, objB[k]);
+                } else {
+                    expect(v).to.deep.equal(objB[k]);
+                }
+            });
+        }
+
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
+
+        var json = JSON.stringify(graph);
+        expect(function() {
+            JSON.parse(json);
+        }).to.not.throw(Error);
+        var parsed = JSON.parse(json);
+
+        // The only values currently that won't compare accurately from JSON to
+        // object are Date objects, so do some manual conversion there.
+        _.forEach(parsed, function(v, k) {
+            if (k !== 'tasks') {
+                return;
+            }
+            _.forEach(v, function(_v, _k) {
+                _.forEach(_v.stats, function(__v, __k) {
+                    if (__v) {
+                        v[_k].stats[__k] = new Date(__v);
+                    }
+                });
+            });
+        });
+
+        // Do a recursive compare down to non-object values, since lodash and
+        // chai deep equality checks do constructor comparisons, which we don't
+        // want in this case.
+        literalCompare(graph, parsed);
     });
 });
