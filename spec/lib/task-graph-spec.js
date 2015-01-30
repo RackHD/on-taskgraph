@@ -9,6 +9,34 @@ var _ = require('lodash');
 var Q = require('q');
 var tasks = require('renasar-tasks');
 
+function literalCompare(objA, objB) {
+    _.forEach(objA, function(v, k) {
+        if (typeof v === 'object' && !(v instanceof Date)) {
+            literalCompare(v, objB[k]);
+        } else {
+            expect(v).to.deep.equal(objB[k]);
+        }
+    });
+}
+
+// The only values currently that won't compare accurately from JSON to
+// object are Date objects, so do some manual conversion there.
+function deserializeJson(json) {
+    _.forEach(json, function(v, k) {
+        if (k !== 'tasks') {
+            return;
+        }
+        _.forEach(v, function(_v, _k) {
+            _.forEach(_v.stats, function(__v, __k) {
+                if (__v) {
+                    v[_k].stats[__k] = new Date(__v);
+                }
+            });
+        });
+    });
+}
+
+
 describe("Task Graph", function () {
     di.annotate(testJobFactory, new di.Provide('Job.test'));
     di.annotate(testJobFactory, new di.Inject('Job.Base', 'Logger', 'Util', 'uuid'));
@@ -102,7 +130,7 @@ describe("Task Graph", function () {
         this.loader = this.injector.get('TaskGraph.DataLoader');
         this.loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
         this.loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
-        return this.injector.get('TaskGraph.Runner').start();
+        return helper.startTaskGraphRunner(this.injector);
     });
 
     after(function() {
@@ -440,17 +468,15 @@ describe("Task Graph", function () {
         });
     });
 
-    it("should serialize", function() {
-        function literalCompare(objA, objB) {
-            _.forEach(objA, function(v, k) {
-                if (typeof v === 'object' && !(v instanceof Date)) {
-                    literalCompare(v, objB[k]);
-                } else {
-                    expect(v).to.deep.equal(objB[k]);
-                }
-            });
-        }
+    it("should serialize to a JSON object", function() {
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
 
+        literalCompare(graph, graph.serialize());
+    });
+
+    it("should serialize to a JSON string", function() {
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
@@ -461,24 +487,53 @@ describe("Task Graph", function () {
         }).to.not.throw(Error);
         var parsed = JSON.parse(json);
 
-        // The only values currently that won't compare accurately from JSON to
-        // object are Date objects, so do some manual conversion there.
-        _.forEach(parsed, function(v, k) {
-            if (k !== 'tasks') {
-                return;
-            }
-            _.forEach(v, function(_v, _k) {
-                _.forEach(_v.stats, function(__v, __k) {
-                    if (__v) {
-                        v[_k].stats[__k] = new Date(__v);
-                    }
-                });
-            });
-        });
+        deserializeJson(parsed);
 
         // Do a recursive compare down to non-object values, since lodash and
         // chai deep equality checks do constructor comparisons, which we don't
         // want in this case.
         literalCompare(graph, parsed);
+    });
+
+    it("should create a database record for a graph object", function() {
+        var waterline = this.injector.get('Services.Waterline');
+
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
+
+        var serialized = graph.serialize();
+
+        expect(waterline.graphobjects).to.be.ok;
+        expect(waterline.graphobjects.create).to.be.a.function;
+        return expect(waterline.graphobjects.create(serialized)).to.be.fulfilled;
+    });
+
+    it("should create a database record for a graph definition", function() {
+        var waterline = this.injector.get('Services.Waterline');
+
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+
+        expect(waterline.graphdefinitions).to.be.ok;
+        expect(waterline.graphdefinitions.create).to.be.a.function;
+        return expect(waterline.graphdefinitions.create(graphFactory.definition)).to.be.fulfilled;
+    });
+
+    it("should have correct JSON in database records for serialized graph objects", function() {
+        var waterline = this.injector.get('Services.Waterline');
+
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
+
+        var serialized = graph.serialize();
+
+        return waterline.graphobjects.create(serialized)
+        .then(function() {
+            return waterline.graphobjects.findOne({ instanceId: serialized.instanceId });
+        })
+        .then(function(record) {
+            literalCompare(record.deserialize(), serialized);
+        });
     });
 });

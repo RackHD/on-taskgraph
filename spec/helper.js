@@ -56,6 +56,21 @@ global.helper = {
         core.injectables,
         ])),
 
+    startTaskGraphRunner: function(injector) {
+        var config = injector.get('Services.Configuration');
+
+        config.set('mongo', {
+            adapter: 'mongo',
+            host: 'localhost',
+            port: 27017,
+            database: 'renasar-pxe-test',
+            user: '',
+            password: ''
+        });
+
+        return injector.get('TaskGraph.Runner').start();
+    },
+
     initializeWaterline: function (injector) {
         if (arguments.length === 0) {
             injector = this.baseInjector;
