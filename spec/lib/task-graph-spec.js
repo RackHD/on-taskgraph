@@ -181,6 +181,8 @@ describe("Task Graph", function () {
         });
 
         it("should validate task properties", function() {
+            var self = this;
+
             var baseTask1 = {
                 friendlyName: 'base test task properties 1',
                 injectableName: 'Task.Base.testProperties1',
@@ -323,17 +325,17 @@ describe("Task Graph", function () {
                     }
                 ]
             };
-            this.loader.loadTasks([
+            self.loader.loadTasks([
                     baseTask1, baseTask2, baseTask3,
                     testTask1, testTask2, testTask3
-                ], this.Task.createRegistryObject);
-            this.loader.loadGraphs([graphDefinitionValid, graphDefinitionInvalid],
-                    this.TaskGraph.createRegistryObject);
-            var graphFactory = this.registry.fetchGraph('Graph.testPropertiesValid');
+                ], self.Task.createRegistryObject);
+            self.loader.loadGraphs([graphDefinitionValid, graphDefinitionInvalid],
+                    self.TaskGraph.createRegistryObject);
+            var graphFactory = self.registry.fetchGraph('Graph.testPropertiesValid');
             var graph = graphFactory.create();
 
             var firstTask = graph.options.tasks[0];
-            var taskDefinition = this.registry.fetchTask(firstTask.taskName).definition;
+            var taskDefinition = self.registry.fetchTask(firstTask.taskName).definition;
 
             var context = {};
             expect(function() {
@@ -343,21 +345,29 @@ describe("Task Graph", function () {
                 .that.deep.equals(taskDefinition.properties);
 
             var secondTask = graph.options.tasks[1];
-            var taskDefinition2 = this.registry.fetchTask(secondTask.taskName).definition;
+            var taskDefinition2 = self.registry.fetchTask(secondTask.taskName).definition;
             expect(function() {
                 graph._validateProperties(taskDefinition2, context);
             }).to.not.throw(Error);
 
-            graphFactory = this.registry.fetchGraph('Graph.testPropertiesInvalid');
+            graphFactory = self.registry.fetchGraph('Graph.testPropertiesInvalid');
             var invalidGraph = graphFactory.create();
 
             var thirdTask = invalidGraph.options.tasks[2];
-            taskDefinition = this.registry.fetchTask(thirdTask.taskName).definition;
+            taskDefinition = self.registry.fetchTask(thirdTask.taskName).definition;
 
             context = {};
             expect(function() {
                 graph._validateProperties(taskDefinition, context);
             }).to.throw(Error);
+
+            _.forEach([baseTask1, baseTask2, baseTask3,
+                        testTask1, testTask2, testTask3], function(task) {
+                self.registry.removeTask(task.injectableName);
+            });
+            _.forEach([graphDefinitionValid, graphDefinitionInvalid], function(graph) {
+                self.registry.removeGraph(graph.injectableName);
+            });
         });
 
         it("should validate a graph", function() {
@@ -367,6 +377,16 @@ describe("Task Graph", function () {
             expect(function() {
                 graph.validate();
             }).to.not.throw(Error);
+        });
+
+        it("should validate all existing graph definition", function() {
+            var self = this;
+            _.forEach(self.registry.fetchGraphCatalog(), function(_graph) {
+                var graph = self.registry.fetchGraph(_graph.injectableName).create();
+                expect(function() {
+                    graph.validate();
+                }).to.not.throw(Error);
+            });
         });
     });
 
