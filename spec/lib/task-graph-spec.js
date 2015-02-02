@@ -4,28 +4,60 @@
 'use strict';
 
 require('../helper');
+
 var di = require('di');
 var _ = require('lodash');
 var Q = require('q');
 var tasks = require('renasar-tasks');
 
+function literalCompare(objA, objB) {
+    _.forEach(objA, function(v, k) {
+        if (typeof v === 'object' && !(v instanceof Date)) {
+            literalCompare(v, objB[k]);
+        } else {
+            expect(v).to.deep.equal(objB[k]);
+        }
+    });
+}
+
+// The only values currently that won't compare accurately from JSON to
+// object are Date objects, so do some manual conversion there.
+function deserializeJson(json) {
+    _.forEach(json, function(v, k) {
+        if (k !== 'tasks') {
+            return;
+        }
+        _.forEach(v, function(_v, _k) {
+            _.forEach(_v.stats, function(__v, __k) {
+                if (__v) {
+                    v[_k].stats[__k] = new Date(__v);
+                }
+            });
+        });
+    });
+}
+
+
 describe("Task Graph", function () {
     di.annotate(testJobFactory, new di.Provide('Job.test'));
-    function testJobFactory() {
-        function TestJob(options, context) {
-            this.options = options;
-            this.context = context;
+    di.annotate(testJobFactory, new di.Inject('Job.Base', 'Logger', 'Util', 'uuid'));
+    function testJobFactory(BaseJob, Logger, util, uuid) {
+        var logger = Logger.initialize(testJobFactory);
+        function TestJob(options, context, taskId) {
+            options = options || {};
+            context = context || {};
+            taskId = taskId || uuid.v4();
+            TestJob.super_.call(this, logger, options, context, taskId);
         }
-        TestJob.prototype.run = function() {
+        util.inherits(TestJob, BaseJob);
+
+        TestJob.prototype._run = function() {
+            var self = this;
             console.log("RUNNING TEST JOB");
-            console.log("TEST JOB OPTIONS: " + this.options);
-            return Q.delay(500);
-        };
-        TestJob.prototype.cancel = function() {
-            return Q.resolve();
-        };
-        TestJob.create = function(options, context) {
-            return new TestJob(options, context);
+            console.log("TEST JOB OPTIONS: " + self.options);
+            Q.delay(500).then(function() {
+                self._done();
+            });
         };
 
         return TestJob;
@@ -39,6 +71,7 @@ describe("Task Graph", function () {
             'option2',
             'option3',
         ],
+        requiredProperties: {},
         properties: {
             test: {
                 type: 'null'
@@ -61,6 +94,7 @@ describe("Task Graph", function () {
         }
     };
     var graphDefinition = {
+        friendlyName: 'Test Graph',
         injectableName: 'Graph.test',
         tasks: [
             {
@@ -92,27 +126,278 @@ describe("Task Graph", function () {
             ])
         );
         this.registry = this.injector.get('TaskGraph.Registry');
-        return this.injector.get('TaskGraph.Runner').start();
+        this.TaskGraph = this.injector.get('TaskGraph.TaskGraph');
+        this.Task = this.injector.get('Task.Task');
+        this.loader = this.injector.get('TaskGraph.DataLoader');
+        this.loader.loadTasks([baseTask, testTask], this.Task.createRegistryObject);
+        this.loader.loadGraphs([graphDefinition], this.TaskGraph.createRegistryObject);
+        return helper.startTaskGraphRunner(this.injector);
     });
 
     after(function() {
         // return this.injector.get('TaskGraph.Runner').stop();
     });
 
+    describe("Validation", function() {
+        it("should get a base task", function() {
+            var graphFactory = this.registry.fetchGraph('Graph.test');
+            var graph = graphFactory.create();
+
+            var firstTask = graph.options.tasks[0];
+            var taskDefinition = this.registry.fetchTask(firstTask.taskName).definition;
+            var _baseTask = graph._getBaseTask(taskDefinition);
+
+            expect(_baseTask).to.be.an.object;
+            expect(_baseTask.injectableName).to.equal(taskDefinition.implementsTask);
+        });
+
+        it("should validate a task definition", function() {
+            var graphFactory = this.registry.fetchGraph('Graph.test');
+            var graph = graphFactory.create();
+
+            var firstTask = graph.options.tasks[0];
+            var taskDefinition = this.registry.fetchTask(firstTask.taskName).definition;
+
+            expect(function() {
+                graph._validateTaskDefinition(taskDefinition);
+            }).to.not.throw(Error);
+
+            _.forEach(_.keys(taskDefinition), function(key) {
+                expect(function() {
+                    var _definition = _.omit(taskDefinition, key);
+                    graph._validateTaskDefinition(_definition);
+                }).to.throw(Error);
+            });
+
+            _.forEach(_.keys(taskDefinition), function(key) {
+                expect(function() {
+                    var _definition = _.cloneDeep(taskDefinition);
+                    // Assert bad types, we won't expect any of our values to be
+                    // functions
+                    _definition[key] = function() {};
+                    graph._validateTaskDefinition(_definition);
+                }).to.throw(/required/);
+            });
+        });
+
+        it("should validate task properties", function() {
+            var self = this;
+
+            var baseTask1 = {
+                friendlyName: 'base test task properties 1',
+                injectableName: 'Task.Base.testProperties1',
+                runJob: 'Job.test',
+                requiredOptions: [],
+                requiredProperties: {},
+                properties: {
+                    test: {
+                        type: 'null'
+                    },
+                    fresh: {
+                        fruit: {
+                            slices: 'sugary'
+                        }
+                    },
+                    fried: {
+                        chicken: {
+                            and: {
+                                waffles: 'yum'
+                            }
+                        }
+                    }
+                }
+            };
+            var baseTask2 = {
+                friendlyName: 'base test task properties 2',
+                injectableName: 'Task.Base.testProperties2',
+                runJob: 'Job.test',
+                requiredOptions: [],
+                requiredProperties: {
+                    // test multiple levels of nesting
+                    'pancakes': 'syrup',
+                    'spam.eggs': 'monty',
+                    'fresh.fruit.slices': 'sugary',
+                    'fried.chicken.and.waffles': 'yum',
+                    'coffee.with.cream.and.sugar': 'wake up'
+                },
+                properties: {
+                    test: {
+                        type: 'null'
+                    }
+                }
+            };
+            var baseTask3 = {
+                friendlyName: 'base test task properties 3',
+                injectableName: 'Task.Base.testProperties3',
+                runJob: 'Job.test',
+                requiredOptions: [],
+                requiredProperties: {
+                    'does.not.exist': 'negative'
+                },
+                properties: {
+                    test: {
+                        type: 'null'
+                    }
+                }
+            };
+            var testTask1 = {
+                friendlyName: 'test properties task 1',
+                implementsTask: 'Task.Base.testProperties1',
+                injectableName: 'Task.testProperties1',
+                options: {},
+                properties: {
+                    test: {
+                        unit: 'properties',
+                    },
+                    pancakes: 'syrup',
+                    spam: {
+                        eggs: 'monty'
+                    },
+                    coffee: {
+                        'with': {
+                            cream: {
+                                and: {
+                                    sugar: 'wake up'
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            var testTask2 = {
+                friendlyName: 'test properties task 2',
+                implementsTask: 'Task.Base.testProperties2',
+                injectableName: 'Task.testProperties2',
+                options: {},
+                properties: {
+                    test: {
+                        foo: 'bar'
+                    }
+                }
+            };
+            var testTask3 = {
+                friendlyName: 'test properties task 3',
+                implementsTask: 'Task.Base.testProperties3',
+                injectableName: 'Task.testProperties3',
+                options: {},
+                properties: {
+                    test: {
+                        bar: 'baz'
+                    }
+                }
+            };
+            var graphDefinitionValid = {
+                injectableName: 'Graph.testPropertiesValid',
+                tasks: [
+                    {
+                        label: 'test-1',
+                        taskName: 'Task.testProperties1'
+                    },
+                    {
+                        label: 'test-2',
+                        taskName: 'Task.testProperties2',
+                        waitOn: {
+                            'test-1': 'finished'
+                        }
+                    }
+                ]
+            };
+            var graphDefinitionInvalid = {
+                injectableName: 'Graph.testPropertiesInvalid',
+                tasks: [
+                    {
+                        label: 'test-1',
+                        taskName: 'Task.testProperties1'
+                    },
+                    {
+                        label: 'test-2',
+                        taskName: 'Task.testProperties2',
+                        waitOn: {
+                            'test-1': 'finished'
+                        }
+                    },
+                    {
+                        label: 'test-3',
+                        taskName: 'Task.testProperties3',
+                        waitOn: {
+                            'test-2': 'finished'
+                        }
+                    }
+                ]
+            };
+            self.loader.loadTasks([
+                    baseTask1, baseTask2, baseTask3,
+                    testTask1, testTask2, testTask3
+                ], self.Task.createRegistryObject);
+            self.loader.loadGraphs([graphDefinitionValid, graphDefinitionInvalid],
+                    self.TaskGraph.createRegistryObject);
+            var graphFactory = self.registry.fetchGraph('Graph.testPropertiesValid');
+            var graph = graphFactory.create();
+
+            var firstTask = graph.options.tasks[0];
+            var taskDefinition = self.registry.fetchTask(firstTask.taskName).definition;
+
+            var context = {};
+            expect(function() {
+                graph._validateProperties(taskDefinition, context);
+            }).to.not.throw(Error);
+            expect(context).to.have.property('properties')
+                .that.deep.equals(taskDefinition.properties);
+
+            var secondTask = graph.options.tasks[1];
+            var taskDefinition2 = self.registry.fetchTask(secondTask.taskName).definition;
+            expect(function() {
+                graph._validateProperties(taskDefinition2, context);
+            }).to.not.throw(Error);
+
+            graphFactory = self.registry.fetchGraph('Graph.testPropertiesInvalid');
+            var invalidGraph = graphFactory.create();
+
+            var thirdTask = invalidGraph.options.tasks[2];
+            taskDefinition = self.registry.fetchTask(thirdTask.taskName).definition;
+
+            context = {};
+            expect(function() {
+                graph._validateProperties(taskDefinition, context);
+            }).to.throw(Error);
+
+            _.forEach([baseTask1, baseTask2, baseTask3,
+                        testTask1, testTask2, testTask3], function(task) {
+                self.registry.removeTask(task.injectableName);
+            });
+            _.forEach([graphDefinitionValid, graphDefinitionInvalid], function(graph) {
+                self.registry.removeGraph(graph.injectableName);
+            });
+        });
+
+        it("should validate a graph", function() {
+            var graphFactory = this.registry.fetchGraph('Graph.test');
+            var graph = graphFactory.create();
+
+            expect(function() {
+                graph.validate();
+            }).to.not.throw(Error);
+        });
+
+        it("should validate all existing graph definition", function() {
+            var self = this;
+            _.forEach(self.registry.fetchGraphCatalog(), function(_graph) {
+                var graph = self.registry.fetchGraph(_graph.injectableName).create();
+                expect(function() {
+                    graph.validate();
+                }).to.not.throw(Error);
+            });
+        });
+    });
+
     it("should load a task graph data file", function() {
-        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
-        var graph = TaskGraph.create(graphDefinition);
+        var graph = this.TaskGraph.create(graphDefinition);
 
         expect(graph.options.injectableName).to.equal(graphDefinition.injectableName);
         expect(graph.options.tasks).to.deep.equal(graphDefinition.tasks);
     });
 
     it("should populate the dependencies of its tasks", function() {
-        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
-        var Task = this.injector.get('Task.Task');
-        var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
         var graphFactory = this.registry. fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
@@ -144,11 +429,6 @@ describe("Task Graph", function () {
     });
 
     it("should find ready tasks", function() {
-        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
-        var Task = this.injector.get('Task.Task');
-        var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
@@ -180,11 +460,7 @@ describe("Task Graph", function () {
     });
 
     it("should run tasks", function(done) {
-        var TaskGraph = this.injector.get('TaskGraph.TaskGraph');
-        var Task = this.injector.get('Task.Task');
-        var loader = this.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
+        this.timeout(5000);
         var graphFactory = this.registry.fetchGraph('Graph.test');
         var graph = graphFactory.create();
 
@@ -196,13 +472,7 @@ describe("Task Graph", function () {
     });
 
     it("should share context object between tasks and jobs", function() {
-        var self = this;
-        var TaskGraph = self.injector.get('TaskGraph.TaskGraph');
-        var Task = self.injector.get('Task.Task');
-        var loader = self.injector.get('TaskGraph.DataLoader');
-        loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
-        loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
-        var graphFactory = self.registry.fetchGraph('Graph.test');
+        var graphFactory = this.registry.fetchGraph('Graph.test');
         var context = { a: 1, b: 2 };
         var graph = graphFactory.create({}, context);
 
@@ -216,6 +486,75 @@ describe("Task Graph", function () {
             expect(task.parentContext).to.equal(context);
             task.instantiateJob();
             expect(task.job.context).to.equal(context);
+        });
+    });
+
+    it("should serialize to a JSON object", function() {
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
+
+        literalCompare(graph, graph.serialize());
+    });
+
+    it("should serialize to a JSON string", function() {
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
+
+        var json = JSON.stringify(graph);
+        expect(function() {
+            JSON.parse(json);
+        }).to.not.throw(Error);
+        var parsed = JSON.parse(json);
+
+        deserializeJson(parsed);
+
+        // Do a recursive compare down to non-object values, since lodash and
+        // chai deep equality checks do constructor comparisons, which we don't
+        // want in this case.
+        literalCompare(graph, parsed);
+    });
+
+    it("should create a database record for a graph object", function() {
+        var waterline = this.injector.get('Services.Waterline');
+
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
+
+        var serialized = graph.serialize();
+
+        expect(waterline.graphobjects).to.be.ok;
+        expect(waterline.graphobjects.create).to.be.a.function;
+        return expect(waterline.graphobjects.create(serialized)).to.be.fulfilled;
+    });
+
+    it("should create a database record for a graph definition", function() {
+        var waterline = this.injector.get('Services.Waterline');
+
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+
+        expect(waterline.graphdefinitions).to.be.ok;
+        expect(waterline.graphdefinitions.create).to.be.a.function;
+        return expect(waterline.graphdefinitions.create(graphFactory.definition)).to.be.fulfilled;
+    });
+
+    it("should have correct JSON in database records for serialized graph objects", function() {
+        var waterline = this.injector.get('Services.Waterline');
+
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
+
+        var serialized = graph.serialize();
+
+        return graph.persist()
+        .then(function() {
+            return waterline.graphobjects.findOne({ instanceId: serialized.instanceId });
+        })
+        .then(function(record) {
+            literalCompare(record.deserialize(), serialized);
         });
     });
 });
