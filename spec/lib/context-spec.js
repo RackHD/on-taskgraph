@@ -3,6 +3,6 @@
 
 'use strict';
 
-describe(__filename, function () {
+describe(require('path').basename(__filename), function () {
     it('needs specs');
 });
