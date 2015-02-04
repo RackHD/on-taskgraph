@@ -1,5 +1,4 @@
-// Copyright 2014, Renasar Technologies Inc.
-/* jshint node:true */
+// Copyright 2014, Renasar Technologies Inc.  /* jshint node:true */
 
 'use strict';
 
@@ -143,7 +142,7 @@ describe("Task Graph", function () {
             var graphFactory = this.registry.fetchGraph('Graph.test');
             var graph = graphFactory.create();
 
-            var firstTask = graph.options.tasks[0];
+            var firstTask = graph.definition.tasks[0];
             var taskDefinition = this.registry.fetchTask(firstTask.taskName).definition;
             var _baseTask = graph._getBaseTask(taskDefinition);
 
@@ -155,7 +154,7 @@ describe("Task Graph", function () {
             var graphFactory = this.registry.fetchGraph('Graph.test');
             var graph = graphFactory.create();
 
-            var firstTask = graph.options.tasks[0];
+            var firstTask = graph.definition.tasks[0];
             var taskDefinition = this.registry.fetchTask(firstTask.taskName).definition;
 
             expect(function() {
@@ -334,7 +333,7 @@ describe("Task Graph", function () {
             var graphFactory = self.registry.fetchGraph('Graph.testPropertiesValid');
             var graph = graphFactory.create();
 
-            var firstTask = graph.options.tasks[0];
+            var firstTask = graph.definition.tasks[0];
             var taskDefinition = self.registry.fetchTask(firstTask.taskName).definition;
 
             var context = {};
@@ -344,7 +343,7 @@ describe("Task Graph", function () {
             expect(context).to.have.property('properties')
                 .that.deep.equals(taskDefinition.properties);
 
-            var secondTask = graph.options.tasks[1];
+            var secondTask = graph.definition.tasks[1];
             var taskDefinition2 = self.registry.fetchTask(secondTask.taskName).definition;
             expect(function() {
                 graph._validateProperties(taskDefinition2, context);
@@ -353,7 +352,7 @@ describe("Task Graph", function () {
             graphFactory = self.registry.fetchGraph('Graph.testPropertiesInvalid');
             var invalidGraph = graphFactory.create();
 
-            var thirdTask = invalidGraph.options.tasks[2];
+            var thirdTask = invalidGraph.definition.tasks[2];
             taskDefinition = self.registry.fetchTask(thirdTask.taskName).definition;
 
             context = {};
@@ -390,42 +389,196 @@ describe("Task Graph", function () {
         });
     });
 
+    describe("Object Construction", function() {
+        it("should share context object between tasks and jobs", function() {
+            var graphFactory = this.registry.fetchGraph('Graph.test');
+            var context = { a: 1, b: 2 };
+            var graph = graphFactory.create({}, context);
+
+            // Don't worry about checking values because .to.equal checks by reference
+            expect(graph).to.have.property('context');
+            expect(graph.context).to.equal(context);
+
+            graph._populateTaskData();
+            _.forEach(graph.tasks, function(task) {
+                expect(task).to.have.property('parentContext');
+                expect(task.parentContext).to.equal(context);
+                task.instantiateJob();
+                expect(task.job.context).to.equal(context);
+            });
+        });
+
+        it("should populate the dependencies of its tasks", function() {
+            var graphFactory = this.registry. fetchGraph('Graph.test');
+            var graph = graphFactory.create();
+
+            graph._populateTaskData();
+
+            expect(graph.tasks).to.be.ok;
+            expect(_.keys(graph.tasks)).to.have.length(2);
+
+            var taskWithDependencies,
+                taskWithNoDependencies;
+
+            _.forEach(graph.tasks, function(v) {
+                if (_.isEmpty(v.waitingOn)) {
+                    taskWithNoDependencies = v;
+                } else {
+                    taskWithDependencies = v;
+                }
+            });
+            expect(taskWithDependencies).to.be.ok;
+            expect(taskWithNoDependencies).to.be.ok;
+
+            expect(taskWithDependencies.instanceId).to.be.a.uuid;
+            expect(taskWithNoDependencies.instanceId).to.be.a.uuid;
+
+            expect(taskWithNoDependencies.waitingOn).to.be.empty;
+            expect(taskWithDependencies.waitingOn).to.have.property(
+                taskWithNoDependencies.instanceId
+            ).that.equals('finished');
+        });
+
+        it("should apply options to a graph via the registry factory", function() {
+            var graphFactory = this.registry. fetchGraph('Graph.test');
+            expect(graphFactory).to.have.property('create').with.length(2);
+            var options = {
+                defaults: {
+                    a: 1
+                }
+            };
+            var graph = graphFactory.create(options);
+            expect(graph.definition.options).to.deep.equal(options);
+        });
+
+        it("should apply context to a graph via the registry factory", function() {
+            var graphFactory = this.registry. fetchGraph('Graph.test');
+            var context = {
+                target: 'test'
+            };
+            var graph = graphFactory.create({}, context);
+            expect(graph.context).to.deep.equal(context);
+        });
+
+        it("should apply options at the graph level to tasks", function() {
+            var firstTask, secondTask, thirdTask;
+
+            var graphDefinitionOptions = {
+                injectableName: 'Graph.testGraphOptions',
+                options: {
+                    defaults: {
+                        option1: 'same for all',
+                        option2: 'same for all',
+                        'optionNonExistant': 'not in any'
+                    },
+                    'test-2': {
+                        overrideOption: 'overridden for test-2',
+                        option2: 'overridden default option for test-2'
+                    },
+                    'test-3': {
+                        inlineOptionOverridden: 'overridden inline option for test-3'
+                    }
+                },
+                tasks: [
+                    {
+                        label: 'test-1',
+                        taskName: 'Task.test',
+                        optionOverrides: {
+                            'testName': 'firstTask'
+                        }
+                    },
+                    {
+                        label: 'test-2',
+                        taskName: 'Task.test',
+                        optionOverrides: {
+                            'testName': 'secondTask',
+                            overrideOption: undefined
+                        },
+                        waitOn: {
+                            'test-1': 'finished'
+                        }
+                    },
+                    {
+                        label: 'test-3',
+                        taskDefinition: {
+                            friendlyName: 'Test Inline Task',
+                            injectableName: 'Task.test.inline-task',
+                            implementsTask: 'Task.Base.test',
+                            options: {
+                                option3: 3,
+                                inlineOption: 3,
+                                inlineOptionOverridden: undefined,
+                                testName: 'thirdTask'
+                            },
+                            properties: {}
+                        }
+                    }
+                ]
+            };
+
+            this.loader.loadGraphs([graphDefinitionOptions],
+                    this.TaskGraph.createRegistryObject);
+
+            var graphFactory = this.registry.fetchGraph('Graph.testGraphOptions');
+            var graph = graphFactory.create();
+
+            // If options will be filled in by the graph, make sure validate
+            // doesn't throw if they are missing from the task definition.
+            expect(function() {
+                graph.validate();
+            }).to.not.throw(Error);
+
+            graph._populateTaskData();
+
+            _.forEach(graph.tasks, function(task) {
+                if (task.definition.options.testName === 'firstTask') {
+                    firstTask = task;
+                } else if (task.definition.options.testName === 'secondTask') {
+                    secondTask = task;
+                } else if (task.definition.options.testName === 'thirdTask') {
+                    thirdTask = task;
+                }
+            });
+
+            _.forEach([firstTask, secondTask, thirdTask], function(task) {
+                expect(task).to.have.property('definition');
+                expect(task).to.have.property('options');
+            });
+
+            // Assert all default options from the graph get passed down and
+            // non-existant options do not get passed down
+            expect(firstTask.options).to.have.property('option1').that.equals('same for all');
+            expect(firstTask.options).to.have.property('option2').that.equals('same for all');
+            expect(firstTask.options).to.have.property('option3').that.equals(3);
+            expect(firstTask.options).to.not.have.property('optionNonExistant');
+
+            // Assert that options overridden by task-specific graph options
+            // get handed down
+            expect(secondTask.options).to.have.property('option1').that.equals('same for all');
+            expect(secondTask.options).to.have.property('option2')
+                .that.equals('overridden default option for test-2');
+            expect(secondTask.options).to.have.property('option3').that.equals(3);
+            expect(secondTask.options).to.have.property('overrideOption')
+                .that.equals('overridden for test-2');
+            expect(secondTask.options).to.not.have.property('optionNonExistant');
+
+            // These aren't in the inline definition, so this asserts that we didn't error
+            // out on them being missing from options during the requiredOptions check
+            expect(thirdTask.options).to.have.property('option1').that.equals('same for all');
+            expect(thirdTask.options).to.have.property('option2').that.equals('same for all');
+            // Assert that inline task definitions also work with graph options
+            expect(thirdTask.options).to.have.property('option3').that.equals(3);
+            expect(thirdTask.options).to.have.property('inlineOptionOverridden')
+                .that.equals('overridden inline option for test-3');
+            expect(thirdTask.options).to.not.have.property('optionNonExistant');
+        });
+    });
+
     it("should load a task graph data file", function() {
         var graph = this.TaskGraph.create(graphDefinition);
 
-        expect(graph.options.injectableName).to.equal(graphDefinition.injectableName);
-        expect(graph.options.tasks).to.deep.equal(graphDefinition.tasks);
-    });
-
-    it("should populate the dependencies of its tasks", function() {
-        var graphFactory = this.registry. fetchGraph('Graph.test');
-        var graph = graphFactory.create();
-
-        graph._populateTaskData();
-
-        expect(graph.tasks).to.be.ok;
-        expect(_.keys(graph.tasks)).to.have.length(2);
-
-        var taskWithDependencies,
-            taskWithNoDependencies;
-
-        _.forEach(graph.tasks, function(v) {
-            if (_.isEmpty(v.waitingOn)) {
-                taskWithNoDependencies = v;
-            } else {
-                taskWithDependencies = v;
-            }
-        });
-        expect(taskWithDependencies).to.be.ok;
-        expect(taskWithNoDependencies).to.be.ok;
-
-        expect(taskWithDependencies.instanceId).to.be.a.uuid;
-        expect(taskWithNoDependencies.instanceId).to.be.a.uuid;
-
-        expect(taskWithNoDependencies.waitingOn).to.be.empty;
-        expect(taskWithDependencies.waitingOn).to.have.property(
-            taskWithNoDependencies.instanceId
-        ).that.equals('finished');
+        expect(graph.definition.injectableName).to.equal(graphDefinition.injectableName);
+        expect(graph.definition.tasks).to.deep.equal(graphDefinition.tasks);
     });
 
     it("should find ready tasks", function() {
@@ -469,24 +622,6 @@ describe("Task Graph", function () {
         });
 
         graph.start();
-    });
-
-    it("should share context object between tasks and jobs", function() {
-        var graphFactory = this.registry.fetchGraph('Graph.test');
-        var context = { a: 1, b: 2 };
-        var graph = graphFactory.create({}, context);
-
-        // Don't worry about checking values because .to.equal checks by reference
-        expect(graph).to.have.property('context');
-        expect(graph.context).to.equal(context);
-
-        graph._populateTaskData();
-        _.forEach(graph.tasks, function(task) {
-            expect(task).to.have.property('parentContext');
-            expect(task.parentContext).to.equal(context);
-            task.instantiateJob();
-            expect(task.job.context).to.equal(context);
-        });
     });
 
     it("should serialize to a JSON object", function() {
