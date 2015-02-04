@@ -716,7 +716,29 @@ describe("Task Graph", function () {
         return expect(waterline.graphdefinitions.create(graphFactory.definition)).to.be.fulfilled;
     });
 
-    it("should have correct JSON in database records for serialized graph objects", function() {
+    // The first persist() will do a create, test that
+    it("should have correct JSON after first persist in database records for " +
+            "serialized graph objects", function() {
+        var waterline = this.injector.get('Services.Waterline');
+
+        var graphFactory = this.registry.fetchGraph('Graph.test');
+        var graph = graphFactory.create();
+        graph._populateTaskData();
+
+        var serialized = graph.serialize();
+
+        return graph.persist()
+        .then(function() {
+            return waterline.graphobjects.findOne({ instanceId: serialized.instanceId });
+        })
+        .then(function(record) {
+            literalCompare(record.deserialize(), serialized);
+        });
+    });
+
+    // Subsequent persist() calls will do an update, test that
+    it("should have correct JSON after subsequent persists in database records " +
+            "for serialized graph objects", function() {
         var waterline = this.injector.get('Services.Waterline');
 
         var graphFactory = this.registry.fetchGraph('Graph.test');
