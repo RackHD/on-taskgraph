@@ -439,6 +439,27 @@ describe("Task Graph", function () {
             ).that.equals('finished');
         });
 
+        it("should apply options to a graph via the registry factory", function() {
+            var graphFactory = this.registry. fetchGraph('Graph.test');
+            expect(graphFactory).to.have.property('create').with.length(2);
+            var options = {
+                defaults: {
+                    a: 1
+                }
+            };
+            var graph = graphFactory.create(options);
+            expect(graph.definition.options).to.deep.equal(options);
+        });
+
+        it("should apply context to a graph via the registry factory", function() {
+            var graphFactory = this.registry. fetchGraph('Graph.test');
+            var context = {
+                target: 'test'
+            };
+            var graph = graphFactory.create({}, context);
+            expect(graph.context).to.deep.equal(context);
+        });
+
         it("should apply options at the graph level to tasks", function() {
             var firstTask, secondTask, thirdTask;
 
