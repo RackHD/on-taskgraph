@@ -753,6 +753,18 @@ describe("Task Graph", function () {
         })
         .then(function(record) {
             literalCompare(record.deserialize(), serialized);
+        })
+        .then(function() {
+            graph.testattribute = 'test';
+            return graph.persist();
+        })
+        .then(function() {
+            return waterline.graphobjects.findOne({ instanceId: serialized.instanceId });
+        })
+        .then(function(record) {
+            expect(graph.serialize()).to.have.property('testattribute').that.equals('test');
+            expect(record.deserialize()).to.have.property('testattribute').that.equals('test');
+            literalCompare(record.deserialize(), graph.serialize());
         });
     });
 });
