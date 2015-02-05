@@ -16,7 +16,9 @@ var di = require('di'),
             require('./lib/task-graph-subscriptions'),
             require('./lib/loader'),
             require('./lib/scheduler'),
-            require('./lib/registry')
+            require('./lib/registry'),
+            require('./lib/stores/memory'),
+            require('./lib/stores/waterline')
         ])
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
@@ -28,7 +30,8 @@ taskGraphRunner.start()
         logger.info('Task Graph Runner Started.');
     })
     .catch(function(error) {
-        console.error(error.stack);
+        console.error(error.message || error.details);
+        console.error(error.stack || error.rawStack);
 //        logger.error('Task Graph Runner Startup Error.', { error: error });
 
         process.nextTick(function() {

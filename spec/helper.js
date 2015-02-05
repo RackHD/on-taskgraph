@@ -56,6 +56,31 @@ global.helper = {
         core.injectables,
         ])),
 
+    startCore: function() {
+        var config = helper.baseInjector.get('Services.Configuration');
+
+        config.set('mongo', {
+            adapter: 'mongo',
+            host: 'localhost',
+            port: 27017,
+            database: 'renasar-pxe-test',
+            user: '',
+            password: ''
+        });
+        return helper.baseInjector.get('Services.Core').start();
+    },
+
+    // Mocha doesn't read the waterline validation errors because they
+    // use rawStack instead of stack, so provide a convenience function to pass
+    // all errors through where there is a chance they could be waterline ones
+    handleError: function(error) {
+        if (error.code === 'E_VALIDATION') {
+            throw new Error("Validation error\n" + error.details + "\n" + error.rawStack);
+        } else {
+            throw error;
+        }
+    },
+
     startTaskGraphRunner: function(injector) {
         var config = injector.get('Services.Configuration');
 
