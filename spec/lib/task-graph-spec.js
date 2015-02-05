@@ -23,7 +23,7 @@ function literalCompare(objA, objB) {
 // object are Date objects, so do some manual conversion there.
 function deserializeJson(json) {
     _.forEach(json, function(v, k) {
-        if (k !== 'tasks') {
+        if (!_.contains(['tasks', 'finishedTasks', 'pendingTasks'], k)) {
             return;
         }
         _.forEach(v, function(_v, _k) {
@@ -32,10 +32,25 @@ function deserializeJson(json) {
                     v[_k].stats[__k] = new Date(__v);
                 }
             });
+
         });
     });
 }
 
+function cleanupTestDefinitions(self) {
+    return Q.all(_.map(self.testGraphs, function(graph) {
+        return self.registry.removeGraphDefinition(graph);
+    }))
+    .then(function() {
+        return Q.all(_.map(self.testTasks, function(task) {
+            return self.registry.removeTaskDefinition(task);
+        }));
+    })
+    .then(function() {
+        self.testTasks = [];
+        self.testGraphs = [];
+    });
+}
 
 describe("Task Graph", function () {
     di.annotate(testJobFactory, new di.Provide('Job.test'));
@@ -153,6 +168,13 @@ describe("Task Graph", function () {
     });
 
     describe("Validation", function() {
+        this.testTasks = [];
+        this.testGraphs = [];
+
+        afterEach(function() {
+            return cleanupTestDefinitions(this);
+        });
+
         it("should get a base task", function() {
             var graphFactory = this.registry.fetchGraphSync('Graph.test');
             var graph = graphFactory.create();
@@ -351,9 +373,22 @@ describe("Task Graph", function () {
                         self.TaskGraph.createRegistryObject);
             })
             .catch(function(e) {
+                self.testGraphs.push(graphDefinitionValid.injectableName);
+                self.testGraphs.push(graphDefinitionInvalid.injectableName);
+                self.testTasks = _.map([baseTask1, baseTask2, baseTask3,
+                                        testTask1, testTask2, testTask3], function(task) {
+                    return task.injectableName;
+                });
                 helper.handleError(e);
             })
             .then(function() {
+                self.testGraphs.push(graphDefinitionValid.injectableName);
+                self.testGraphs.push(graphDefinitionInvalid.injectableName);
+                self.testTasks = _.map([baseTask1, baseTask2, baseTask3,
+                                        testTask1, testTask2, testTask3], function(task) {
+                    return task.injectableName;
+                });
+
                 var graphFactory = self.registry.fetchGraphSync('Graph.testPropertiesValid');
                 var graph = graphFactory.create();
 
@@ -405,21 +440,32 @@ describe("Task Graph", function () {
             }).to.not.throw(Error);
         });
 
-        it("should validate all existing graph definition", function() {
+        it("should validate all existing graph definitions not using external options", function() {
             var self = this;
             return self.registry.fetchGraphDefinitionCatalog()
             .then(function(graphs) {
                 _.forEach(graphs, function(_graph) {
                     var graph = self.registry.fetchGraphSync(_graph.injectableName).create();
-                    expect(function() {
-                        graph.validate();
-                    }).to.not.throw(Error);
+                    if (_.isEmpty(_graph.options)) {
+                        expect(function() {
+                            graph.validate();
+                        }).to.not.throw(Error);
+                    }
                 });
             });
         });
+
+        it("should validate all existing graph definitions using external options");
     });
 
     describe("Object Construction", function() {
+        this.testTasks = [];
+        this.testGraphs = [];
+
+        afterEach(function() {
+            return cleanupTestDefinitions(this);
+        });
+
         it("should share context object between tasks and jobs", function() {
             var graphFactory = this.registry.fetchGraphSync('Graph.test');
             var context = { a: 1, b: 2 };
@@ -551,9 +597,11 @@ describe("Task Graph", function () {
             return this.loader.loadGraphs([graphDefinitionOptions],
                     this.TaskGraph.createRegistryObject)
             .catch(function(e) {
+                self.testGraphs.push(graphDefinitionOptions.injectableName);
                 helper.handleError(e);
             })
             .then(function() {
+                self.testGraphs.push(graphDefinitionOptions.injectableName);
                 var graphFactory = self.registry.fetchGraphSync('Graph.testGraphOptions');
                 var graph = graphFactory.create();
 
