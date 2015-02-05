@@ -11,9 +11,7 @@ override_dh_auto_configure:
 	# do nothing
 
 override_dh_auto_build:
-	rm -rf node_modules
-	npm install
-	npm prune --production
+	# do nothing
 
 override_dh_usrlocal:
 	# do nothing
