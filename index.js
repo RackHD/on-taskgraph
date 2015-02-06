@@ -17,6 +17,7 @@ var di = require('di'),
             require('./lib/loader'),
             require('./lib/scheduler'),
             require('./lib/registry'),
+            require('./lib/service-graph'),
             require('./lib/stores/memory'),
             require('./lib/stores/waterline')
         ])
