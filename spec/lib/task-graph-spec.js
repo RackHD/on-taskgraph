@@ -459,11 +459,58 @@ describe("Task Graph", function () {
     });
 
     describe("Object Construction", function() {
-        this.testTasks = [];
-        this.testGraphs = [];
+        before(function() {
+            this.testTasks = [];
+            this.testGraphs = [];
+        });
 
         afterEach(function() {
             return cleanupTestDefinitions(this);
+        });
+
+        it("should render uuids in definition options template values", function() {
+            var self = this;
+            var assert = self.injector.get('Assert');
+
+            var graphDefinitionRenderUuid = {
+                friendlyName: 'Test Render Uuid Graph',
+                injectableName: 'Graph.Test.RenderUuid',
+                options: {
+                    'test-render-task': {
+                        option1: '<%=uuid%>',
+                        option2: '<%=uuid%>',
+                        option3: '<%=uuid%>'
+                    },
+                },
+                tasks: [
+                    {
+                        label: 'test-render-task',
+                        taskName: 'Task.test'
+                    }
+                ]
+            };
+
+            return this.loader.loadGraphs([graphDefinitionRenderUuid],
+                    this.TaskGraph.createRegistryObject)
+            .catch(function(e) {
+                self.testGraphs.push(graphDefinitionRenderUuid.injectableName);
+                self.handleError(e);
+            })
+            .then(function() {
+                self.testGraphs.push(graphDefinitionRenderUuid.injectableName);
+                var graphFactory = self.registry.fetchGraphSync('Graph.Test.RenderUuid');
+                var graph = graphFactory.create({}, {});
+                graph._populateTaskData();
+
+                for (var taskId in graph.tasks) break; // jshint ignore: line
+
+                _.forEach(['option1', 'option2', 'option3'], function(option) {
+                    expect(function() {
+                        assert.uuid(graph.definition.options['test-render-task'][option]);
+                        assert.uuid(graph.tasks[taskId].options[option]);
+                    }).to.not.throw(Error);
+                });
+            });
         });
 
         it("should share context object between tasks and jobs", function() {
