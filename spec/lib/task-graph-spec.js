@@ -135,6 +135,7 @@ describe("Task Graph", function () {
                 helper.require('/lib/task-graph'),
                 helper.require('/lib/task-graph-runner'),
                 helper.require('/lib/task-graph-subscriptions'),
+                helper.require('/lib/service-graph'),
                 helper.require('/lib/loader'),
                 helper.require('/lib/scheduler'),
                 helper.require('/lib/registry'),
@@ -147,6 +148,10 @@ describe("Task Graph", function () {
         self.TaskGraph = self.injector.get('TaskGraph.TaskGraph');
         self.Task = self.injector.get('Task.Task');
         self.loader = self.injector.get('TaskGraph.DataLoader');
+
+        // Don't run service graphs on start in test
+        var serviceGraph = self.injector.get('TaskGraph.ServiceGraph');
+        serviceGraph.start = sinon.stub();
 
         return helper.startTaskGraphRunner(self.injector)
         .then(function() {
