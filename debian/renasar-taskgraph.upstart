@@ -1,6 +1,6 @@
 description "run the renasar taskgraph service"
 
-start on started mongodb
+start on (started rabbitmq-server and started mongodb)
 stop on runlevel [!2345]
 respawn
 
