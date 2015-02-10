@@ -31,7 +31,7 @@ describe("Scheduler", function() {
     var scheduler;
 
     describe("Scheduler object", function(){
-        before(function() {
+        before("before scheduler-spec", function() {
             injector = helper.baseInjector.createChild(
                 _.flatten([require('../../lib/scheduler')]));
 
@@ -95,7 +95,6 @@ describe("Scheduler", function() {
              scheduler.should.have.property('stop')
                 .that.is.a('function').with.length(0);
 
-
         });
     });
 
@@ -103,7 +102,7 @@ describe("Scheduler", function() {
         var uuid,
             taskProtocol;
 
-        beforeEach(function(){
+        beforeEach("beforeEach scheduler-spec", function(){
             injector = helper.baseInjector.createChild(
                 _.flatten([require('../../lib/scheduler')]));
 
