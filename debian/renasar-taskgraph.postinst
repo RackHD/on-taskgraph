@@ -2,4 +2,4 @@
 
 #DEBHELPER#
 
-service renasar-http stop
+service renasar-taskgraph stop
