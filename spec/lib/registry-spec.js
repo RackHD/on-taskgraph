@@ -15,7 +15,7 @@ function MockGraph(id) {
 }
 util.inherits(MockGraph, events.EventEmitter);
 
-before(function() {
+before("before registry-spec", function() {
     var self = this;
 
     self.injector = helper.baseInjector.createChild(
@@ -45,7 +45,7 @@ describe('Registry', function () {
         create: sinon.stub()
     };
 
-    beforeEach(function() {
+    beforeEach("beforeEach registry-spec", function() {
         var self = this;
         return Q.all([
             self.waterline.taskdefinitions.drop({}),
