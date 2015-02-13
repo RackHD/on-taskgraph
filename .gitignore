@@ -13,15 +13,19 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 xunit.xml
+checkstyle-result.xml
 
-# webstorm
-.idea
+#jsdoc
+docs
 
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
 build/Release
+
+#Config overrride
+overrides.json
 
 # Dependency directory
 # Commenting this out is preferred by some people, see
