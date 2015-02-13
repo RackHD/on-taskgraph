@@ -26,7 +26,7 @@ graph-based control flow mechanisms. For example, a typical graph consists of a 
 tasks, which themselves are essentially decorated functions. The graph definition specifies
 any context and/or option values that should be handed to these functions, and more importantly,
 it provides a mechanism for specifying when each task should be run. The most simple case is
-saying a task should be run only after a previous task has succeeded (essentially becoming a 
+saying a task should be run only after a previous task has succeeded (essentially becoming a
 state machine). More complex graphs may involve event based task running, or defining
 data/event channels that should exist between concurrently running tasks.
 
@@ -37,8 +37,8 @@ When running the renasar-http process, these are some common API commands you ca
 **Get available graphs**
 
 ```
-GET  
-/api/common/workflows/library  
+GET
+/api/common/workflows/library
 ```
 
 **Run a new graph against a node**
@@ -46,11 +46,11 @@ GET
 Find the graph definition you would like to use, and copy the top-level *injectableName* attribute
 
 ```
-POST  
-/api/common/nodes/<id>/workflows  
-{  
-    name: <graph name>  
-}  
+POST
+/api/common/nodes/<id>/workflows
+{
+    name: <graph name>
+}
 ```
 
 This will return a serialized graph object.
@@ -108,5 +108,7 @@ To run tests and get coverage for CI:
 
     # verify hint/style
     ./node_modules/.bin/jshint -c .jshintrc --reporter=checkstyle lib index.js > checkstyle-result.xml || true
-    ./node_modules/.bin/istanbul cover _mocha -- $(find spec -name '*-spec.js') -R xunit-file --require spec/helper.js
+    ./node_modules/.bin/istanbul cover -x "**/spec/**" _mocha -- $(find spec -name '*-spec.js') -R xunit-file --require spec/helper.js
     ./node_modules/.bin/istanbul report cobertura
+    # if you want HTML reports locally
+    ./node_modules/.bin/istanbul report html
