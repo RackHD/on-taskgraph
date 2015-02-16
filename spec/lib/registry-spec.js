@@ -189,4 +189,26 @@ describe('Registry', function () {
         var targetGraph = self.registry.fetchActiveGraphSync({ instanceId: 'testid1' });
         expect(targetGraph).to.equal(graph);
     });
+
+    it("should fetch graph history", function() {
+        this.registry.graphHistoryStore.getAll = sinon.stub();
+        this.registry.fetchGraphHistory({ testfilter: 1 });
+        expect(this.registry.graphHistoryStore.getAll).to.have.been.calledWith({ testfilter: 1 });
+    });
+
+    it("should fetch a task definition", function() {
+        this.registry.taskDefinitionStore.get = sinon.stub();
+        this.registry.fetchTaskDefinition('Test name');
+        expect(this.registry.taskDefinitionStore.get).to.have.been.calledWith('Test name');
+    });
+
+    it("should fetch a graph definition", function() {
+        this.registry.graphDefinitionStore.get = sinon.stub();
+        this.registry.fetchGraphDefinition('Test name');
+        expect(this.registry.graphDefinitionStore.get).to.have.been.calledWith('Test name');
+    });
+
+    it("should not fetch an active graph with no filter", function() {
+        expect(this.registry.fetchActiveGraphSync()).to.equal(undefined);
+    });
 });
