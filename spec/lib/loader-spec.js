@@ -9,7 +9,7 @@ var _ = require('lodash');
 
 describe(require('path').basename(__filename), function () {
     describe('definition loading', function() {
-        beforeEach("before registry-spec", function() {
+        beforeEach("before loader-spec", function() {
             this.injector = helper.baseInjector.createChild(
                 _.flatten([
                     helper.require('/lib/task-graph'),
@@ -44,16 +44,16 @@ describe(require('path').basename(__filename), function () {
                   implementsTask: 'Task.Base.Obm.Node',
                   options: { action: 'powerOn' } },
             ];
-            this.registry.fetchGraphDefinitionCatalog = sinon.promise().resolves(
+            this.registry.fetchGraphDefinitionCatalog = sinon.stub().resolves(
                     _.cloneDeep(this.graphCatalog));
-            this.registry.fetchTaskDefinitionCatalog = sinon.promise().resolves(
+            this.registry.fetchTaskDefinitionCatalog = sinon.stub().resolves(
                     _.cloneDeep(this.taskCatalog));
         });
 
         it('should load tasks and graphs on start', function() {
             var self = this;
-            self.loader.loadGraphs = sinon.promise().resolves(self.graphCatalog);
-            self.loader.loadTasks = sinon.promise().resolves(self.taskCatalog);
+            self.loader.loadGraphs = sinon.stub().resolves(self.graphCatalog);
+            self.loader.loadTasks = sinon.stub().resolves(self.taskCatalog);
             self.loader.graphData = _.cloneDeep(self.graphCatalog);
             self.loader.taskData = _.cloneDeep(self.taskCatalog);
 
@@ -84,13 +84,13 @@ describe(require('path').basename(__filename), function () {
 
             // Each object has a unique document in them, to test merge with
             self.registry.fetchTaskDefinitionCatalog =
-                sinon.promise().resolves(updatedRegistryTaskCatalog);
+                sinon.stub().resolves(updatedRegistryTaskCatalog);
             self.loader.taskData = _.cloneDeep(updatedTaskCatalog);
 
-            self.loader.loadTasks = sinon.promise().resolves([]);
+            self.loader.loadTasks = sinon.stub().resolves([]);
 
             self.loader.graphData = _.cloneDeep(self.graphCatalog);
-            self.loader.loadGraphs = sinon.promise().resolves(self.graphCatalog);
+            self.loader.loadGraphs = sinon.stub().resolves(self.graphCatalog);
 
             var expectedResults = self.taskCatalog;
             expectedResults.push(powerOffTask);
@@ -122,13 +122,13 @@ describe(require('path').basename(__filename), function () {
 
             // Each object has a unique document in them, to test merge with
             self.registry.fetchGraphDefinitionCatalog =
-                sinon.promise().resolves(updatedRegistryGraphCatalog);
+                sinon.stub().resolves(updatedRegistryGraphCatalog);
             self.loader.graphData = _.cloneDeep(updatedGraphCatalog);
 
-            self.loader.loadGraphs = sinon.promise().resolves([]);
+            self.loader.loadGraphs = sinon.stub().resolves([]);
 
             self.loader.taskData = _.cloneDeep(self.taskCatalog);
-            self.loader.loadTasks = sinon.promise().resolves(self.taskCatalog);
+            self.loader.loadTasks = sinon.stub().resolves(self.taskCatalog);
 
             var expectedResults = self.graphCatalog;
             expectedResults.push(powerOffGraph);

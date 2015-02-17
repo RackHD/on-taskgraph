@@ -2,29 +2,7 @@
 
 var path = require('path');
 
-/**
-*  set up global sinon for use as a spy and ensure initialized before
-*  invoking sinon-chai extension to chai.
-*/
-global.sinon = require('sinon');
-global.sinonPromise = require('sinon-promise')(global.sinon);
-
-/**
-*  set up global chai for testing
-*/
-global.chai = require('chai');
-global.chai.use(require("chai-as-promised"));
-global.chai.use(require("sinon-chai"));
-
-/**
-*  set up global expect for testing
-*/
-global.expect = chai.expect; // jshint ignore:line
-
-/**
-*  set up global should for testing
-*/
-global.should = chai.should(); // jshint ignore:line
+require('renasar-core/spec/helper');
 
 /**
 *  set up di for testing
