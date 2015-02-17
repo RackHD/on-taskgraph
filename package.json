@@ -35,10 +35,15 @@
     "rx": "^2.3.22"
   },
   "devDependencies": {
+    "chai": "^2.0.0",
+    "chai-as-promised": "^4.2.0",
     "istanbul": "^0.3.5",
     "jsdoc": "^3.3.0-alpha13",
     "jshint": "^2.5.11",
     "mocha": "^2.1.0",
+    "sinon": "^1.12.2",
+    "sinon-as-promised": "^2.0.3",
+    "sinon-chai": "^2.7.0",
     "supertest": "^0.15.0",
     "xunit-file": "0.0.6"
   }
