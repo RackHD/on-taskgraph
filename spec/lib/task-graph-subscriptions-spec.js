@@ -27,7 +27,7 @@ describe(require('path').basename(__filename), function () {
     it('should start', function() {
         var tgrProtocol = injector.get('Protocol.TaskGraphRunner');
         _.forEach(Object.getPrototypeOf(tgrProtocol), function(v, k) {
-            tgrProtocol[k] = sinon.promise().resolves({});
+            tgrProtocol[k] = sinon.stub().resolves({});
         });
 
         var subscriber = injector.get('TaskGraph.Subscriptions');
@@ -46,7 +46,7 @@ describe(require('path').basename(__filename), function () {
 
         var tgrProtocol = injector.get('Protocol.TaskGraphRunner');
         _.forEach(Object.getPrototypeOf(tgrProtocol), function(v, k) {
-            tgrProtocol[k] = sinon.promise().resolves({
+            tgrProtocol[k] = sinon.stub().resolves({
                 dispose: disposeStub
             });
         });

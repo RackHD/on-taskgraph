@@ -23,11 +23,11 @@ function mockRegistryFactory() {
         this.stopStub = stopStub;
     }
 
-    MockRegistry.prototype.fetchGraphDefinitionCatalog = sinon.promise().resolves([
+    MockRegistry.prototype.fetchGraphDefinitionCatalog = sinon.stub().resolves([
         { injectableName: 'Test Service Graph', serviceGraph: true }
     ]);
 
-    MockRegistry.prototype.fetchGraphHistory = sinon.promise().resolves([
+    MockRegistry.prototype.fetchGraphHistory = sinon.stub().resolves([
         { instanceId: serviceGraphUuid, injectableName: 'Test Service Graph', serviceGraph: true }
     ]);
 
@@ -81,7 +81,7 @@ describe(require('path').basename(__filename), function () {
 
     it('should start service graphs without options.instanceId if there are no ' +
             'pre-existing instances', function() {
-        registry.fetchGraphHistory = sinon.promise().resolves([]);
+        registry.fetchGraphHistory = sinon.stub().resolves([]);
         return serviceGraph.start()
         .then(function() {
             expect(registry.createStub).to.have.been.calledWith({}, {});
@@ -130,7 +130,7 @@ describe(require('path').basename(__filename), function () {
     });
 
     it('should start multiple service graphs', function() {
-        registry.fetchGraphDefinitionCatalog = sinon.promise().resolves([
+        registry.fetchGraphDefinitionCatalog = sinon.stub().resolves([
             { injectableName: 'Test Service Graph 1', serviceGraph: true },
             { injectableName: 'Test Service Graph 2', serviceGraph: true },
             { injectableName: 'Test Service Graph 3', serviceGraph: true }
@@ -150,7 +150,7 @@ describe(require('path').basename(__filename), function () {
     });
 
     it('should stop multiple service graphs', function() {
-        registry.fetchGraphDefinitionCatalog = sinon.promise().resolves([
+        registry.fetchGraphDefinitionCatalog = sinon.stub().resolves([
             { injectableName: 'Test Service Graph 1', serviceGraph: true },
             { injectableName: 'Test Service Graph 2', serviceGraph: true },
             { injectableName: 'Test Service Graph 3', serviceGraph: true }
