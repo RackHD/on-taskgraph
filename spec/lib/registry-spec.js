@@ -4,10 +4,8 @@
 'use strict';
 
 require('../helper');
-var _ = require('lodash'),
-    util = require('util'),
-    events = require('events'),
-    Q = require('q');
+var util = require('util'),
+    events = require('events');
 
 function MockGraph(id) {
     this.instanceId = id;

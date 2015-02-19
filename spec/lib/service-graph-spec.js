@@ -6,7 +6,6 @@
 require('../helper');
 
 var di = require('di'),
-    _ = require('lodash'),
     uuid = require('node-uuid');
 
 

@@ -4,8 +4,6 @@
 'use strict';
 
 require('../helper');
-var _ = require('lodash');
-
 
 describe(require('path').basename(__filename), function () {
     describe('definition loading', function() {
