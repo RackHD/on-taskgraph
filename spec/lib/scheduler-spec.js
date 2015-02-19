@@ -4,7 +4,6 @@
 'use strict';
 
 require('../helper');
-var _ = require('lodash');
 
 /*var di = require('di'),
     _ = require('lodash'),

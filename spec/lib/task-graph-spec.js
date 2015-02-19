@@ -5,8 +5,6 @@
 require('../helper');
 
 var di = require('di');
-var _ = require('lodash');
-var Q = require('q');
 var tasks = require('renasar-tasks');
 
 function literalCompare(objA, objB) {
