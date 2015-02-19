@@ -1,0 +1,82 @@
+{
+    "maxerr"        : 50,     //Max errors before it fails the build
+
+    //Enforcing
+    "bitwise" : true,
+    "camelcase" : true,
+    "curly" : true,
+    "es3" : false,
+    "eqeqeq" : true,
+    "forin" : true,
+    "freeze" : true,
+    "immed" : true,
+    "indent" : 4,
+    "latedef" : "nofunc",        //allows function definitions to be ignored
+    "maxcomplexity" : false,
+    "maxdepth" : false,
+    "maxlen" : 100,
+    "maxparams" : false,
+    "maxstatements" : false,
+    "newcap" : true,
+    "noarg" : true,
+    "noempty" : true,
+    "nonbsp" : true,
+    "nonew" : true,
+    "plusplus" : true,
+    "quotmark" : false,
+    "strict" : true,
+    "trailing" : true,
+    "undef" : true,
+    "unused" : true,
+
+    //Relaxing
+    "asi" : false,
+    "boss" : false,
+    "debug" : false,
+    "eqnull" : false,
+    "es5" : false,
+    "esnext" : false,
+    "moz" : false,
+    "evil" : false,
+    "expr" : true,     // true: Tolerate `ExpressionStatement` as Programs
+    "funcscope" : false,
+    "globalstrict" : false,
+    "iterator" : false,
+    "lastsemic" : false,
+    "laxbreak" : false,
+    "laxcomma" : false,
+    "loopfunc" : false,
+    "multistr" : false,
+    "noyield" : false,
+    "notypeof" : false,
+    "proto" : false,
+    "scripturl" : false,
+    "shadow" : false,
+    "sub" : false,
+    "supernew" : false,
+    "validthis" : false,
+
+    // Environments
+    "node": true,
+
+    //Custom Globals
+    "globals" : {
+        "describe": false,
+        "it": false,
+        "before": false,
+        "beforeEach": false,
+        "after": false,
+        "afterEach": false,
+        "expect": false,
+        "should": false,
+        "request": false,
+        "helper": false,
+        "chai": false,
+        "sinon": false,
+        "dihelper": false,
+        "_": false,
+        "Q": false,
+        "core": false
+    }
+}
+
