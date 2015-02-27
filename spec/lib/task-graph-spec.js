@@ -4,53 +4,53 @@
 
 require('../helper');
 
-var di = require('di');
-var tasks = require('renasar-tasks');
-
-function literalCompare(objA, objB) {
-    _.forEach(objA, function(v, k) {
-        if (typeof v === 'object' && !(v instanceof Date)) {
-            literalCompare(v, objB[k]);
-        } else {
-            expect(v).to.deep.equal(objB[k]);
-        }
-    });
-}
-
-// The only values currently that won't compare accurately from JSON to
-// object are Date objects, so do some manual conversion there.
-function deserializeJson(json) {
-    _.forEach(json, function(v, k) {
-        if (!_.contains(['tasks', 'finishedTasks', 'pendingTasks'], k)) {
-            return;
-        }
-        _.forEach(v, function(_v, _k) {
-            _.forEach(_v.stats, function(__v, __k) {
-                if (__v) {
-                    v[_k].stats[__k] = new Date(__v);
-                }
-            });
-
-        });
-    });
-}
-
-function cleanupTestDefinitions(self) {
-    return Q.all(_.map(self.testGraphs, function(graph) {
-        return self.registry.removeGraphDefinition(graph);
-    }))
-    .then(function() {
-        return Q.all(_.map(self.testTasks, function(task) {
-            return self.registry.removeTaskDefinition(task);
-        }));
-    })
-    .then(function() {
-        self.testTasks = [];
-        self.testGraphs = [];
-    });
-}
-
 describe("Task Graph", function () {
+    var di = require('di');
+    var tasks = require('renasar-tasks');
+
+    function literalCompare(objA, objB) {
+        _.forEach(objA, function(v, k) {
+            if (typeof v === 'object' && !(v instanceof Date)) {
+                literalCompare(v, objB[k]);
+            } else {
+                expect(v).to.deep.equal(objB[k]);
+            }
+        });
+    }
+
+    // The only values currently that won't compare accurately from JSON to
+    // object are Date objects, so do some manual conversion there.
+    function deserializeJson(json) {
+        _.forEach(json, function(v, k) {
+            if (!_.contains(['tasks', 'finishedTasks', 'pendingTasks'], k)) {
+                return;
+            }
+            _.forEach(v, function(_v, _k) {
+                _.forEach(_v.stats, function(__v, __k) {
+                    if (__v) {
+                        v[_k].stats[__k] = new Date(__v);
+                    }
+                });
+
+            });
+        });
+    }
+
+    function cleanupTestDefinitions(self) {
+        return Q.all(_.map(self.testGraphs, function(graph) {
+            return self.registry.removeGraphDefinition(graph);
+        }))
+        .then(function() {
+            return Q.all(_.map(self.testTasks, function(task) {
+                return self.registry.removeTaskDefinition(task);
+            }));
+        })
+        .then(function() {
+            self.testTasks = [];
+            self.testGraphs = [];
+        });
+    }
+
     di.annotate(testJobFactory, new di.Provide('Job.test'));
     di.annotate(testJobFactory, new di.Inject('Job.Base', 'Logger', 'Util', 'uuid'));
     function testJobFactory(BaseJob, Logger, util, uuid) {
@@ -67,7 +67,7 @@ describe("Task Graph", function () {
             var self = this;
             console.log("RUNNING TEST JOB");
             console.log("TEST JOB OPTIONS: " + self.options);
-            Q.delay(500).then(function() {
+            setTimeout(function() {
                 self._done();
             });
         };
@@ -123,7 +123,7 @@ describe("Task Graph", function () {
         ]
     };
 
-    before(function(done) {
+    before(function() {
         var self = this;
 
         self.timeout(5000);
@@ -157,9 +157,6 @@ describe("Task Graph", function () {
         })
         .then(function() {
             return self.loader.loadGraphs([graphDefinition], self.TaskGraph.createRegistryObject);
-        })
-        .then(function() {
-            done();
         })
         .catch(function(e) {
             helper.handleError(e);
@@ -756,6 +753,23 @@ describe("Task Graph", function () {
 
         graph.on(graph.completeEventString, function() {
             done();
+        });
+
+        graph.start();
+    });
+
+    it("should change status to succeeded on success", function(done) {
+        this.timeout(5000);
+        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graph = graphFactory.create();
+
+        graph.on(graph.completeEventString, function() {
+            try {
+                expect(graph._status).to.equal('succeeded');
+                done();
+            } catch (e) {
+                done(e);
+            }
         });
 
         graph.start();
