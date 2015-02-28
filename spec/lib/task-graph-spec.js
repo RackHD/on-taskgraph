@@ -2,11 +2,12 @@
 
 'use strict';
 
-require('../helper');
-
 describe("Task Graph", function () {
-    var di = require('di');
-    var tasks = require('renasar-tasks');
+    var runner;
+    var registry;
+    var TaskGraph;
+    var Task;
+    var loader;
 
     function literalCompare(objA, objB) {
         _.forEach(objA, function(v, k) {
@@ -38,11 +39,11 @@ describe("Task Graph", function () {
 
     function cleanupTestDefinitions(self) {
         return Q.all(_.map(self.testGraphs, function(graph) {
-            return self.registry.removeGraphDefinition(graph);
+            return registry.removeGraphDefinition(graph);
         }))
         .then(function() {
             return Q.all(_.map(self.testTasks, function(task) {
-                return self.registry.removeTaskDefinition(task);
+                return registry.removeTaskDefinition(task);
             }));
         })
         .then(function() {
@@ -51,8 +52,6 @@ describe("Task Graph", function () {
         });
     }
 
-    di.annotate(testJobFactory, new di.Provide('Job.test'));
-    di.annotate(testJobFactory, new di.Inject('Job.Base', 'Logger', 'Util', 'uuid'));
     function testJobFactory(BaseJob, Logger, util, uuid) {
         var logger = Logger.initialize(testJobFactory);
         function TestJob(options, context, taskId) {
@@ -125,38 +124,47 @@ describe("Task Graph", function () {
 
     before(function() {
         var self = this;
+        var tasks = require('renasar-tasks');
 
-        self.timeout(5000);
-        self.injector = helper.baseInjector.createChild(
-            _.flatten([
-                tasks.injectables,
-                helper.require('/lib/task-graph'),
-                helper.require('/lib/task-graph-runner'),
-                helper.require('/lib/task-graph-subscriptions'),
-                helper.require('/lib/service-graph'),
-                helper.require('/lib/loader'),
-                helper.require('/lib/scheduler'),
-                helper.require('/lib/registry'),
-                helper.require('/lib/stores/waterline'),
-                helper.require('/lib/stores/memory'),
-                testJobFactory
-            ])
-        );
-        self.registry = self.injector.get('TaskGraph.Registry');
-        self.TaskGraph = self.injector.get('TaskGraph.TaskGraph');
-        self.Task = self.injector.get('Task.Task');
-        self.loader = self.injector.get('TaskGraph.DataLoader');
+        self.timeout(10000);
+        helper.setupInjector(_.flatten([
+            tasks.injectables,
+            helper.require('/lib/task-graph'),
+            helper.require('/lib/task-graph-runner'),
+            helper.require('/lib/task-graph-subscriptions'),
+            helper.require('/lib/service-graph'),
+            helper.require('/lib/loader'),
+            helper.require('/lib/scheduler'),
+            helper.require('/lib/registry'),
+            helper.require('/lib/stores/waterline'),
+            helper.require('/lib/stores/memory'),
+            helper.di.overrideInjection(testJobFactory, 'Job.test',
+                ['Job.Base', 'Logger', 'Util', 'uuid'])
+        ]));
+
+        helper.setupTestConfig();
+
+        var Logger = helper.injector.get('Logger');
+        Logger.prototype.log = function(level, message, obj) {
+            console.log(message, obj);
+        };
+
+        runner = helper.injector.get('TaskGraph.Runner');
+        registry = helper.injector.get('TaskGraph.Registry');
+        TaskGraph = helper.injector.get('TaskGraph.TaskGraph');
+        Task = helper.injector.get('Task.Task');
+        loader = helper.injector.get('TaskGraph.DataLoader');
 
         // Don't run service graphs on start in test
-        var serviceGraph = self.injector.get('TaskGraph.ServiceGraph');
+        var serviceGraph = helper.injector.get('TaskGraph.ServiceGraph');
         serviceGraph.start = sinon.stub();
 
-        return helper.startTaskGraphRunner(self.injector)
+        return runner.start()
         .then(function() {
-            return self.loader.loadTasks([baseTask, testTask], self.Task.createRegistryObject);
+            return loader.loadTasks([baseTask, testTask], Task.createRegistryObject);
         })
         .then(function() {
-            return self.loader.loadGraphs([graphDefinition], self.TaskGraph.createRegistryObject);
+            return loader.loadGraphs([graphDefinition], TaskGraph.createRegistryObject);
         })
         .catch(function(e) {
             helper.handleError(e);
@@ -164,7 +172,7 @@ describe("Task Graph", function () {
     });
 
     after(function() {
-        // return this.injector.get('TaskGraph.Runner').stop();
+        return runner.stop();
     });
 
     describe("Validation", function() {
@@ -176,11 +184,11 @@ describe("Task Graph", function () {
         });
 
         it("should get a base task", function() {
-            var graphFactory = this.registry.fetchGraphSync('Graph.test');
+            var graphFactory = registry.fetchGraphSync('Graph.test');
             var graph = graphFactory.create();
 
             var firstTask = graph.definition.tasks[0];
-            var taskDefinition = this.registry.fetchTaskSync(firstTask.taskName).definition;
+            var taskDefinition = registry.fetchTaskSync(firstTask.taskName).definition;
 
             var baseTaskDefinition = graph._getBaseTask(taskDefinition);
 
@@ -189,11 +197,11 @@ describe("Task Graph", function () {
         });
 
         it("should validate a task definition", function() {
-            var graphFactory = this.registry.fetchGraphSync('Graph.test');
+            var graphFactory = registry.fetchGraphSync('Graph.test');
             var graph = graphFactory.create();
 
             var firstTask = graph.definition.tasks[0];
-            var taskDefinition = this.registry.fetchTaskSync(firstTask.taskName).definition;
+            var taskDefinition = registry.fetchTaskSync(firstTask.taskName).definition;
 
             expect(function() {
                 graph._validateTaskDefinition(taskDefinition);
@@ -364,13 +372,13 @@ describe("Task Graph", function () {
                     }
                 ]
             };
-            return self.loader.loadTasks([
+            return loader.loadTasks([
                     baseTask1, baseTask2, baseTask3,
                     testTask1, testTask2, testTask3
-                ], self.Task.createRegistryObject)
+                ], Task.createRegistryObject)
             .then(function() {
-                return self.loader.loadGraphs([graphDefinitionValid, graphDefinitionInvalid],
-                        self.TaskGraph.createRegistryObject);
+                return loader.loadGraphs([graphDefinitionValid, graphDefinitionInvalid],
+                        TaskGraph.createRegistryObject);
             })
             .catch(function(e) {
                 self.testGraphs.push(graphDefinitionValid.injectableName);
@@ -389,11 +397,11 @@ describe("Task Graph", function () {
                     return task.injectableName;
                 });
 
-                var graphFactory = self.registry.fetchGraphSync('Graph.testPropertiesValid');
+                var graphFactory = registry.fetchGraphSync('Graph.testPropertiesValid');
                 var graph = graphFactory.create();
 
                 var firstTask = graph.definition.tasks[0];
-                var taskDefinition = self.registry.fetchTaskSync(firstTask.taskName).definition;
+                var taskDefinition = registry.fetchTaskSync(firstTask.taskName).definition;
 
                 var context = {};
                 expect(function() {
@@ -403,16 +411,16 @@ describe("Task Graph", function () {
                     .that.deep.equals(taskDefinition.properties);
 
                 var secondTask = graph.definition.tasks[1];
-                var taskDefinition2 = self.registry.fetchTaskSync(secondTask.taskName).definition;
+                var taskDefinition2 = registry.fetchTaskSync(secondTask.taskName).definition;
                 expect(function() {
                     graph._validateProperties(taskDefinition2, context);
                 }).to.not.throw(Error);
 
-                graphFactory = self.registry.fetchGraphSync('Graph.testPropertiesInvalid');
+                graphFactory = registry.fetchGraphSync('Graph.testPropertiesInvalid');
                 var invalidGraph = graphFactory.create();
 
                 var thirdTask = invalidGraph.definition.tasks[2];
-                taskDefinition = self.registry.fetchTaskSync(thirdTask.taskName).definition;
+                taskDefinition = registry.fetchTaskSync(thirdTask.taskName).definition;
 
                 context = {};
                 expect(function() {
@@ -421,10 +429,10 @@ describe("Task Graph", function () {
 
                 _.forEach([baseTask1, baseTask2, baseTask3,
                             testTask1, testTask2, testTask3], function(task) {
-                    self.registry.removeTaskSync(task.injectableName);
+                    registry.removeTaskSync(task.injectableName);
                 });
                 _.forEach([graphDefinitionValid, graphDefinitionInvalid], function(graph) {
-                    self.registry.removeGraphSync(graph.injectableName);
+                    registry.removeGraphSync(graph.injectableName);
                 });
             }).catch(function(e) {
                 helper.handleError(e);
@@ -432,7 +440,7 @@ describe("Task Graph", function () {
         });
 
         it("should validate a graph", function() {
-            var graphFactory = this.registry.fetchGraphSync('Graph.test');
+            var graphFactory = registry.fetchGraphSync('Graph.test');
             var graph = graphFactory.create();
 
             expect(function() {
@@ -441,11 +449,10 @@ describe("Task Graph", function () {
         });
 
         it("should validate all existing graph definitions not using external options", function() {
-            var self = this;
-            return self.registry.fetchGraphDefinitionCatalog()
+            return registry.fetchGraphDefinitionCatalog()
             .then(function(graphs) {
                 _.forEach(graphs, function(_graph) {
-                    var graph = self.registry.fetchGraphSync(_graph.injectableName).create();
+                    var graph = registry.fetchGraphSync(_graph.injectableName).create();
                     if (_.isEmpty(_graph.options)) {
                         expect(function() {
                             graph.validate();
@@ -470,7 +477,7 @@ describe("Task Graph", function () {
 
         it("should render uuids in definition options template values", function() {
             var self = this;
-            var assert = self.injector.get('Assert');
+            var assert = helper.injector.get('Assert');
 
             var graphDefinitionRenderUuid = {
                 friendlyName: 'Test Render Uuid Graph',
@@ -490,15 +497,15 @@ describe("Task Graph", function () {
                 ]
             };
 
-            return this.loader.loadGraphs([graphDefinitionRenderUuid],
-                    this.TaskGraph.createRegistryObject)
+            return loader.loadGraphs([graphDefinitionRenderUuid],
+                    TaskGraph.createRegistryObject)
             .catch(function(e) {
                 self.testGraphs.push(graphDefinitionRenderUuid.injectableName);
-                self.handleError(e);
+                helper.handleError(e);
             })
             .then(function() {
                 self.testGraphs.push(graphDefinitionRenderUuid.injectableName);
-                var graphFactory = self.registry.fetchGraphSync('Graph.Test.RenderUuid');
+                var graphFactory = registry.fetchGraphSync('Graph.Test.RenderUuid');
                 var graph = graphFactory.create({}, {});
                 graph._populateTaskData();
 
@@ -514,7 +521,7 @@ describe("Task Graph", function () {
         });
 
         it("should share context object between tasks and jobs", function() {
-            var graphFactory = this.registry.fetchGraphSync('Graph.test');
+            var graphFactory = registry.fetchGraphSync('Graph.test');
             var context = { a: 1, b: 2 };
             var graph = graphFactory.create({}, context);
 
@@ -532,7 +539,7 @@ describe("Task Graph", function () {
         });
 
         it("should populate the dependencies of its tasks", function() {
-            var graphFactory = this.registry. fetchGraphSync('Graph.test');
+            var graphFactory = registry. fetchGraphSync('Graph.test');
             var graph = graphFactory.create();
 
             graph._populateTaskData();
@@ -563,7 +570,7 @@ describe("Task Graph", function () {
         });
 
         it("should apply options to a graph via the registry factory", function() {
-            var graphFactory = this.registry. fetchGraphSync('Graph.test');
+            var graphFactory = registry. fetchGraphSync('Graph.test');
             expect(graphFactory).to.have.property('create').with.length(2);
             var options = {
                 defaults: {
@@ -575,7 +582,7 @@ describe("Task Graph", function () {
         });
 
         it("should apply context to a graph via the registry factory", function() {
-            var graphFactory = this.registry. fetchGraphSync('Graph.test');
+            var graphFactory = registry. fetchGraphSync('Graph.test');
             var context = {
                 target: 'test'
             };
@@ -641,15 +648,15 @@ describe("Task Graph", function () {
                 ]
             };
 
-            return this.loader.loadGraphs([graphDefinitionOptions],
-                    this.TaskGraph.createRegistryObject)
+            return loader.loadGraphs([graphDefinitionOptions],
+                    TaskGraph.createRegistryObject)
             .catch(function(e) {
                 self.testGraphs.push(graphDefinitionOptions.injectableName);
                 helper.handleError(e);
             })
             .then(function() {
                 self.testGraphs.push(graphDefinitionOptions.injectableName);
-                var graphFactory = self.registry.fetchGraphSync('Graph.testGraphOptions');
+                var graphFactory = registry.fetchGraphSync('Graph.testGraphOptions');
                 var graph = graphFactory.create();
 
                 // If options will be filled in by the graph, make sure validate
@@ -709,14 +716,14 @@ describe("Task Graph", function () {
     });
 
     it("should load a task graph data file", function() {
-        var graph = this.TaskGraph.create(graphDefinition);
+        var graph = TaskGraph.create(graphDefinition);
 
         expect(graph.definition.injectableName).to.equal(graphDefinition.injectableName);
         expect(graph.definition.tasks).to.deep.equal(graphDefinition.tasks);
     });
 
     it("should find ready tasks", function() {
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
 
@@ -747,8 +754,8 @@ describe("Task Graph", function () {
     });
 
     it("should run tasks", function(done) {
-        this.timeout(5000);
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        this.timeout(10000);
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
 
         graph.on(graph.completeEventString, function() {
@@ -759,8 +766,8 @@ describe("Task Graph", function () {
     });
 
     it("should change status to succeeded on success", function(done) {
-        this.timeout(5000);
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        this.timeout(10000);
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
 
         graph.on(graph.completeEventString, function() {
@@ -776,7 +783,7 @@ describe("Task Graph", function () {
     });
 
     it("should serialize to a JSON object", function() {
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
 
@@ -784,7 +791,7 @@ describe("Task Graph", function () {
     });
 
     it("should serialize a graph with a target as a linked node", function() {
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create({}, { target: '1234' });
         graph._populateTaskData();
 
@@ -794,7 +801,7 @@ describe("Task Graph", function () {
     });
 
     it("should serialize a graph with a nodeId option as a linked node", function() {
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create({ nodeId: '4321' }, {});
         graph._populateTaskData();
 
@@ -804,7 +811,7 @@ describe("Task Graph", function () {
     });
 
     it("should serialize a graph with both a target and nodeId as a linked node", function() {
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create({ nodeId: '1234' }, { target: '1234' });
         graph._populateTaskData();
 
@@ -814,7 +821,7 @@ describe("Task Graph", function () {
     });
 
     it("should serialize a graph with a nodeId option as a linked node", function() {
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create({ nodeId: '4321' }, { target: '1234' });
         graph._populateTaskData();
 
@@ -825,7 +832,7 @@ describe("Task Graph", function () {
     });
 
     it("should serialize to a JSON string", function() {
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
 
@@ -844,9 +851,9 @@ describe("Task Graph", function () {
     });
 
     it("should create a database record for a graph object", function() {
-        var waterline = this.injector.get('Services.Waterline');
+        var waterline = helper.injector.get('Services.Waterline');
 
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
 
@@ -858,9 +865,9 @@ describe("Task Graph", function () {
     });
 
     it("should create a database record for a graph definition", function() {
-        var waterline = this.injector.get('Services.Waterline');
+        var waterline = helper.injector.get('Services.Waterline');
 
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
 
         expect(waterline.graphdefinitions).to.be.ok;
         expect(waterline.graphdefinitions.create).to.be.a.function;
@@ -870,9 +877,9 @@ describe("Task Graph", function () {
     // The first persist() will do a create, test that
     it("should have correct JSON after first persist in database records for " +
             "serialized graph objects", function() {
-        var waterline = this.injector.get('Services.Waterline');
+        var waterline = helper.injector.get('Services.Waterline');
 
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
 
@@ -890,9 +897,9 @@ describe("Task Graph", function () {
     // Subsequent persist() calls will do an update, test that
     it("should have correct JSON after subsequent persists in database records " +
             "for serialized graph objects", function() {
-        var waterline = this.injector.get('Services.Waterline');
+        var waterline = helper.injector.get('Services.Waterline');
 
-        var graphFactory = this.registry.fetchGraphSync('Graph.test');
+        var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
         graph._populateTaskData();
 

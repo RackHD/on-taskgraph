@@ -42,19 +42,18 @@ function mockRegistryFactory() {
 }
 
 describe(require('path').basename(__filename), function () {
-    var injector,
-        serviceGraph,
-        registry;
+    var serviceGraph;
+    var registry;
 
     beforeEach(function() {
-        injector = helper.baseInjector.createChild(
+        helper.setupInjector(
             _.flatten([
                 mockRegistryFactory,
                 helper.require('/lib/service-graph')
             ])
         );
-        serviceGraph = injector.get('TaskGraph.ServiceGraph');
-        registry = injector.get('TaskGraph.Registry');
+        serviceGraph = helper.injector.get('TaskGraph.ServiceGraph');
+        registry = helper.injector.get('TaskGraph.Registry');
     });
 
     it('should find service graphs and start them', function() {

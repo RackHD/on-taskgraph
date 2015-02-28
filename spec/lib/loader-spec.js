@@ -3,24 +3,28 @@
 
 'use strict';
 
-require('../helper');
-
 describe(require('path').basename(__filename), function () {
+    var loader;
+    var registry;
+
+    before(function() {
+        helper.setupInjector(
+            _.flatten([
+                helper.require('/lib/task-graph'),
+                helper.require('/lib/scheduler'),
+                helper.require('/lib/registry'),
+                helper.require('/lib/loader'),
+                helper.require('/lib/stores/waterline'),
+                helper.require('/lib/stores/memory'),
+                require('renasar-tasks').injectables
+            ])
+        );
+    });
+
     describe('definition loading', function() {
         beforeEach("before loader-spec", function() {
-            this.injector = helper.baseInjector.createChild(
-                _.flatten([
-                    helper.require('/lib/task-graph'),
-                    helper.require('/lib/scheduler'),
-                    helper.require('/lib/registry'),
-                    helper.require('/lib/loader'),
-                    helper.require('/lib/stores/waterline'),
-                    helper.require('/lib/stores/memory'),
-                    require('renasar-tasks').injectables
-                ])
-            );
-            this.loader = this.injector.get('TaskGraph.DataLoader');
-            this.registry = this.injector.get('TaskGraph.Registry');
+            loader = helper.injector.get('TaskGraph.DataLoader');
+            registry = helper.injector.get('TaskGraph.Registry');
 
             this.graphCatalog = [
                 { injectableName: 'Graph.Reboot.Node',
@@ -42,23 +46,23 @@ describe(require('path').basename(__filename), function () {
                   implementsTask: 'Task.Base.Obm.Node',
                   options: { action: 'powerOn' } },
             ];
-            this.registry.fetchGraphDefinitionCatalog = sinon.stub().resolves(
+            registry.fetchGraphDefinitionCatalog = sinon.stub().resolves(
                     _.cloneDeep(this.graphCatalog));
-            this.registry.fetchTaskDefinitionCatalog = sinon.stub().resolves(
+            registry.fetchTaskDefinitionCatalog = sinon.stub().resolves(
                     _.cloneDeep(this.taskCatalog));
         });
 
         it('should load tasks and graphs on start', function() {
             var self = this;
-            self.loader.loadGraphs = sinon.stub().resolves(self.graphCatalog);
-            self.loader.loadTasks = sinon.stub().resolves(self.taskCatalog);
-            self.loader.graphData = _.cloneDeep(self.graphCatalog);
-            self.loader.taskData = _.cloneDeep(self.taskCatalog);
+            loader.loadGraphs = sinon.stub().resolves(self.graphCatalog);
+            loader.loadTasks = sinon.stub().resolves(self.taskCatalog);
+            loader.graphData = _.cloneDeep(self.graphCatalog);
+            loader.taskData = _.cloneDeep(self.taskCatalog);
 
-            return self.loader.start()
+            return loader.start()
             .then(function() {
-                expect(self.loader.loadGraphs.calledWith(self.graphCatalog)).to.equal(true);
-                expect(self.loader.loadTasks.calledWith(self.taskCatalog)).to.equal(true);
+                expect(loader.loadGraphs.calledWith(self.graphCatalog)).to.equal(true);
+                expect(loader.loadTasks.calledWith(self.taskCatalog)).to.equal(true);
             });
         });
 
@@ -81,22 +85,22 @@ describe(require('path').basename(__filename), function () {
             updatedRegistryTaskCatalog.push(pxeTask);
 
             // Each object has a unique document in them, to test merge with
-            self.registry.fetchTaskDefinitionCatalog =
+            registry.fetchTaskDefinitionCatalog =
                 sinon.stub().resolves(updatedRegistryTaskCatalog);
-            self.loader.taskData = _.cloneDeep(updatedTaskCatalog);
+            loader.taskData = _.cloneDeep(updatedTaskCatalog);
 
-            self.loader.loadTasks = sinon.stub().resolves([]);
+            loader.loadTasks = sinon.stub().resolves([]);
 
-            self.loader.graphData = _.cloneDeep(self.graphCatalog);
-            self.loader.loadGraphs = sinon.stub().resolves(self.graphCatalog);
+            loader.graphData = _.cloneDeep(self.graphCatalog);
+            loader.loadGraphs = sinon.stub().resolves(self.graphCatalog);
 
             var expectedResults = self.taskCatalog;
             expectedResults.push(powerOffTask);
             expectedResults.push(pxeTask);
 
-            return self.loader.start()
+            return loader.start()
             .then(function() {
-                expect(self.loader.loadTasks.calledWith(expectedResults)).to.equal(true);
+                expect(loader.loadTasks.calledWith(expectedResults)).to.equal(true);
             });
         });
 
@@ -119,22 +123,22 @@ describe(require('path').basename(__filename), function () {
             updatedRegistryGraphCatalog.push(pxeGraph);
 
             // Each object has a unique document in them, to test merge with
-            self.registry.fetchGraphDefinitionCatalog =
+            registry.fetchGraphDefinitionCatalog =
                 sinon.stub().resolves(updatedRegistryGraphCatalog);
-            self.loader.graphData = _.cloneDeep(updatedGraphCatalog);
+            loader.graphData = _.cloneDeep(updatedGraphCatalog);
 
-            self.loader.loadGraphs = sinon.stub().resolves([]);
+            loader.loadGraphs = sinon.stub().resolves([]);
 
-            self.loader.taskData = _.cloneDeep(self.taskCatalog);
-            self.loader.loadTasks = sinon.stub().resolves(self.taskCatalog);
+            loader.taskData = _.cloneDeep(self.taskCatalog);
+            loader.loadTasks = sinon.stub().resolves(self.taskCatalog);
 
             var expectedResults = self.graphCatalog;
             expectedResults.push(powerOffGraph);
             expectedResults.push(pxeGraph);
 
-            return self.loader.start()
+            return loader.start()
             .then(function() {
-                expect(self.loader.loadGraphs.calledWith(expectedResults)).to.equal(true);
+                expect(loader.loadGraphs.calledWith(expectedResults)).to.equal(true);
             });
         });
     });
