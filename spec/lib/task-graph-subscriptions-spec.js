@@ -3,13 +3,9 @@
 
 'use strict';
 
-require('../helper');
-
-describe(require('path').basename(__filename), function () {
-    var injector;
-
-    before(function() {
-        injector = helper.baseInjector.createChild(
+describe('Task Graph Subscriptions', function () {
+    before('Task Graph Subscriptions before', function() {
+        helper.setupInjector(
             _.flatten([
                 require('renasar-tasks').injectables,
                 helper.require('/lib/task-graph-runner'),
@@ -24,33 +20,32 @@ describe(require('path').basename(__filename), function () {
     });
 
     describe('service', function() {
-        var childInjector;
         var registry;
         var tgrProtocol;
         var subscriber;
         var disposeStub;
 
-        before(function() {
-            childInjector = injector.createChild();
-            tgrProtocol = childInjector.get('Protocol.TaskGraphRunner');
-            registry = childInjector.get('TaskGraph.Registry');
-
+        before('service before', function() {
+            tgrProtocol = helper.injector.get('Protocol.TaskGraphRunner');
+            registry = helper.injector.get('TaskGraph.Registry');
             disposeStub = sinon.stub();
             _.forEach(Object.getPrototypeOf(tgrProtocol), function(v, k) {
                 tgrProtocol[k] = sinon.stub().resolves({
                     dispose: disposeStub
                 });
             });
-            registry.fetchActiveGraphsSync = sinon.stub();
+            sinon.stub(registry, 'fetchActiveGraphsSync');
         });
 
-        beforeEach(function() {
-            childInjector = childInjector.createChild([
-                helper.require('/lib/task-graph-subscriptions')
-            ]);
-            subscriber = childInjector.get('TaskGraph.Subscriptions');
-
+        beforeEach('service beforeEach', function() {
+            subscriber = helper.injector.get('TaskGraph.Subscriptions');
+            registry.fetchActiveGraphsSync.reset();
+            registry.fetchActiveGraphsSync.returns();
             disposeStub.reset();
+        });
+
+        after('service after', function() {
+            registry.fetchActiveGraphsSync.restore();
         });
 
         it('should start', function() {
@@ -86,31 +81,42 @@ describe(require('path').basename(__filename), function () {
 
     describe('run task graph', function() {
         var registry;
-        var childInjector;
         var tgSubscriptions;
         var graphStubObj;
         var createStub;
 
-        before(function() {
-            childInjector = injector.createChild([
-                helper.require('/lib/task-graph-subscriptions'),
-                helper.require('/lib/registry')
-            ]);
-            registry = childInjector.get('TaskGraph.Registry');
-            tgSubscriptions = childInjector.get('TaskGraph.Subscriptions');
-        });
-
-        beforeEach(function() {
+        before('run task graph before', function() {
+            registry = helper.injector.get('TaskGraph.Registry');
+            tgSubscriptions = helper.injector.get('TaskGraph.Subscriptions');
             // Default mocks used by the majority of tests. Custom overrides
             // are in unit tests that need them.
             graphStubObj = { start: sinon.stub().resolves() };
             createStub = sinon.stub().returns(graphStubObj);
-            registry.fetchGraphSync = sinon.stub().returns({ create: createStub });
-            registry.putActiveGraphSync = sinon.stub();
-            registry.fetchGraphDefinitionCatalog = sinon.stub().resolves([
+            sinon.stub(registry, 'fetchGraphSync');
+            sinon.stub(registry, 'putActiveGraphSync');
+            sinon.stub(registry, 'fetchGraphDefinitionCatalog');
+            sinon.stub(registry, 'hasActiveGraphSync');
+        });
+
+        beforeEach('run task graph beforeEach', function() {
+            registry.fetchGraphSync.reset();
+            registry.fetchGraphSync.returns({ create: createStub });
+            registry.putActiveGraphSync.reset();
+            registry.fetchGraphDefinitionCatalog.reset();
+            registry.fetchGraphDefinitionCatalog.resolves([
                 { injectableName: 'Test.Graph', friendlyName: 'Test Graph Friendly Name' }
             ]);
-            registry.hasActiveGraphSync = sinon.stub().returns(false);
+            registry.hasActiveGraphSync.reset();
+            registry.hasActiveGraphSync.returns();
+            graphStubObj.start.reset();
+            createStub.reset();
+        });
+
+        after('run task graph after', function() {
+            registry.fetchGraphSync.restore();
+            registry.putActiveGraphSync.restore();
+            registry.fetchGraphDefinitionCatalog.restore();
+            registry.hasActiveGraphSync.restore();
         });
 
         it('should reject if there is an existing graph against a specified target', function() {
@@ -167,32 +173,38 @@ describe(require('path').basename(__filename), function () {
     });
 
     describe('registry getters', function() {
-        var childInjector;
         var registry;
         var tgSubscriptions;
         var graphStubObj;
         var taskCatalog;
         var graphCatalog;
 
-        before(function() {
-            childInjector = injector.createChild([
-                helper.require('/lib/task-graph-subscriptions'),
-                helper.require('/lib/registry')
-            ]);
-            registry = childInjector.get('TaskGraph.Registry');
-            tgSubscriptions = childInjector.get('TaskGraph.Subscriptions');
+        before('registry getters before', function() {
+            registry = helper.injector.get('TaskGraph.Registry');
+            tgSubscriptions = helper.injector.get('TaskGraph.Subscriptions');
+            sinon.stub(registry, 'fetchTaskDefinitionCatalog');
+            sinon.stub(registry, 'fetchGraphDefinitionCatalog');
+            sinon.stub(registry, 'fetchActiveGraphSync');
+            sinon.stub(registry, 'fetchActiveGraphsSync');
         });
 
-        beforeEach(function() {
+        beforeEach('registry getters beforeEach', function() {
             taskCatalog = [{ name: 'task1' }, { name: 'task2' }];
             graphCatalog = [{ name: 'graph1' }, { name: 'graph2' }];
-            registry.fetchTaskDefinitionCatalog = sinon.stub().returns(taskCatalog);
-            registry.fetchGraphDefinitionCatalog = sinon.stub().returns(graphCatalog);
-            registry.fetchActiveGraphSync = sinon.stub();
-            registry.fetchActiveGraphsSync = sinon.stub();
+            registry.fetchTaskDefinitionCatalog.returns(taskCatalog);
+            registry.fetchGraphDefinitionCatalog.returns(graphCatalog);
+            registry.fetchActiveGraphSync.reset();
+            registry.fetchActiveGraphsSync.reset();
             graphStubObj = {
                 status: sinon.stub().returns('running')
             };
+        });
+
+        after('registry getters after', function() {
+            registry.fetchTaskDefinitionCatalog.restore();
+            registry.fetchGraphDefinitionCatalog.restore();
+            registry.fetchActiveGraphSync.restore();
+            registry.fetchActiveGraphsSync.restore();
         });
 
         it('should get the graph library', function() {
@@ -235,26 +247,35 @@ describe(require('path').basename(__filename), function () {
     });
 
     describe('task/graph definitions', function() {
-        var childInjector;
         var registry;
         var tgSubscriptions;
         var TaskGraph;
         var Task;
-        before(function() {
-            childInjector = injector.createChild([
-                helper.require('/lib/task-graph-subscriptions'),
-                helper.require('/lib/registry'),
-                helper.require('/lib/task-graph')
-            ]);
-            registry = childInjector.get('TaskGraph.Registry');
-            tgSubscriptions = childInjector.get('TaskGraph.Subscriptions');
-            TaskGraph = childInjector.get('TaskGraph.TaskGraph');
-            Task = childInjector.get('Task.Task');
 
-            TaskGraph.createRegistryObject = sinon.stub();
-            Task.createRegistryObject = sinon.stub();
-            registry.registerGraph = sinon.stub();
-            registry.registerTask = sinon.stub();
+        before(function() {
+            registry = helper.injector.get('TaskGraph.Registry');
+            tgSubscriptions = helper.injector.get('TaskGraph.Subscriptions');
+            TaskGraph = helper.injector.get('TaskGraph.TaskGraph');
+            Task = helper.injector.get('Task.Task');
+
+            sinon.stub(TaskGraph, 'createRegistryObject');
+            sinon.stub(Task, 'createRegistryObject');
+            sinon.stub(registry, 'registerGraph');
+            sinon.stub(registry, 'registerTask');
+        });
+
+        beforeEach('task/graph definitions after', function() {
+            TaskGraph.createRegistryObject.reset();
+            Task.createRegistryObject.reset();
+            registry.registerGraph.reset();
+            registry.registerTask.reset();
+        });
+
+        after('task/graph definitions after', function() {
+            TaskGraph.createRegistryObject.restore();
+            Task.createRegistryObject.restore();
+            registry.registerGraph.restore();
+            registry.registerTask.restore();
         });
 
         it('should reject if task definition is empty', function() {

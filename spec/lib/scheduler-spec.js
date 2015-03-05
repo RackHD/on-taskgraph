@@ -3,126 +3,46 @@
 
 'use strict';
 
-require('../helper');
-
-/*var di = require('di'),
-    _ = require('lodash'),
-    core = require('renasar-core')(di),
-    injector = new di.Injector(
-            _.flatten(
-                core.injectables
-                )),
-    schedulerProtocol = injector.get('Protocol.Scheduler'),
-    eventsProtocol = injector.get('Protocol.Events'),
-    taskProtocol = injector.get('Protocol.Task'),
-    Logger = injector.get('Logger'),
-    assert = injector.get('Assert'),
-    Util = injector.get('Util'),
-    uuid = injector.get('uuid'),
-    Q = injector.get('Q'),
-    scheduleFactory = require('../../lib/scheduler.js');
-*/
-
-
-
 describe("Scheduler", function() {
-    var injector;
     var scheduler;
 
+    before("before scheduler-spec", function() {
+        helper.setupInjector([require('../../lib/scheduler')]);
+        scheduler = helper.injector.get('TaskGraph.Scheduler');
+    });
+
     describe("Scheduler object", function(){
-        before("before scheduler-spec", function() {
-            injector = helper.baseInjector.createChild(
-                _.flatten([require('../../lib/scheduler')]));
-
-            scheduler = injector.get('TaskGraph.Scheduler');
-        });
-/*        var scheduler = scheduleFactory(
-            schedulerProtocol,
-            eventsProtocol,
-            taskProtocol,
-            Logger,
-            assert,
-            Util,
-            uuid,
-            Q,
-            _
-        );
-*/
-
         it("should implement the scheduler interface", function(){
-
-
-            scheduler.should.have.property('status')
-                .that.is.a('function').with.length(0);
-
-            scheduler.should.have.property('wrapData')
-                .that.is.a('function').with.length(3);
-
-            scheduler.should.have.property('requestShutdown')
-                .that.is.a('function').with.length(0);
-
-            scheduler.should.have.property('schedule')
-                .that.is.a('function').with.length(3);
-
-            scheduler.should.have.property('isQueueEmpty')
-                .that.is.a('function').with.length(0);
-
+            scheduler.should.have.property('status').that.is.a('function').with.length(0);
+            scheduler.should.have.property('wrapData').that.is.a('function').with.length(3);
+            scheduler.should.have.property('requestShutdown').that.is.a('function').with.length(0);
+            scheduler.should.have.property('schedule').that.is.a('function').with.length(3);
+            scheduler.should.have.property('isQueueEmpty').that.is.a('function').with.length(0);
             scheduler.should.have.property('isRunningMaxTasks')
                 .that.is.a('function').with.length(0);
-
-            scheduler.should.have.property('evaluateWork')
-                .that.is.a('function').with.length(0);
-
-             scheduler.should.have.property('fetchNext')
-                .that.is.a('function').with.length(0);
-
-             scheduler.should.have.property('runWork')
+            scheduler.should.have.property('evaluateWork').that.is.a('function').with.length(0);
+            scheduler.should.have.property('fetchNext').that.is.a('function').with.length(0);
+            scheduler.should.have.property('runWork').that.is.a('function').with.length(1);
+            scheduler.should.have.property('_createWorkItemSubscription')
                 .that.is.a('function').with.length(1);
-
-             scheduler.should.have.property('_createWorkItemSubscription')
+            scheduler.should.have.property('removeSubscription')
                 .that.is.a('function').with.length(1);
-
-             scheduler.should.have.property('removeSubscription')
-                .that.is.a('function').with.length(1);
-
-             scheduler.should.have.property('doneRunning')
-                .that.is.a('function').with.length(2);
-
-             scheduler.should.have.property('start')
-                .that.is.a('function').with.length(0);
-
-             scheduler.should.have.property('stop')
-                .that.is.a('function').with.length(0);
-
+            scheduler.should.have.property('doneRunning').that.is.a('function').with.length(2);
+            scheduler.should.have.property('start').that.is.a('function').with.length(0);
+            scheduler.should.have.property('stop').that.is.a('function').with.length(0);
         });
     });
 
     describe("Scheduler in action", function() {
         var uuid,
-            taskProtocol;
+            taskProtocol,
+            _wrapDataOrig;
 
-        beforeEach("beforeEach scheduler-spec", function(){
-            injector = helper.baseInjector.createChild(
-                _.flatten([require('../../lib/scheduler')]));
+        before("Scheduler Spec before: stub scheduler methods, state", function(done){
+            uuid = helper.injector.get('uuid');
+            taskProtocol = helper.injector.get('Protocol.Task');
 
-
-            scheduler = injector.get('TaskGraph.Scheduler');
-            uuid = injector.get('uuid');
-            taskProtocol = injector.get('Protocol.Task');
-
-/*            scheduler = scheduleFactory(
-                schedulerProtocol,
-                eventsProtocol,
-                taskProtocol,
-                Logger,
-                assert,
-                Util,
-                uuid,
-                Q,
-                _
-            );
-*/
-
+            _wrapDataOrig = scheduler.wrapData;
             scheduler.wrapData = function pseudoWrapData(taskId, taskName)  {
                 return {
                     id: taskId,
@@ -142,64 +62,75 @@ describe("Scheduler", function() {
             sinon.stub(scheduler,'_createWorkItemSubscription');
             sinon.stub(scheduler,'removeSubscription');
             sinon.stub(scheduler, 'log');
+            sinon.stub(taskProtocol, 'cancel');
 
-             for(var i = 0; i < scheduler.options.concurrentTasks; i+=1 ) {
+            for(var i = 0; i < scheduler.options.concurrentTasks; i+=1 ) {
                 scheduler.schedule(uuid.v4(),'testTask');
             }
-
+            process.nextTick(function() {
+                done();
+            });
         });
 
-        afterEach(function(){
+        beforeEach("Scheduler Spec beforeEach: reset stubs", function(){
+            scheduler._createWorkItemSubscription.reset();
+            scheduler.removeSubscription.reset();
+            scheduler.log.reset();
+            taskProtocol.cancel.reset();
+        });
+
+        after("Scheduler Spec after: restore stubs", function(){
+            scheduler.wrapData = _wrapDataOrig;
             scheduler._createWorkItemSubscription.restore();
             scheduler.removeSubscription.restore();
             scheduler.log.restore();
+            taskProtocol.cancel.restore();
         });
 
-        it("should not exceed max number of concurrent tasks", function() {
-
+        it("should not exceed max number of concurrent tasks", function(done) {
             //schedule two additional tasks
             for(var i = 0; i < 2; i+=1 ) {
                 scheduler.schedule(uuid.v4(),'testTask');
             }
-
-            scheduler.currentlyRunning
-                .should.equal(scheduler.options.concurrentTasks);
-
-            scheduler.stats.maxConcurrentExceeded
-                .should.equal(2);
+            process.nextTick(function() {
+                expect(scheduler.currentlyRunning).to.equal(scheduler.options.concurrentTasks);
+                expect(scheduler.stats.maxConcurrentExceeded).to.equal(2);
+                done();
+            });
         });
 
         it("should update running map as tasks are launched",function(){
-
-            Object.keys(scheduler.running)
-                .should.have.length(scheduler.options.concurrentTasks);
+            Object.keys(scheduler.running).should.have.length(scheduler.options.concurrentTasks);
         });
 
-        it("should forget about tasks when they are doneRunning", function(){
-
-            _.values(scheduler.running).forEach(function(task){
-               scheduler.doneRunning(null, task);
+        it("should queue next scheduled items when max concurrent tasks is not met", function(done){
+            _.forEach(scheduler.running, function(workItem) {
+                scheduler.doneRunning(null, workItem);
             });
+            process.nextTick(function() {
+                expect(_.keys(scheduler.running)).to.have.length(2);
+                expect(scheduler.currentlyRunning).to.equal(2);
+                done();
+            });
+        });
 
-
-            scheduler.running.should.be.empty;
-            scheduler.currentlyRunning.should.equal(0);
+        it("should forget about tasks when they are doneRunning", function(done){
+            _.forEach(scheduler.running, function(workItem) {
+                scheduler.doneRunning(null, workItem);
+            });
+            process.nextTick(function() {
+                expect(scheduler.running).to.be.empty;
+                expect(scheduler.currentlyRunning).to.equal(0);
+                done();
+            });
         });
 
         it("should shut down on request and cancel all running tasks", function(){
-             _.range(scheduler.options.concurrentTasks).forEach(function() {
+            _.range(scheduler.options.concurrentTasks).forEach(function() {
                 scheduler.schedule(uuid.v4(),'testTask');
             });
-
-            var cancelStub = sinon.stub(taskProtocol, 'cancel');
-
             scheduler.requestShutdown();
-
-            cancelStub.callCount
-                .should.equal(scheduler.options.concurrentTasks);
-
+            taskProtocol.cancel.callCount.should.equal(scheduler.options.concurrentTasks);
         });
-
-
     });
 });
