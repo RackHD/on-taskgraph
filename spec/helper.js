@@ -1,6 +1,6 @@
 'use strict';
 
-require('renasar-core/spec/helper');
+require('on-core/spec/helper');
 
 // Mocha doesn't read the waterline validation errors because they
 // use rawStack instead of stack, so provide a convenience function to pass
