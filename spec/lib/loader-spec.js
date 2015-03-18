@@ -16,7 +16,7 @@ describe(require('path').basename(__filename), function () {
                 helper.require('/lib/loader'),
                 helper.require('/lib/stores/waterline'),
                 helper.require('/lib/stores/memory'),
-                require('renasar-tasks').injectables
+                require('on-tasks').injectables
             ])
         );
     });

@@ -5,8 +5,8 @@
 
 var di = require('di'),
     _ = require('lodash'),
-    core = require('renasar-core')(di),
-    tasks = require('renasar-tasks'),
+    core = require('on-core')(di),
+    tasks = require('on-tasks'),
     injector = new di.Injector(
         _.flatten([
             core.injectables,

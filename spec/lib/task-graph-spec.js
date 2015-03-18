@@ -124,7 +124,7 @@ describe("Task Graph", function () {
 
     before(function() {
         var self = this;
-        var tasks = require('renasar-tasks');
+        var tasks = require('on-tasks');
 
         self.timeout(10000);
         helper.setupInjector(_.flatten([

@@ -7,7 +7,7 @@ describe('Task Graph Subscriptions', function () {
     before('Task Graph Subscriptions before', function() {
         helper.setupInjector(
             _.flatten([
-                require('renasar-tasks').injectables,
+                require('on-tasks').injectables,
                 helper.require('/lib/task-graph-runner'),
                 helper.require('/lib/registry'),
                 helper.require('/lib/scheduler'),

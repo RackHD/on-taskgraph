@@ -79,7 +79,7 @@ Graphs are defined via a JSON definition that conform to this schema:
 - friendlyName (string): a human readable name for the graph
 - injectableName (string): a unique name used by the system and the API to refer to the graph
 - tasks (array of objects): a list of task definitions or references to task definitions. For an in-depth explanation
-        of task definitions, see [the renasar-tasks README](https://github.com/renasar/renasar-tasks/blob/master/README.md)
+        of task definitions, see [the on-tasks README](https://github.com/renasar/on-tasks/blob/master/README.md)
     - tasks.label (string): a unique string to be used as a reference within the graph definition
     - tasks.\[taskName\] (string): the injectableName of a task in the database to run. This or taskDefinition is required.
     - tasks.\[taskDefinition\] (object): an inline definition of a task, instead of one in the database. This or taskName is required.
