@@ -89,6 +89,14 @@ describe("Task Graph", function () {
             }
         }
     };
+    var baseTaskEmpty = {
+        friendlyName: 'Test task empty',
+        injectableName: 'Task.Base.test-empty',
+        runJob: 'Job.test',
+        requiredOptions: [],
+        requiredProperties: {},
+        properties: {}
+    };
     var testTask = {
         friendlyName: 'Base test task',
         implementsTask: 'Task.Base.test',
@@ -117,6 +125,218 @@ describe("Task Graph", function () {
                 taskName: 'Task.test',
                 waitOn: {
                     'test-1': 'finished'
+                }
+            }
+        ]
+    };
+
+    var baseTask1 = {
+        friendlyName: 'base test task properties 1',
+        injectableName: 'Task.Base.testProperties1',
+        runJob: 'Job.test',
+        requiredOptions: [],
+        requiredProperties: {},
+        properties: {
+            test: {
+                type: 'null'
+            },
+            fresh: {
+                fruit: {
+                    slices: 'sugary'
+                }
+            },
+            fried: {
+                chicken: {
+                    and: {
+                        waffles: 'yum'
+                    }
+                }
+            }
+        }
+    };
+    var baseTask2 = {
+        friendlyName: 'base test task properties 2',
+        injectableName: 'Task.Base.testProperties2',
+        runJob: 'Job.test',
+        requiredOptions: [],
+        requiredProperties: {
+            // test multiple levels of nesting
+            'pancakes': 'syrup',
+            'spam.eggs': 'monty',
+            'fresh.fruit.slices': 'sugary',
+            'fried.chicken.and.waffles': 'yum',
+            'coffee.with.cream.and.sugar': 'wake up'
+        },
+        properties: {
+            test: {
+                type: 'null'
+            }
+        }
+    };
+    var baseTask3 = {
+        friendlyName: 'base test task properties 3',
+        injectableName: 'Task.Base.testProperties3',
+        runJob: 'Job.test',
+        requiredOptions: [],
+        requiredProperties: {
+            'does.not.exist': 'negative'
+        },
+        properties: {
+            test: {
+                type: 'null'
+            }
+        }
+    };
+    var testTask1 = {
+        friendlyName: 'test properties task 1',
+        implementsTask: 'Task.Base.testProperties1',
+        injectableName: 'Task.testProperties1',
+        options: {},
+        properties: {
+            test: {
+                unit: 'properties',
+            },
+            pancakes: 'syrup',
+            spam: {
+                eggs: 'monty'
+            },
+            coffee: {
+                'with': {
+                    cream: {
+                        and: {
+                            sugar: 'wake up'
+                        }
+                    }
+                }
+            }
+        }
+    };
+    var testTask2 = {
+        friendlyName: 'test properties task 2',
+        implementsTask: 'Task.Base.testProperties2',
+        injectableName: 'Task.testProperties2',
+        options: {},
+        properties: {
+            test: {
+                foo: 'bar'
+            }
+        }
+    };
+    var testTask3 = {
+        friendlyName: 'test properties task 3',
+        implementsTask: 'Task.Base.testProperties3',
+        injectableName: 'Task.testProperties3',
+        options: {},
+        properties: {
+            test: {
+                bar: 'baz'
+            }
+        }
+    };
+    var graphDefinitionValid = {
+        injectableName: 'Graph.testPropertiesValid',
+        friendlyName: 'Valid Test Graph',
+        tasks: [
+            {
+                label: 'test-1',
+                taskName: 'Task.testProperties1'
+            },
+            {
+                label: 'test-2',
+                taskName: 'Task.testProperties2',
+                waitOn: {
+                    'test-1': 'finished'
+                }
+            }
+        ]
+    };
+    var graphDefinitionInvalid = {
+        injectableName: 'Graph.testPropertiesInvalid',
+        friendlyName: 'Invalid Test Graph',
+        tasks: [
+            {
+                label: 'test-1',
+                taskName: 'Task.testProperties1'
+            },
+            {
+                label: 'test-2',
+                taskName: 'Task.testProperties2',
+                waitOn: {
+                    'test-1': 'finished'
+                }
+            },
+            {
+                label: 'test-3',
+                taskName: 'Task.testProperties3',
+                waitOn: {
+                    'test-2': 'finished'
+                }
+            }
+        ]
+    };
+
+    var graphDefinitionOptions = {
+        injectableName: 'Graph.testGraphOptions',
+        friendlyName: 'Test Graph Options',
+        options: {
+            defaults: {
+                option1: 'same for all',
+                option2: 'same for all',
+                'optionNonExistant': 'not in any'
+            },
+            'test-2': {
+                overrideOption: 'overridden for test-2',
+                option2: 'overridden default option for test-2'
+            },
+            'test-3': {
+                inlineOptionOverridden: 'overridden inline option for test-3'
+            },
+            'test-4': {
+                nonRequiredOption: 'add an option to an empty base task'
+            }
+        },
+        tasks: [
+            {
+                label: 'test-1',
+                taskName: 'Task.test',
+                optionOverrides: {
+                    'testName': 'firstTask'
+                }
+            },
+            {
+                label: 'test-2',
+                taskName: 'Task.test',
+                optionOverrides: {
+                    'testName': 'secondTask',
+                    overrideOption: undefined
+                },
+                waitOn: {
+                    'test-1': 'finished'
+                }
+            },
+            {
+                label: 'test-3',
+                taskDefinition: {
+                    friendlyName: 'Test Inline Task',
+                    injectableName: 'Task.test.inline-task',
+                    implementsTask: 'Task.Base.test',
+                    options: {
+                        option3: 3,
+                        inlineOption: 3,
+                        inlineOptionOverridden: undefined,
+                        testName: 'thirdTask'
+                    },
+                    properties: {}
+                }
+            },
+            {
+                label: 'test-4',
+                taskDefinition: {
+                    friendlyName: 'Test Inline Task no options',
+                    injectableName: 'Task.test.inline-task-no-opts',
+                    implementsTask: 'Task.Base.test-empty',
+                    options: {},
+                    properties: {}
                 }
             }
         ]
@@ -228,150 +448,6 @@ describe("Task Graph", function () {
         it("should validate task properties", function() {
             var self = this;
 
-            var baseTask1 = {
-                friendlyName: 'base test task properties 1',
-                injectableName: 'Task.Base.testProperties1',
-                runJob: 'Job.test',
-                requiredOptions: [],
-                requiredProperties: {},
-                properties: {
-                    test: {
-                        type: 'null'
-                    },
-                    fresh: {
-                        fruit: {
-                            slices: 'sugary'
-                        }
-                    },
-                    fried: {
-                        chicken: {
-                            and: {
-                                waffles: 'yum'
-                            }
-                        }
-                    }
-                }
-            };
-            var baseTask2 = {
-                friendlyName: 'base test task properties 2',
-                injectableName: 'Task.Base.testProperties2',
-                runJob: 'Job.test',
-                requiredOptions: [],
-                requiredProperties: {
-                    // test multiple levels of nesting
-                    'pancakes': 'syrup',
-                    'spam.eggs': 'monty',
-                    'fresh.fruit.slices': 'sugary',
-                    'fried.chicken.and.waffles': 'yum',
-                    'coffee.with.cream.and.sugar': 'wake up'
-                },
-                properties: {
-                    test: {
-                        type: 'null'
-                    }
-                }
-            };
-            var baseTask3 = {
-                friendlyName: 'base test task properties 3',
-                injectableName: 'Task.Base.testProperties3',
-                runJob: 'Job.test',
-                requiredOptions: [],
-                requiredProperties: {
-                    'does.not.exist': 'negative'
-                },
-                properties: {
-                    test: {
-                        type: 'null'
-                    }
-                }
-            };
-            var testTask1 = {
-                friendlyName: 'test properties task 1',
-                implementsTask: 'Task.Base.testProperties1',
-                injectableName: 'Task.testProperties1',
-                options: {},
-                properties: {
-                    test: {
-                        unit: 'properties',
-                    },
-                    pancakes: 'syrup',
-                    spam: {
-                        eggs: 'monty'
-                    },
-                    coffee: {
-                        'with': {
-                            cream: {
-                                and: {
-                                    sugar: 'wake up'
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-            var testTask2 = {
-                friendlyName: 'test properties task 2',
-                implementsTask: 'Task.Base.testProperties2',
-                injectableName: 'Task.testProperties2',
-                options: {},
-                properties: {
-                    test: {
-                        foo: 'bar'
-                    }
-                }
-            };
-            var testTask3 = {
-                friendlyName: 'test properties task 3',
-                implementsTask: 'Task.Base.testProperties3',
-                injectableName: 'Task.testProperties3',
-                options: {},
-                properties: {
-                    test: {
-                        bar: 'baz'
-                    }
-                }
-            };
-            var graphDefinitionValid = {
-                injectableName: 'Graph.testPropertiesValid',
-                friendlyName: 'Valid Test Graph',
-                tasks: [
-                    {
-                        label: 'test-1',
-                        taskName: 'Task.testProperties1'
-                    },
-                    {
-                        label: 'test-2',
-                        taskName: 'Task.testProperties2',
-                        waitOn: {
-                            'test-1': 'finished'
-                        }
-                    }
-                ]
-            };
-            var graphDefinitionInvalid = {
-                injectableName: 'Graph.testPropertiesInvalid',
-                friendlyName: 'Invalid Test Graph',
-                tasks: [
-                    {
-                        label: 'test-1',
-                        taskName: 'Task.testProperties1'
-                    },
-                    {
-                        label: 'test-2',
-                        taskName: 'Task.testProperties2',
-                        waitOn: {
-                            'test-1': 'finished'
-                        }
-                    },
-                    {
-                        label: 'test-3',
-                        taskName: 'Task.testProperties3',
-                        waitOn: {
-                            'test-2': 'finished'
-                        }
-                    }
-                ]
-            };
             return loader.loadTasks([
                     baseTask1, baseTask2, baseTask3,
                     testTask1, testTask2, testTask3
@@ -590,107 +666,68 @@ describe("Task Graph", function () {
             expect(graph.context).to.deep.equal(context);
         });
 
-        it("should apply options at the graph level to tasks", function() {
-            var self = this;
-            var firstTask, secondTask, thirdTask;
+        describe("graph level options", function() {
+            var firstTask, secondTask, thirdTask, fourthTask;
 
-            var graphDefinitionOptions = {
-                injectableName: 'Graph.testGraphOptions',
-                friendlyName: 'Test Graph Options',
-                options: {
-                    defaults: {
-                        option1: 'same for all',
-                        option2: 'same for all',
-                        'optionNonExistant': 'not in any'
-                    },
-                    'test-2': {
-                        overrideOption: 'overridden for test-2',
-                        option2: 'overridden default option for test-2'
-                    },
-                    'test-3': {
-                        inlineOptionOverridden: 'overridden inline option for test-3'
-                    }
-                },
-                tasks: [
-                    {
-                        label: 'test-1',
-                        taskName: 'Task.test',
-                        optionOverrides: {
-                            'testName': 'firstTask'
+            before("Graph level options before", function() {
+                var self = this;
+
+                return loader.loadGraphs([graphDefinitionOptions],
+                        TaskGraph.createRegistryObject)
+                .then(function() {
+                    return loader.loadTasks([baseTaskEmpty], Task.createRegistryObject);
+                })
+                .catch(function(e) {
+                    self.testGraphs.push(graphDefinitionOptions.injectableName);
+                    self.testTasks.push(baseTaskEmpty.injectableName);
+                    helper.handleError(e);
+                })
+                .then(function() {
+                    self.testGraphs.push(graphDefinitionOptions.injectableName);
+                    self.testTasks.push(baseTaskEmpty.injectableName);
+                    var graphFactory = registry.fetchGraphSync('Graph.testGraphOptions');
+                    var graph = graphFactory.create();
+
+                    // If options will be filled in by the graph, make sure validate
+                    // doesn't throw if they are missing from the task definition.
+                    expect(function() {
+                        graph.validate();
+                    }).to.not.throw(Error);
+
+                    graph._populateTaskData();
+
+                    _.forEach(graph.tasks, function(task) {
+                        if (task.definition.options.testName === 'firstTask') {
+                            firstTask = task;
+                        } else if (task.definition.options.testName === 'secondTask') {
+                            secondTask = task;
+                        } else if (task.definition.options.testName === 'thirdTask') {
+                            thirdTask = task;
+                        } else {
+                            fourthTask = task;
                         }
-                    },
-                    {
-                        label: 'test-2',
-                        taskName: 'Task.test',
-                        optionOverrides: {
-                            'testName': 'secondTask',
-                            overrideOption: undefined
-                        },
-                        waitOn: {
-                            'test-1': 'finished'
-                        }
-                    },
-                    {
-                        label: 'test-3',
-                        taskDefinition: {
-                            friendlyName: 'Test Inline Task',
-                            injectableName: 'Task.test.inline-task',
-                            implementsTask: 'Task.Base.test',
-                            options: {
-                                option3: 3,
-                                inlineOption: 3,
-                                inlineOptionOverridden: undefined,
-                                testName: 'thirdTask'
-                            },
-                            properties: {}
-                        }
-                    }
-                ]
-            };
-
-            return loader.loadGraphs([graphDefinitionOptions],
-                    TaskGraph.createRegistryObject)
-            .catch(function(e) {
-                self.testGraphs.push(graphDefinitionOptions.injectableName);
-                helper.handleError(e);
-            })
-            .then(function() {
-                self.testGraphs.push(graphDefinitionOptions.injectableName);
-                var graphFactory = registry.fetchGraphSync('Graph.testGraphOptions');
-                var graph = graphFactory.create();
-
-                // If options will be filled in by the graph, make sure validate
-                // doesn't throw if they are missing from the task definition.
-                expect(function() {
-                    graph.validate();
-                }).to.not.throw(Error);
-
-                graph._populateTaskData();
-
-                _.forEach(graph.tasks, function(task) {
-                    if (task.definition.options.testName === 'firstTask') {
-                        firstTask = task;
-                    } else if (task.definition.options.testName === 'secondTask') {
-                        secondTask = task;
-                    } else if (task.definition.options.testName === 'thirdTask') {
-                        thirdTask = task;
-                    }
+                    });
+                })
+                .catch(function(e) {
+                    helper.handleError(e);
                 });
+            });
 
-                _.forEach([firstTask, secondTask, thirdTask], function(task) {
+            it("should have tasks with expected keys", function() {
+                _.forEach([firstTask, secondTask, thirdTask, fourthTask], function(task) {
                     expect(task).to.have.property('definition');
                     expect(task).to.have.property('options');
                 });
+            });
 
-                // Assert all default options from the graph get passed down and
-                // non-existant options do not get passed down
+            it("should pass default options only to tasks that require those options", function() {
                 expect(firstTask.options).to.have.property('option1').that.equals('same for all');
                 expect(firstTask.options).to.have.property('option2').that.equals('same for all');
                 expect(firstTask.options).to.have.property('option3').that.equals(3);
                 expect(firstTask.options).to.not.have.property('optionNonExistant');
+            });
 
-                // Assert that options overridden by task-specific graph options
-                // get handed down
+            it("should pass task-specific options and override existing options", function() {
                 expect(secondTask.options).to.have.property('option1').that.equals('same for all');
                 expect(secondTask.options).to.have.property('option2')
                     .that.equals('overridden default option for test-2');
@@ -698,7 +735,9 @@ describe("Task Graph", function () {
                 expect(secondTask.options).to.have.property('overrideOption')
                     .that.equals('overridden for test-2');
                 expect(secondTask.options).to.not.have.property('optionNonExistant');
+            });
 
+            it("should pass options to inline tasks definitions", function() {
                 // These aren't in the inline definition, so this asserts that we didn't error
                 // out on them being missing from options during the requiredOptions check
                 expect(thirdTask.options).to.have.property('option1').that.equals('same for all');
@@ -708,9 +747,11 @@ describe("Task Graph", function () {
                 expect(thirdTask.options).to.have.property('inlineOptionOverridden')
                     .that.equals('overridden inline option for test-3');
                 expect(thirdTask.options).to.not.have.property('optionNonExistant');
-            })
-            .catch(function(e) {
-                helper.handleError(e);
+            });
+
+            it("should pass in options to a task with no required options", function() {
+                expect(fourthTask.options).to.have.property('nonRequiredOption')
+                    .that.equals('add an option to an empty base task');
             });
         });
     });
