@@ -11,28 +11,6 @@ describe("Scheduler", function() {
         scheduler = helper.injector.get('TaskGraph.Scheduler');
     });
 
-    describe("Scheduler object", function(){
-        it("should implement the scheduler interface", function(){
-            scheduler.should.have.property('status').that.is.a('function').with.length(0);
-            scheduler.should.have.property('wrapData').that.is.a('function').with.length(3);
-            scheduler.should.have.property('requestShutdown').that.is.a('function').with.length(0);
-            scheduler.should.have.property('schedule').that.is.a('function').with.length(3);
-            scheduler.should.have.property('isQueueEmpty').that.is.a('function').with.length(0);
-            scheduler.should.have.property('isRunningMaxTasks')
-                .that.is.a('function').with.length(0);
-            scheduler.should.have.property('evaluateWork').that.is.a('function').with.length(0);
-            scheduler.should.have.property('fetchNext').that.is.a('function').with.length(0);
-            scheduler.should.have.property('runWork').that.is.a('function').with.length(1);
-            scheduler.should.have.property('_createWorkItemSubscription')
-                .that.is.a('function').with.length(1);
-            scheduler.should.have.property('removeSubscription')
-                .that.is.a('function').with.length(1);
-            scheduler.should.have.property('doneRunning').that.is.a('function').with.length(2);
-            scheduler.should.have.property('start').that.is.a('function').with.length(0);
-            scheduler.should.have.property('stop').that.is.a('function').with.length(0);
-        });
-    });
-
     describe("Scheduler in action", function() {
         var uuid,
             taskProtocol,
@@ -122,6 +100,64 @@ describe("Scheduler", function() {
                 expect(scheduler.running).to.be.empty;
                 expect(scheduler.currentlyRunning).to.equal(0);
                 done();
+            });
+        });
+
+        describe("task timeouts", function() {
+            var workItem = {
+                stats: {},
+                id: 'test work item id',
+                run: function() {},
+                timeout: undefined
+            };
+
+            before("task timeouts before", function() {
+                sinon.stub(scheduler, "doneRunning");
+            });
+
+            beforeEach("task timeouts beforeEach", function() {
+                clearTimeout(workItem.timer);
+                workItem.timer = undefined;
+            });
+
+            afterEach("task timeouts afterEach", function() {
+                scheduler.doneRunning.reset();
+            });
+
+            after("task timeouts after", function() {
+                scheduler.doneRunning.restore();
+            });
+
+            it("should timeout a task", function(done) {
+                var tasksTimedOut = scheduler.stats.tasksTimedOut;
+                workItem.timeout = 1;
+                scheduler.runWork(workItem);
+                expect(workItem.timer).to.be.an.object;
+                setTimeout(function() {
+                    try {
+                        expect(scheduler.doneRunning).to.have.been.calledOnce;
+                        expect(tasksTimedOut + 1).to.equal(scheduler.stats.tasksTimedOut);
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                }, 1);
+            });
+
+            it("should not timeout a task with a timeout of <= 0", function(done) {
+                var tasksTimedOut = scheduler.stats.tasksTimedOut;
+                workItem.timeout = -1;
+                scheduler.runWork(workItem);
+                expect(workItem.timer).to.be.undefined;
+                setTimeout(function() {
+                    try {
+                        expect(scheduler.doneRunning).to.not.have.been.called;
+                        expect(tasksTimedOut).to.equal(scheduler.stats.tasksTimedOut);
+                        done();
+                    } catch (e) {
+                        done(e);
+                    }
+                }, 1);
             });
         });
 
