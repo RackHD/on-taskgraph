@@ -1,12 +1,11 @@
-Source: renasar-taskgraph
+Source: on-taskgraph
 Section: utilties
 Priority: optional
-Maintainer: Joe Heck <joseph.heck@renasar.com>
+Maintainer: Joe Heck <joseph.heck@emc.com>
 Build-Depends: debhelper (>= 8.0.0)
 Standards-Version: 3.9.4
-Homepage: http://www.renasar.com/
 
-Package: renasar-taskgraph
+Package: on-taskgraph
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
  nodejs,
@@ -16,5 +15,5 @@ Depends: ${shlibs:Depends}, ${misc:Depends},
  snmp,
  ipmitool
 Suggests: python-pywbem, ansible, apt-mirror, amtterm
-Description: renasar-taskgraph
+Description: on-taskgraph
  Imaging Workflow taskgraph engine

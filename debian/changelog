@@ -1,5 +1,5 @@
-renasar-taskgraph (1.1-1) unstable; urgency=low
+on-taskgraph (1.1-1) unstable; urgency=low
 
   * Initial release
 
- -- Joe Heck <joseph.heck@renasar.com>  Fri, 31 Oct 2014 00:17:50 +0000
+ -- Joe Heck <joseph.heck@emc.com>  Fri, 31 Oct 2014 00:17:50 +0000
