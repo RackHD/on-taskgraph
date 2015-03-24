@@ -837,8 +837,7 @@ describe("Task Graph", function () {
         graph._populateTaskData();
 
         var output = graph.serialize();
-        expect(output).to.have.property('nodes').with.length(1);
-        expect(output).to.have.deep.property('nodes[0].id', '1234');
+        expect(output).to.have.property('node').with.property('id').that.equals('1234');
     });
 
     it("should serialize a graph with a nodeId option as a linked node", function() {
@@ -847,29 +846,7 @@ describe("Task Graph", function () {
         graph._populateTaskData();
 
         var output = graph.serialize();
-        expect(output).to.have.property('nodes').with.length(1);
-        expect(output).to.have.deep.property('nodes[0].id', '4321');
-    });
-
-    it("should serialize a graph with both a target and nodeId as a linked node", function() {
-        var graphFactory = registry.fetchGraphSync('Graph.test');
-        var graph = graphFactory.create({ nodeId: '1234' }, { target: '1234' });
-        graph._populateTaskData();
-
-        var output = graph.serialize();
-        expect(output).to.have.property('nodes').with.length(1);
-        expect(output).to.have.deep.property('nodes[0].id', '1234');
-    });
-
-    it("should serialize a graph with a nodeId option as a linked node", function() {
-        var graphFactory = registry.fetchGraphSync('Graph.test');
-        var graph = graphFactory.create({ nodeId: '4321' }, { target: '1234' });
-        graph._populateTaskData();
-
-        var output = graph.serialize();
-        expect(output).to.have.property('nodes').with.length(2);
-        expect(output).to.have.deep.property('nodes[0].id', '4321');
-        expect(output).to.have.deep.property('nodes[1].id', '1234');
+        expect(output).to.have.property('node').with.property('id').that.equals('4321');
     });
 
     it("should serialize to a JSON string", function() {
