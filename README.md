@@ -1,4 +1,4 @@
-# renasar-taskgraph
+# on-taskgraph
 
 job network/graph runner
 
@@ -15,9 +15,9 @@ Note: requires RabbitMQ and mongod (if using the waterline/mongo driver) to be r
 
 To interact with the system externally, e.g. running graphs against live systems, you need to be running the following services:
 
-- [renasar-http](https://github.com/renasar/renasar-http) (mandatory for all)
-- [renasar-dhcp](https://github.com/renasar/renasar-dhcp) (mandatory for node graphs)
-- [renasar-tftp](https://github.com/renasar/renasar-tftp) (mandatory for node booting graphs)
+- [on-http](https://hwstashprd01.isus.emc.com:8443/projects/ONRACK/repos/on-http/) (mandatory for all)
+- [on-dhcp](https://hwstashprd01.isus.emc.com:8443/projects/ONRACK/repos/on-dhcp/) (mandatory for node graphs)
+- [on-tftp](https://hwstashprd01.isus.emc.com:8443/projects/ONRACK/repos/on-tftp/) (mandatory for node booting graphs)
 
 ## Overview
 
@@ -32,7 +32,7 @@ data/event channels that should exist between concurrently running tasks.
 
 ## API commands
 
-When running the renasar-http process, these are some common API commands you can send:
+When running the on-http process, these are some common API commands you can send:
 
 **Get available graphs**
 
@@ -79,7 +79,7 @@ Graphs are defined via a JSON definition that conform to this schema:
 - friendlyName (string): a human readable name for the graph
 - injectableName (string): a unique name used by the system and the API to refer to the graph
 - tasks (array of objects): a list of task definitions or references to task definitions. For an in-depth explanation
-        of task definitions, see [the on-tasks README](https://github.com/renasar/on-tasks/blob/master/README.md)
+        of task definitions, see [the on-tasks README](https://hwstashprd01.isus.emc.com:8443/projects/ONRACK/repos/on-tasks/browse/README.md)
     - tasks.label (string): a unique string to be used as a reference within the graph definition
     - tasks.\[taskName\] (string): the injectableName of a task in the database to run. This or taskDefinition is required.
     - tasks.\[taskDefinition\] (object): an inline definition of a task, instead of one in the database. This or taskName is required.
