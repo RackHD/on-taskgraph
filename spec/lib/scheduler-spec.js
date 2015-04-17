@@ -11,7 +11,7 @@ describe("Scheduler", function() {
         scheduler = helper.injector.get('TaskGraph.Scheduler');
     });
 
-    describe("Scheduler in action", function() {
+    describe("while running", function() {
         var uuid,
             taskProtocol,
             _wrapDataOrig;
@@ -37,7 +37,7 @@ describe("Scheduler", function() {
                 };
             };
 
-            sinon.stub(scheduler,'_createWorkItemSubscription');
+            sinon.stub(scheduler,'_createWorkItemSubscription').resolves();
             sinon.stub(scheduler,'removeSubscription');
             sinon.stub(scheduler, 'log');
             sinon.stub(taskProtocol, 'cancel');
@@ -103,6 +103,14 @@ describe("Scheduler", function() {
             });
         });
 
+        it("should shut down on request and cancel all running tasks", function(){
+            _.range(scheduler.options.concurrentTasks).forEach(function(i) {
+                scheduler.running[uuid.v4()] = 'testTask' + i;
+            });
+            scheduler.requestShutdown();
+            taskProtocol.cancel.callCount.should.equal(scheduler.options.concurrentTasks);
+        });
+
         describe("task timeouts", function() {
             var workItem = {
                 stats: {},
@@ -131,42 +139,46 @@ describe("Scheduler", function() {
             it("should timeout a task", function(done) {
                 var tasksTimedOut = scheduler.stats.tasksTimedOut;
                 workItem.timeout = 1;
-                scheduler.runWork(workItem);
-                expect(workItem.timer).to.be.an.object;
-                setTimeout(function() {
-                    try {
-                        expect(scheduler.doneRunning).to.have.been.calledOnce;
-                        expect(tasksTimedOut + 1).to.equal(scheduler.stats.tasksTimedOut);
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
-                }, 1);
+
+                scheduler.runWork(workItem)
+                .then(function() {
+                    expect(workItem.timer).to.be.an.object;
+
+                    setTimeout(function() {
+                        try {
+                            expect(scheduler.doneRunning).to.have.been.calledOnce;
+                            expect(tasksTimedOut + 1).to.equal(scheduler.stats.tasksTimedOut);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 2);
+                })
+                .catch(function(e) {
+                    done(e);
+                });
             });
 
             it("should not timeout a task with a timeout of <= 0", function(done) {
                 var tasksTimedOut = scheduler.stats.tasksTimedOut;
                 workItem.timeout = -1;
-                scheduler.runWork(workItem);
-                expect(workItem.timer).to.be.undefined;
-                setTimeout(function() {
-                    try {
-                        expect(scheduler.doneRunning).to.not.have.been.called;
-                        expect(tasksTimedOut).to.equal(scheduler.stats.tasksTimedOut);
-                        done();
-                    } catch (e) {
-                        done(e);
-                    }
-                }, 1);
+                return scheduler.runWork(workItem)
+                .then(function() {
+                    expect(workItem.timer).to.be.undefined;
+                    setTimeout(function() {
+                        try {
+                            expect(scheduler.doneRunning).to.not.have.been.called;
+                            expect(tasksTimedOut).to.equal(scheduler.stats.tasksTimedOut);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 1);
+                })
+                .catch(function(e) {
+                    done(e);
+                });
             });
-        });
-
-        it("should shut down on request and cancel all running tasks", function(){
-            _.range(scheduler.options.concurrentTasks).forEach(function() {
-                scheduler.schedule(uuid.v4(),'testTask');
-            });
-            scheduler.requestShutdown();
-            taskProtocol.cancel.callCount.should.equal(scheduler.options.concurrentTasks);
         });
     });
 });
