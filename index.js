@@ -45,7 +45,7 @@ process.on('SIGINT', function() {
         .catch(function(error) {
             logger.error('Task Graph Runner Shutdown Error.', { error: error });
         })
-        .fin(function() {
+        .finally(function() {
             process.nextTick(function() {
                 process.exit(1);
             });
