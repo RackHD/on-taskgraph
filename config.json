@@ -10,5 +10,8 @@
         "user": "",
         "password": ""
     },
-    "statsdPrefix": "taskGraphRunner."
+    "statsdPrefix": "taskGraphRunner.",
+    "server": "10.1.1.1",
+    "httpPort": 80,
+    "httpsPort": 443
 }
