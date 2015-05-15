@@ -9,6 +9,17 @@ describe("Task Graph", function () {
     var Task;
     var loader;
 
+    function findAllValues(obj) {
+        var allValues = _.map(obj, function(v) {
+            if (v !== null && typeof v === 'object') {
+                return findAllValues(v);
+            } else {
+                return v;
+            }
+        });
+        return _.flatten(allValues);
+    }
+
     function literalCompare(objA, objB) {
         _.forEach(objA, function(v, k) {
             if (typeof v === 'object' && !(v instanceof Date)) {
@@ -524,21 +535,39 @@ describe("Task Graph", function () {
             }).to.not.throw(Error);
         });
 
-        it("should validate all existing graph definitions not using external options", function() {
+        it("should validate all existing graph definitions not requiring API input", function() {
             return registry.fetchGraphDefinitionCatalog()
             .then(function(graphs) {
                 _.forEach(graphs, function(_graph) {
                     var graph = registry.fetchGraphSync(_graph.injectableName).create();
                     if (_.isEmpty(_graph.options)) {
-                        expect(function() {
-                            graph.validate();
-                        }).to.not.throw(Error);
+                        // Only validate tasks that don't explicitly have blanks
+                        // in their definitions (to be filled in by users)
+                        var skip = _.some(_graph.tasks, function(task) {
+                            if (task.taskName) {
+                                var options = registry.fetchTaskSync(task.taskName).options;
+                                return _.contains(findAllValues(options, null));
+                            } else if (task.taskDefinition) {
+                                return _.contains(findAllValues(task.taskDefinition.options), null);
+                            }
+                        });
+                        if (!skip) {
+                            expect(function() {
+                                graph.validate();
+                            }).to.not.throw(Error);
+                        }
+                    } else {
+                        // Only validate tasks that don't explicitly have blanks
+                        // in their definitions (to be filled in by users)
+                        if (!_.contains(findAllValues(_graph.options), null)) {
+                            expect(function() {
+                                graph.validate();
+                            }).to.not.throw(Error);
+                        }
                     }
                 });
             });
         });
-
-        it("should validate all existing graph definitions using external options");
     });
 
     describe("Object Construction", function() {
