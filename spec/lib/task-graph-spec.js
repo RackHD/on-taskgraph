@@ -405,6 +405,14 @@ describe("Task Graph", function () {
         });
     });
 
+    beforeEach(function() {
+        this.sandbox = sinon.sandbox.create();
+    });
+
+    afterEach(function() {
+        this.sandbox.restore();
+    });
+
     after(function() {
         return runner.stop();
     });
@@ -838,6 +846,36 @@ describe("Task Graph", function () {
         graph.start();
     });
 
+    it("should publish an event on start", function() {
+        var graphFactory = registry.fetchGraphSync('Graph.test');
+        var graph = graphFactory.create();
+        var eventsProtocol = helper.injector.get('Protocol.Events');
+        var publishGraphStarted = this.sandbox.stub(eventsProtocol, 'publishGraphStarted');
+
+        return graph.start()
+        .then(function() {
+            expect(publishGraphStarted).to.have.been.calledWith(graph.instanceId);
+        });
+    });
+
+    it("should publish an event on finish", function(done) {
+        var graphFactory = registry.fetchGraphSync('Graph.test');
+        var graph = graphFactory.create();
+        var eventsProtocol = helper.injector.get('Protocol.Events');
+        var publishGraphFinished = this.sandbox.stub(eventsProtocol, 'publishGraphFinished');
+
+        graph.on(graph.completeEventString, function() {
+            try {
+                expect(publishGraphFinished).to.have.been.calledWith(graph.instanceId);
+                done();
+            } catch (e) {
+                done(e);
+            }
+        });
+
+        graph.start();
+    });
+
     it("should change status to succeeded on success", function(done) {
         this.timeout(10000);
         var graphFactory = registry.fetchGraphSync('Graph.test');
@@ -860,7 +898,6 @@ describe("Task Graph", function () {
         var graph = graphFactory.create();
         graph._populateTaskData();
 
-        debugger;
         literalCompare(graph, graph.serialize());
     });
 
