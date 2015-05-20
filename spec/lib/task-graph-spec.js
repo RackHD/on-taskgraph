@@ -22,6 +22,9 @@ describe("Task Graph", function () {
 
     function literalCompare(objA, objB) {
         _.forEach(objA, function(v, k) {
+            if (_.contains(['renderContext', 'subscriptions' ,'_events', '_cancellable'], k)) {
+                return;
+            }
             if (typeof v === 'object' && !(v instanceof Date)) {
                 literalCompare(v, objB[k]);
             } else {
@@ -857,6 +860,7 @@ describe("Task Graph", function () {
         var graph = graphFactory.create();
         graph._populateTaskData();
 
+        debugger;
         literalCompare(graph, graph.serialize());
     });
 
