@@ -110,7 +110,7 @@ describe('Registry', function () {
         })
         .then(function(tasks) {
             expect(tasks).to.have.length(1);
-            expect(tasks[0].toJSON().properties).to.be.empty;
+            expect(tasks[0].properties).to.be.empty;
 
             testTask.properties.updateKey = 'updated';
             return registry.registerTask(taskRegistryObject);
@@ -120,7 +120,7 @@ describe('Registry', function () {
         })
         .then(function(tasks) {
             expect(tasks).to.have.length(1);
-            expect(tasks[0].toJSON().properties).to.have.property('updateKey')
+            expect(tasks[0].properties).to.have.property('updateKey')
                 .that.equals('updated');
         })
         .catch(function(e) {
