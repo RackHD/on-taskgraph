@@ -152,7 +152,7 @@ describe("Scheduler", function() {
                         } catch (e) {
                             done(e);
                         }
-                    }, 2);
+                    }, 10);
                 })
                 .catch(function(e) {
                     done(e);
@@ -173,7 +173,7 @@ describe("Scheduler", function() {
                         } catch (e) {
                             done(e);
                         }
-                    }, 1);
+                    }, 10);
                 })
                 .catch(function(e) {
                     done(e);
