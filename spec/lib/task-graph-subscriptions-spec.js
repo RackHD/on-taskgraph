@@ -84,8 +84,10 @@ describe('Task Graph Subscriptions', function () {
         var tgSubscriptions;
         var graphStubObj;
         var createStub;
+        var Errors;
 
         before('run task graph before', function() {
+            Errors = helper.injector.get('Errors');
             registry = helper.injector.get('TaskGraph.Registry');
             tgSubscriptions = helper.injector.get('TaskGraph.Subscriptions');
             // Default mocks used by the majority of tests. Custom overrides
@@ -122,7 +124,9 @@ describe('Task Graph Subscriptions', function () {
         it('should reject if there is an existing graph against a specified target', function() {
             registry.hasActiveGraphSync.returns(true);
             return expect(tgSubscriptions.runTaskGraph('TestGraph', {}, 'target'))
-                .to.be.rejectedWith(/Unable to run multiple task graphs against a single target/);
+                .to.be.rejectedWith(
+                    Errors.BadRequestError,
+                    /Unable to run multiple task graphs against a single target/);
         });
 
         it('should reject if the graph name does not exist', function() {
