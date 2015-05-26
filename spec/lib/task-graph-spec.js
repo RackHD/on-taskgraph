@@ -846,6 +846,16 @@ describe("Task Graph", function () {
         graph.start();
     });
 
+    it("should return the graph record on start()", function() {
+        var graphFactory = registry.fetchGraphSync('Graph.test');
+        var graph = graphFactory.create();
+
+        return graph.start()
+        .then(function(graph) {
+            expect(graph).to.have.property('instanceId').that.equals(graph.instanceId);
+        });
+    });
+
     it("should publish an event on start", function() {
         var graphFactory = registry.fetchGraphSync('Graph.test');
         var graph = graphFactory.create();
