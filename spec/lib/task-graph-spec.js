@@ -425,6 +425,21 @@ describe("Task Graph", function () {
             return cleanupTestDefinitions(this);
         });
 
+        it("should validate task labels", function() {
+            var graphFactory = registry.fetchGraphSync('Graph.test');
+            var graph = graphFactory.create();
+            graph.definition.tasks.push({
+                'label': 'test-duplicate'
+            });
+            graph.definition.tasks.push({
+                'label': 'test-duplicate'
+            });
+            expect(function() {
+                graph._validateTaskLabels();
+            }).to.throw(
+                /The task label \'test-duplicate\' is used more than once in the graph definition/);
+        });
+
         it("should get a base task", function() {
             var graphFactory = registry.fetchGraphSync('Graph.test');
             var graph = graphFactory.create();
