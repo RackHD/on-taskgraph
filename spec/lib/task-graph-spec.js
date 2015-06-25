@@ -571,7 +571,9 @@ describe("Task Graph", function () {
                         // in their definitions (to be filled in by users)
                         var skip = _.some(_graph.tasks, function(task) {
                             if (task.taskName) {
-                                var options = registry.fetchTaskSync(task.taskName).options;
+                                var _task = registry.fetchTaskSync(task.taskName);
+                                expect(_task, task.taskName).to.exist;
+                                var options = _task.options;
                                 return _.contains(findAllValues(options, null));
                             } else if (task.taskDefinition) {
                                 return _.contains(findAllValues(task.taskDefinition.options), null);
