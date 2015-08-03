@@ -976,7 +976,7 @@ describe("Task Graph", function () {
 
         expect(waterline.graphobjects).to.be.ok;
         expect(waterline.graphobjects.create).to.be.a.function;
-        return expect(waterline.graphobjects.create(serialized)).to.be.fulfilled;
+        return waterline.graphobjects.create(serialized);
     });
 
     it("should create a database record for a graph definition", function() {
@@ -986,7 +986,7 @@ describe("Task Graph", function () {
 
         expect(waterline.graphdefinitions).to.be.ok;
         expect(waterline.graphdefinitions.create).to.be.a.function;
-        return expect(waterline.graphdefinitions.create(graphFactory.definition)).to.be.fulfilled;
+        return waterline.graphdefinitions.create(graphFactory.definition);
     });
 
     // The first persist() will do a create, test that
