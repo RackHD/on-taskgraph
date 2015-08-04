@@ -979,14 +979,41 @@ describe("Task Graph", function () {
         return waterline.graphobjects.create(serialized);
     });
 
-    it("should create a database record for a graph definition", function() {
-        var waterline = helper.injector.get('Services.Waterline');
+    describe("Graph Definition Persistence", function() {
+        var waterline;
+        var testCreateGraphDefinition = {
+            friendlyName: 'Test Create Graph',
+            injectableName: 'Graph.TestCreate',
+            tasks: [
+                {
+                    label: 'test-1',
+                    taskName: 'Task.test'
+                },
+                {
+                    label: 'test-2',
+                    taskName: 'Task.test',
+                    waitOn: {
+                        'test-1': 'finished'
+                    }
+                }
+            ]
+        };
 
-        var graphFactory = registry.fetchGraphSync('Graph.test');
+        before(function() {
+            waterline = helper.injector.get('Services.Waterline');
+        });
 
-        expect(waterline.graphdefinitions).to.be.ok;
-        expect(waterline.graphdefinitions.create).to.be.a.function;
-        return waterline.graphdefinitions.create(graphFactory.definition);
+        after(function() {
+            return waterline.graphdefinitions.destroy({
+                injectableName: "Graph.TestCreate"
+            });
+        });
+
+        it("should create a database record for a graph definition", function() {
+            expect(waterline.graphdefinitions).to.be.ok;
+            expect(waterline.graphdefinitions.create).to.be.a('function');
+            return waterline.graphdefinitions.create(testCreateGraphDefinition);
+        });
     });
 
     // The first persist() will do a create, test that
