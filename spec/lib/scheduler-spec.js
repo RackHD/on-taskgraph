@@ -85,7 +85,7 @@ describe("Scheduler", function() {
             _.forEach(scheduler.running, function(workItem) {
                 scheduler.doneRunning(null, workItem);
             });
-            process.nextTick(function() {
+            setImmediate(function() {
                 expect(_.keys(scheduler.running)).to.have.length(2);
                 expect(scheduler.currentlyRunning).to.equal(2);
                 done();
