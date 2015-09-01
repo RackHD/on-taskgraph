@@ -12,14 +12,17 @@ var di = require('di'),
 di.annotate(mockRegistryFactory, new di.Provide('TaskGraph.Registry'));
 function mockRegistryFactory() {
     var createStub = sinon.stub();
-    var startStub = sinon.stub();
+    var startStub = sinon.stub().resolves();
     var serviceGraphUuid = uuid.v4();
     var stopStub = sinon.stub();
+    var emitterStub = sinon.stub();
+
     function MockRegistry() {
         this.createStub = createStub;
         this.startStub = startStub;
         this.serviceGraphUuid = serviceGraphUuid;
         this.stopStub = stopStub;
+        this.emitterStub = emitterStub;
     }
 
     MockRegistry.prototype.fetchGraphDefinitionCatalog = sinon.stub().resolves([
@@ -30,8 +33,14 @@ function mockRegistryFactory() {
         { instanceId: serviceGraphUuid, injectableName: 'Test Service Graph', serviceGraph: true }
     ]);
 
-    MockRegistry.prototype.fetchGraphSync = sinon.stub().returns(
-        { create: createStub.returns({ start: startStub }) }
+    MockRegistry.prototype.fetchGraphSync = sinon.stub().returns({
+        create: createStub.returns({
+                    start: startStub,
+                    on: emitterStub,
+                    completeEventString: 'testcomplete',
+                    definition: { injectableName: 'Test Service Graph' }
+                })
+        }
     );
 
     MockRegistry.prototype.fetchActiveGraphsSync = sinon.stub().returns([
@@ -41,7 +50,7 @@ function mockRegistryFactory() {
     return new MockRegistry();
 }
 
-describe(require('path').basename(__filename), function () {
+describe('Service Graph', function () {
     var serviceGraph;
     var registry;
 
@@ -102,6 +111,9 @@ describe(require('path').basename(__filename), function () {
             { injectableName: 'Test Service Graph 2', serviceGraph: true, stop: registry.stopStub },
             { injectableName: 'Test Non-Service Graph', stop: registry.stopStub }
         ]);
+        _.forEach(registry.fetchActiveGraphsSync(), function(graph) {
+            graph.on = sinon.stub();
+        });
         return serviceGraph.start()
         .then(function() {
             return serviceGraph.stop();
@@ -118,6 +130,9 @@ describe(require('path').basename(__filename), function () {
             { injectableName: 'Test Service Graph 2', serviceGraph: true, stop: registry.stopStub },
             { injectableName: 'Test Service Graph 3', serviceGraph: true, stop: registry.stopStub }
         ]);
+        _.forEach(registry.fetchActiveGraphsSync(), function(graph) {
+            graph.on = sinon.stub();
+        });
         return serviceGraph.start()
         .then(function() {
             return serviceGraph.stop();
@@ -134,9 +149,9 @@ describe(require('path').basename(__filename), function () {
             { injectableName: 'Test Service Graph 3', serviceGraph: true }
         ]);
         registry.fetchGraphSync = sinon.stub().returns(
-            { create: registry.createStub.returns({ start: registry.startStub }) },
-            { create: registry.createStub.returns({ start: registry.startStub }) },
-            { create: registry.createStub.returns({ start: registry.startStub }) }
+            { create: registry.createStub },
+            { create: registry.createStub },
+            { create: registry.createStub }
         );
 
         return serviceGraph.start()
@@ -154,9 +169,9 @@ describe(require('path').basename(__filename), function () {
             { injectableName: 'Test Service Graph 3', serviceGraph: true }
         ]);
         registry.fetchGraphSync = sinon.stub().returns(
-            { create: registry.createStub.returns({ start: registry.startStub }) },
-            { create: registry.createStub.returns({ start: registry.startStub }) },
-            { create: registry.createStub.returns({ start: registry.startStub }) }
+            { create: registry.createStub },
+            { create: registry.createStub },
+            { create: registry.createStub }
         );
 
         return serviceGraph.start()
@@ -164,6 +179,42 @@ describe(require('path').basename(__filename), function () {
             expect(registry.fetchGraphSync).to.have.been.calledThrice;
             expect(registry.createStub).to.have.been.calledThrice;
             expect(registry.startStub).to.have.been.calledThrice;
+        });
+    });
+
+    it('should restart service graphs that finish', function() {
+        var createStub = registry.fetchGraphSync().create;
+        var graph = createStub();
+        registry.fetchGraphSync.reset();
+        createStub.reset();
+        return serviceGraph._createAndRunServiceGraph(
+            { injectableName: 'Test Service Graph Restartable' }, {}
+        )
+        .then(function() {
+            expect(registry.fetchGraphSync).to.have.been.calledOnce;
+            expect(createStub).to.have.been.calledOnce;
+            expect(graph.start).to.have.been.calledOnce;
+            expect(graph.on).to.have.been.calledOnce;
+            expect(graph.on).to.have.been.calledWith(graph.completeEventString);
+            var cb = graph.on.firstCall.args[1];
+            expect(cb).to.be.a('function');
+
+            return cb();
+        })
+        .then(function() {
+            expect(registry.fetchGraphSync).to.have.been.calledTwice;
+            expect(createStub).to.have.been.calledTwice;
+            expect(graph.start).to.have.been.calledTwice;
+            expect(graph.on).to.have.been.calledTwice;
+            var cb = graph.on.firstCall.args[1];
+
+            return cb();
+        })
+        .then(function() {
+            expect(registry.fetchGraphSync).to.have.been.calledThrice;
+            expect(createStub).to.have.been.calledThrice;
+            expect(graph.start).to.have.been.calledThrice;
+            expect(graph.on).to.have.been.calledThrice;
         });
     });
 });
