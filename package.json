@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@hwstashprd01.isus.emc.com:7999/onrack/on-taskgraph.git"
+    "url": "https://github.com/RackHD/on-taskgraph.git"
   },
   "keywords": [
     "task",
@@ -17,16 +17,16 @@
     "job",
     "network"
   ],
-  "license": "Proprietary",
+  "license": "Apache-2.0",
   "dependencies": {
-    "di": "git+ssh://git@hwstashprd01.isus.emc.com:7999/onrack/di.js.git",
+    "di": "git+https://5f5fdee3b5f3bc054cece98ad854c3090043f3c0:x-oauth-basic@github.com/RackHD/di.js.git",
     "dot-object": "^0.6.0",
     "lodash": "^2.4.1",
     "lru-cache": "^2.5.0",
     "node-uuid": "^1.4.2",
     "q": "^1.1.2",
-    "on-core": "git+ssh://git@hwstashprd01.isus.emc.com:7999/onrack/on-core.git",
-    "on-tasks": "git+ssh://git@hwstashprd01.isus.emc.com:7999/onrack/on-tasks.git",
+    "on-core": "git+https://5f5fdee3b5f3bc054cece98ad854c3090043f3c0:x-oauth-basic@github.com/RackHD/on-core.git",
+    "on-tasks": "git+https://5f5fdee3b5f3bc054cece98ad854c3090043f3c0:x-oauth-basic@github.com/RackHD/on-tasks.git",
     "rx": "^2.3.22"
   },
   "devDependencies": {
