@@ -1,3 +1,5 @@
+// Copyright 2015, EMC, Inc.
+
 'use strict';
 var Rx = require('rx');
 var util = require('util');
