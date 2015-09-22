@@ -9,6 +9,7 @@ describe("Task Graph", function () {
     var TaskGraph;
     var Task;
     var loader;
+    var Promise;
 
     function findAllValues(obj) {
         var allValues = _.map(obj, function(v) {
@@ -53,11 +54,11 @@ describe("Task Graph", function () {
     }
 
     function cleanupTestDefinitions(self) {
-        return Q.all(_.map(self.testGraphs, function(graph) {
+        return Promise.all(_.map(self.testGraphs, function(graph) {
             return registry.removeGraphDefinition(graph);
         }))
         .then(function() {
-            return Q.all(_.map(self.testTasks, function(task) {
+            return Promise.all(_.map(self.testTasks, function(task) {
                 return registry.removeTaskDefinition(task);
             }));
         })
@@ -378,6 +379,8 @@ describe("Task Graph", function () {
         ]));
 
         helper.setupTestConfig();
+
+        Promise = helper.injector.get('Promise');
 
         var Logger = helper.injector.get('Logger');
         Logger.prototype.log = function(level, message, obj) {
