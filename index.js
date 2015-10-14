@@ -13,12 +13,15 @@ var di = require('di'),
             require('./lib/task-graph'),
             require('./lib/task-graph-runner'),
             require('./lib/task-graph-subscriptions'),
+            require('./lib/store'),
+            require('./lib/task-scheduler'),
             require('./lib/loader'),
             require('./lib/scheduler'),
             require('./lib/registry'),
             require('./lib/service-graph'),
             require('./lib/stores/memory'),
-            require('./lib/stores/waterline')
+            require('./lib/stores/waterline'),
+            require('./lib/stores/mongo')
         ])
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),

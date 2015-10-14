@@ -471,6 +471,7 @@ describe("Task Graph", function () {
             _.forEach(_.keys(taskDefinition), function(key) {
                 expect(function() {
                     var _definition = _.omit(taskDefinition, key);
+
                     graph._validateTaskDefinition(_definition);
                 }).to.throw(Error);
             });
