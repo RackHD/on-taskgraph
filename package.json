@@ -19,13 +19,13 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "di": "git+https://5f5fdee3b5f3bc054cece98ad854c3090043f3c0:x-oauth-basic@github.com/RackHD/di.js.git",
+    "di": "git+https://github.com/RackHD/di.js.git",
     "dot-object": "^0.6.0",
     "lodash": "^2.4.1",
     "lru-cache": "^2.5.0",
     "node-uuid": "^1.4.2",
-    "on-core": "git+https://5f5fdee3b5f3bc054cece98ad854c3090043f3c0:x-oauth-basic@github.com/RackHD/on-core.git",
-    "on-tasks": "git+https://5f5fdee3b5f3bc054cece98ad854c3090043f3c0:x-oauth-basic@github.com/RackHD/on-tasks.git",
+    "on-core": "git+https://github.com/RackHD/on-core.git",
+    "on-tasks": "git+https://github.com/RackHD/on-tasks.git",
     "rx": "^2.3.22"
   },
   "devDependencies": {
