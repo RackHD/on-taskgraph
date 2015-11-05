@@ -8,6 +8,7 @@ describe(require('path').basename(__filename), function () {
     var registry;
 
     before(function() {
+        this.timeout(3000);
         helper.setupInjector(
             _.flatten([
                 helper.require('/lib/task-graph'),
