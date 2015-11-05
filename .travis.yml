@@ -2,8 +2,5 @@ sudo: required
 language: node_js
 node_js:
   - "0.10"
-services:
- - mongodb
- - rabbitmq
 before_install:
  - sudo apt-get update -qq
