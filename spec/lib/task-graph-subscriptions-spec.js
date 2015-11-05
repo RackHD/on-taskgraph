@@ -5,6 +5,7 @@
 
 describe('Task Graph Subscriptions', function () {
     before('Task Graph Subscriptions before', function() {
+        this.timeout(5000);
         helper.setupInjector(
             _.flatten([
                 require('on-tasks').injectables,
