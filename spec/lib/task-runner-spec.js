@@ -7,6 +7,7 @@ describe("Task-runner", function() {
     var runner,
     Task = {},
     TaskRunner,
+    taskMessenger = {},
     store = {},
     taskAndGraphId,
     stubbedTask = {run:function() {}},
@@ -21,6 +22,9 @@ describe("Task-runner", function() {
     before(function() {
         helper.setupInjector([
                 require('../../lib/task-runner.js'),
+                require('../../lib/messenger-factory.js'),
+                require('../../lib/messengers/messenger-AMQP.js'),
+                helper.di.simpleWrapper(taskMessenger, 'Task.Messenger.AMQP'),
                 helper.di.simpleWrapper(Task, 'Task.Task'),
                 helper.di.simpleWrapper(store, 'TaskGraph.Store')
         ]);
@@ -36,7 +40,8 @@ describe("Task-runner", function() {
         };
         stubbedTask.run = this.sandbox.stub();
         Task.create = this.sandbox.stub().returns(stubbedTask);
-        store.checkoutTask = this.sandbox.stub();
+        store.checkoutTaskForRunner = this.sandbox.stub();
+        taskMessenger.subscribeRun = this.sandbox.stub();
         return runner.start();
     });
 
@@ -48,8 +53,12 @@ describe("Task-runner", function() {
         expect(runner.pipeline).to.not.equal(null);
     });
 
+    it("should start its heart", function() {
+        expect(runner.heart).to.not.equal(null);
+    });
+
     it("should instantiate and run checked out task", function(done) {
-        store.checkoutTask.resolves(taskDef);
+        store.checkoutTaskForRunner.resolves(taskDef);
         runner.inputStream.onNext(taskAndGraphId);
 
         setImmediate(function() {
@@ -60,14 +69,14 @@ describe("Task-runner", function() {
     });
 
     it("should filter tasks that have already been checkout out", function(done) {
-        store.checkoutTask.onCall(0).resolves(taskDef);
-        store.checkoutTask.onCall(1).resolves(undefined);
+        store.checkoutTaskForRunner.onCall(0).resolves(taskDef);
+        store.checkoutTaskForRunner.onCall(1).resolves(undefined);
 
         runner.inputStream.onNext(taskAndGraphId);
         runner.inputStream.onNext(taskAndGraphId);
 
         setImmediate(function() {
-            expect(store.checkoutTask).to.be.calledTwice;
+            expect(store.checkoutTaskForRunner).to.be.calledTwice;
             expect(stubbedTask.run).to.be.calledOnce;
             done();
         });
