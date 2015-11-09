@@ -1,8 +1,8 @@
+# on-taskgraph [![Build Status](https://travis-ci.org/RackHD/on-taskgraph.svg?branch=master)](https://travis-ci.org/RackHD/on-taskgraph) [![Code Climate](https://codeclimate.com/github/RackHD/on-taskgraph/badges/gpa.svg)](https://codeclimate.com/github/RackHD/on-taskgraph) [![Coverage Status](https://coveralls.io/repos/RackHD/on-taskgraph/badge.svg?branch=master&service=github)](https://coveralls.io/github/RackHD/on-taskgraph?branch=master)
+
+'on-taskgraph' is the core workflow engine for RackHD, initiating workflows, performing tasks, and responding to ancillary services to enable the RackHD service
+
 Copyright 2015, EMC, Inc.
-
-# on-taskgraph
-
-job network/graph runner
 
 ## installation
 
@@ -15,11 +15,14 @@ Note: requires RabbitMQ and mongod (if using the waterline/mongo driver) to be r
 
     sudo node index.js
 
-To interact with the system externally, e.g. running graphs against live systems, you need to be running the following services:
+To interact with the system externally, e.g. running graphs against live systems, you need to be running the following RackHD services:
 
-- [on-http](https://hwstashprd01.isus.emc.com:8443/projects/ONRACK/repos/on-http/) (mandatory for all)
-- [on-dhcp](https://hwstashprd01.isus.emc.com:8443/projects/ONRACK/repos/on-dhcp/) (mandatory for node graphs)
-- [on-tftp](https://hwstashprd01.isus.emc.com:8443/projects/ONRACK/repos/on-tftp/) (mandatory for node booting graphs)
+- [on-http](https://github.com/RackHD/on-http/) (mandatory for all)
+- [on-dhcp-proxy](https://github.com/RackHD/on-dhcp-proxy/) (mandatory for node graphs)
+- [on-tftp](https://github.com/RackHD/on-tftp/) (mandatory for node booting graphs)
+
+In addition, the system requires MongoDB, ISC DHCP, and RabbitMQ to be running and configured appropriately to enable PXE booting. More information is
+available in the documentation for RackHD at http://rackhd.readthedocs.org
 
 ## Overview
 
