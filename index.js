@@ -13,8 +13,7 @@ var di = require('di'),
             require('./lib/task-graph'),
             require('./lib/task-graph-runner'),
             require('./lib/task-runner.js'),
-            require('./lib/event-tail.js'),
-            require('./lib/messenger-factory.js'),
+            require('./lib/messenger.js'),
             require('./lib/messengers/messenger-AMQP.js'),
             require('./lib/messengers/messenger-mongo.js'),
             require('./lib/task-graph-subscriptions'),
@@ -60,4 +59,4 @@ process.on('SIGINT', function() {
                 process.exit(1);
             });
         });
-});
+    });
