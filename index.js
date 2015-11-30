@@ -31,8 +31,18 @@ var di = require('di'),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
     logger = injector.get('Logger').initialize('TaskGraph');
 
+var options = {
+    runner: true,
+    scheduler: true
+};
 
-taskGraphRunner.start()
+if (_.contains(process.argv, '-s') || _.contains(process.argv, '--scheduler')) {
+    options.runner = false;
+} else if (_.contains(process.argv, '-r') || _.contains(process.argv, '--runner')) {
+    options.scheduler = false;
+}
+
+taskGraphRunner.start(options)
     .then(function () {
         logger.info('Task Graph Runner Started.');
     })
