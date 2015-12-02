@@ -1,9 +1,17 @@
 language: node_js
+
 node_js:
   - "0.10"
+  - "4"
+
+matrix:
+  allow_failures:
+   - node_js: "4"
+
 services:
  - mongodb
  - rabbitmq
+
 after_success:
  - ./node_modules/.bin/istanbul cover -x "**/spec/**" ./node_modules/.bin/_mocha --report lcovonly -- $(find spec -name '*-spec.js') -R spec --require spec/helper.js
  - cat ./coverage/lcov.info | node_modules/.bin/coveralls
@@ -15,4 +23,3 @@ notifications:
     on_success: never
     on_failure: always
     on_start: never
-    
