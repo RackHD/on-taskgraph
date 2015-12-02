@@ -75,7 +75,7 @@ describe("Task-runner", function() {
                 runner.running = false;
                 runner.subscribeRunTask = this.sandbox.stub();
                 runner.initializePipeline = this.sandbox.stub();
-                store.heartbeatTasks = this.sandbox.stub();
+                store.heartbeatTasksForRunner = this.sandbox.stub();
                 return runner.start()
                 .then(function() {
                     try {
@@ -105,7 +105,7 @@ describe("Task-runner", function() {
             describe('initializePipeline', function() {
 
                 it('should return disposable subscriptions', function() {
-                    store.checkoutTaskForRunner = this.sandbox.stub();
+                    store.checkoutTask = this.sandbox.stub();
                     store.getTaskById = this.sandbox.stub();
                     runner.initializePipeline().forEach(function(subscription) {
                         expect(subscription).to.have.property('dispose')
@@ -120,8 +120,8 @@ describe("Task-runner", function() {
                     beforeEach(function() {
                         this.sandbox.restore();
                         runner = TaskRunner.create();
-                        store.checkoutTaskForRunner = this.sandbox.stub();
-                        store.getTaskById = this.sandbox.stub();
+                        store.checkoutTask = this.sandbox.stub().resolves();
+                        store.getTaskById = this.sandbox.stub().resolves();
                         taskAndGraphId = {
                             taskId: 'someTaskId',
                             graphId: 'someGraphId'
@@ -133,7 +133,7 @@ describe("Task-runner", function() {
                         var subscription = runner.createRunTaskSubscription(runner.runTaskStream);
                         runner.runTaskStream.onNext(taskAndGraphId);
                         setImmediateAssertWrapper(done, function() {
-                            expect(store.checkoutTaskForRunner).to.not.have.been.called;
+                            expect(store.checkoutTask).to.not.have.been.called;
                             subscription.dispose();
                         });
                     });
@@ -146,11 +146,11 @@ describe("Task-runner", function() {
 
                     it('should filter empty tasks', function(done) {
                         runner.running = true;
-                        store.checkoutTaskForRunner.resolves(undefined);
+                        store.checkoutTask.resolves();
                         var subscription = runner.createRunTaskSubscription(runner.runTaskStream);
                         runner.runTaskStream.onNext(taskAndGraphId);
                         setImmediateAssertWrapper(done, function() {
-                            expect(store.checkoutTaskForRunner.callCount).to.equal(1);
+                            expect(store.checkoutTask).to.have.been.calledOnce;
                             expect(store.getTaskById).to.not.have.been.called;
                             subscription.dispose();
                         });
@@ -158,7 +158,7 @@ describe("Task-runner", function() {
 
                     it('should run a task', function(done) {
                         runner.running = true;
-                        store.checkoutTaskForRunner.resolves(taskAndGraphId);
+                        store.checkoutTask.resolves(taskAndGraphId);
                         store.getTaskById.resolves();
                         runner.runTask = this.sandbox.stub().resolves();
                         runner.handleStreamSuccess = this.sandbox.stub();
@@ -170,26 +170,25 @@ describe("Task-runner", function() {
                         });
                     });
 
-                    it('should handle any errors in the stream', function(done) {
+                    it('should handle stream errors without crashing the parent stream', function(done) {
                         runner.running = true;
-                        store.checkoutTaskForRunner.resolves(taskAndGraphId);
+                        store.checkoutTask.resolves(taskAndGraphId);
+                        store.checkoutTask.onCall(1).throws(new Error('checkout error'));
                         store.getTaskById.resolves();
+                        store.getTaskById.onCall(0).throws(new Error('get task error'));
                         runner.runTask = this.sandbox.stub().resolves();
+                        var eSpy = sinon.spy(runner, 'handleStreamError');
+                        runner.handleStreamSuccess = this.sandbox.stub();
 
-                        var mapFuncs = [
-                            store.checkoutTaskForRunner,
-                            store.getTaskById,
-                            runner.runTask
-                        ];
+                        var subscription = runner.createRunTaskSubscription(runner.runTaskStream);
 
-                        var errSpy = sinon.spy(runner, 'handleStreamError');
-                        _.forEach(mapFuncs, function(func) {
-                            runner.createRunTaskSubscription(runner.runTaskStream);
-                            func.throws(new Error());
-                            runner.runTaskStream.onNext({});
-                        });
+                        runner.runTaskStream.onNext();
+                        runner.runTaskStream.onNext();
+                        runner.runTaskStream.onNext();
+
                         setImmediateAssertWrapper(done, function() {
-                            expect(errSpy.callCount).to.equal(3);
+                            expect(eSpy.callCount).to.equal(2);
+                            expect(runner.handleStreamSuccess).to.be.calledOnce;
                         });
                     });
                 });
@@ -199,7 +198,7 @@ describe("Task-runner", function() {
                     beforeEach(function() {
                         this.sandbox.restore();
                         runner = TaskRunner.create();
-                        store.heartbeatTasks = this.sandbox.stub().resolves();
+                        store.heartbeatTasksForRunner = this.sandbox.stub().resolves();
                         runner.handleStreamSuccess = this.sandbox.stub();
                     });
 
@@ -208,7 +207,7 @@ describe("Task-runner", function() {
                         runner.heartbeatInterval = 20;
                         runner.createHeartbeatSubscription();
                         setTimeout(asyncAssertWrapper(done, function() {
-                            expect(store.heartbeatTasks.callCount).to.equal(2);
+                            expect(store.heartbeatTasksForRunner.callCount).to.equal(2);
                             expect(runner.handleStreamSuccess.callCount).to.equal(2);
                         }), 59);
                     });
@@ -217,7 +216,7 @@ describe("Task-runner", function() {
                         runner.running = false;
                         runner.createHeartbeatSubscription(1);
                         setTimeout(asyncAssertWrapper(done, function() {
-                            expect(store.heartbeatTasks).to.not.have.been.called;
+                            expect(store.heartbeatTasksForRunner).to.not.have.been.called;
                         }), 20);
                     });
 
@@ -230,11 +229,11 @@ describe("Task-runner", function() {
                     it('should stop the runner on Error', function(done) {
                         runner.running = true;
                         runner.heartbeatInterval = 1;
-                        store.heartbeatTasks = this.sandbox.stub().throws(new Error('test error'));
+                        store.heartbeatTasksForRunner = this.sandbox.stub().throws(new Error('test error'));
                         runner.stop = this.sandbox.stub();
                         runner.createHeartbeatSubscription();
                         setTimeout(asyncAssertWrapper(done, function() {
-                            expect(store.heartbeatTasks).to.have.been.calledOnce;
+                            expect(store.heartbeatTasksForRunner).to.have.been.calledOnce;
                             expect(runner.handleStreamSuccess).to.have.been.calledOnce;
                             expect(runner.stop).to.have.been.calledOnce;
                         }), 20);
@@ -349,7 +348,7 @@ describe("Task-runner", function() {
 
         beforeEach(function() {
             this.sandbox.restore();
-
+            runner = TaskRunner.create();
             stubbedTask = _.defaults({run: this.sandbox.stub()}, taskDef);
             Task.create = this.sandbox.stub().returns(stubbedTask);
             stubbedTask.definition = { injectableName: 'taskName'};
@@ -375,11 +374,9 @@ describe("Task-runner", function() {
         });
 
         it('should add and remove tasks from its activeTasks list', function(done) {
-            stubbedTask.run = function() {
+            runner.runTask(data).subscribe(function() {
                 expect(runner.activeTasks[taskDef.instanceId]).to.equal(stubbedTask);
-                return Promise.resolve(finishedTask);
-            };
-            runner.runTask(data);
+            });
             setImmediateAssertWrapper(done, function() {
                 expect(_.isEmpty(runner.activeTasks)).to.equal(true);
             });
@@ -398,14 +395,22 @@ describe("Task-runner", function() {
         });
 
         it('should not crash the parent stream if a task fails', function(done) {
-            stubbedTask.run.onCall(1).throws(new Error);
+            runner.running = true;
+            stubbedTask.run.onCall(1).throws(new Error('test error'));
+            stubbedTask.run.resolves(finishedTask);
+            var successSpy = sinon.spy(runner, 'handleStreamSuccess');// = this.sandbox.stub().returns(Rx.Observable.empty());
+            var errorSpy = sinon.spy(runner, 'handleStreamError');// = this.sandbox.stub().returns(Rx.Observable.empty());
+            store.checkoutTask = this.sandbox.stub().resolves({ task: 'taskStuff'});
+            store.getTaskById = this.sandbox.stub().resolves(data);
+            var subscription = runner.createRunTaskSubscription(runner.runTaskStream);
 
             runner.runTaskStream.onNext();
             runner.runTaskStream.onNext();
             runner.runTaskStream.onNext();
 
             setImmediateAssertWrapper(done, function() {
-                expect(runner.handleStreamSuccess.callCount).to.equal(2);
+                expect(errorSpy).to.be.called.once;
+                expect(successSpy).to.be.calledTwice;
             });
         });
     });
