@@ -13,10 +13,11 @@ var di = require('di'),
             require('./lib/task-graph-runner.js'),
             require('./lib/task-runner.js'),
             require('./lib/task-graph-subscriptions.js'),
+            require('./lib/loader.js'),
             require('./lib/task-scheduler.js'),
             require('./lib/lease-expiration-poller.js'),
-            require('./lib/loader.js'),
             require('./lib/service-graph.js'),
+            require('./lib/completed-task-poller.js'),
             require('./lib/rx-mixins.js')
         ])
     ),
