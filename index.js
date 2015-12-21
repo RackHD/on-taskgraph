@@ -30,9 +30,12 @@ taskGraphRunner.start()
         logger.info('Task Graph Runner Started.');
     })
     .catch(function(error) {
+        //NOTE(heckj): I'm unclear why this is on the console directly and not
+        // using a logger. Would expect this to be logger.critical(), but
+        // leaving as is because I don't know the implications.
         console.error(error.message || error.details);
         console.error(error.stack || error.rawStack);
-//        logger.error('Task Graph Runner Startup Error.', { error: error });
+//      logger.critical('Task Graph Runner Startup Error.', { error: error });
 
         process.nextTick(function() {
             process.exit(1);
@@ -42,7 +45,7 @@ taskGraphRunner.start()
 process.on('SIGINT', function() {
     taskGraphRunner.stop()
         .catch(function(error) {
-            logger.error('Task Graph Runner Shutdown Error.', { error: error });
+            logger.critical('Task Graph Runner Shutdown Error.', { error: error });
         })
         .finally(function() {
             process.nextTick(function() {
