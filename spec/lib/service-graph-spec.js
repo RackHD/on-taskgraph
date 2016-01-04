@@ -56,7 +56,7 @@ describe('Service Graph', function () {
 
     beforeEach(function() {
         helper.setupInjector(
-            _.flatten([
+            _.flattenDeep([
                 mockRegistryFactory,
                 helper.require('/lib/service-graph')
             ])

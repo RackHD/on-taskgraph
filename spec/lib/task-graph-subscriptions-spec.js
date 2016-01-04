@@ -7,7 +7,7 @@ describe('Task Graph Subscriptions', function () {
     before('Task Graph Subscriptions before', function() {
         this.timeout(5000);
         helper.setupInjector(
-            _.flatten([
+            _.flattenDeep([
                 require('on-tasks').injectables,
                 helper.require('/lib/task-graph-runner'),
                 helper.require('/lib/registry'),

@@ -10,7 +10,7 @@ describe(require('path').basename(__filename), function () {
     before(function() {
         this.timeout(3000);
         helper.setupInjector(
-            _.flatten([
+            _.flattenDeep([
                 helper.require('/lib/task-graph'),
                 helper.require('/lib/scheduler'),
                 helper.require('/lib/registry'),
