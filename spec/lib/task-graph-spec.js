@@ -19,7 +19,7 @@ describe("Task Graph", function () {
                 return v;
             }
         });
-        return _.flatten(allValues);
+        return _.flattenDeep(allValues);
     }
 
     function literalCompare(objA, objB) {
@@ -363,7 +363,7 @@ describe("Task Graph", function () {
         var tasks = require('on-tasks');
 
         self.timeout(10000);
-        helper.setupInjector(_.flatten([
+        helper.setupInjector(_.flattenDeep([
             tasks.injectables,
             helper.require('/lib/task-graph'),
             helper.require('/lib/task-graph-runner'),

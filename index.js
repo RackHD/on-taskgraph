@@ -7,7 +7,7 @@ var di = require('di'),
     core = require('on-core')(di),
     tasks = require('on-tasks'),
     injector = new di.Injector(
-        _.flatten([
+        _.flattenDeep([
             core.injectables,
             tasks.injectables,
             require('./lib/task-graph'),
