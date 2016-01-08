@@ -97,11 +97,19 @@ Graphs are defined via a JSON definition that conform to this schema:
     - options.\<label\> (object): key, value pairs that should all be handed to a specific task
 
 
-## debugging
+## Debugging/Profiling
 
 To run in debug mode:
 
     sudo node debug index.js
+
+If you're using Node v4 or greater you can use `node-inspector` to debug and profile from a GUI.
+
+    npm install node-inspector -g
+    node-inspector --preload=false &
+    sudo node --debug-brk index.js
+
+Note: do not use the `node-debug` command it doesn't work as well.
 
 ## CI/testing
 
