@@ -1,9 +1,11 @@
-// Copyright 2015, EMC, Inc.
-/* jshint node:true */
+// Copyright 2016, EMC, Inc.
 
 'use strict';
 
-describe("Task-runner", function() {
+describe("Task Runner", function() {
+    var di = require('di');
+    var core = require('on-core')(di, __dirname);
+
     var runner,
     Task = {},
     TaskRunner,
@@ -14,6 +16,8 @@ describe("Task-runner", function() {
         heartbeatTasksForRunner: function(){}
     },
     Promise,
+    Constants,
+    assert,
     Rx;
 
     var asyncAssertWrapper = function(done, cb) {
@@ -35,28 +39,29 @@ describe("Task-runner", function() {
             );
     };
 
-    var setImmediateAssertWrapper = function(done, cb) {
-        setImmediate(asyncAssertWrapper(done, cb));
-    };
-
     before(function() {
         helper.setupInjector([
-                require('../../lib/task-runner.js'),
-                helper.di.simpleWrapper(taskMessenger, 'Task.Messenger'),
-                helper.di.simpleWrapper(Task, 'Task.Task'),
-                helper.di.simpleWrapper(store, 'TaskGraph.Store')
+            core.workflowInjectables,
+            require('../../lib/task-runner.js'),
+            helper.di.simpleWrapper(taskMessenger, 'Task.Messengers.AMQP'),
+            helper.di.simpleWrapper(Task, 'Task.Task'),
+            helper.di.simpleWrapper(store, 'TaskGraph.Store')
         ]);
         Rx = helper.injector.get('Rx');
         Promise = helper.injector.get('Promise');
+        Constants = helper.injector.get('Constants');
+        assert = helper.injector.get('Assert');
         TaskRunner = helper.injector.get('TaskGraph.TaskRunner');
         this.sandbox = sinon.sandbox.create();
     });
 
+    beforeEach(function() {
+        runner = TaskRunner.create();
+    });
 
     afterEach(function() {
         this.sandbox.restore();
     });
-
 
     describe('start', function() {
 
@@ -94,19 +99,6 @@ describe("Task-runner", function() {
             }));
         });
     });
-
-    describe('initializePipeline', function() {
-
-        it('should return disposable subscriptions', function() {
-            this.sandbox.stub(store, 'checkoutTask');
-            this.sandbox.stub(store, 'getTaskById');
-            runner.initializePipeline().forEach(function(subscription) {
-                expect(subscription).to.have.property('dispose')
-                .that.is.a('function');
-            });
-        });
-    });
-
 
     describe('createRunTaskSubscription', function() {
         var taskAndGraphId,
@@ -238,7 +230,7 @@ describe("Task-runner", function() {
             runner.running = true;
             runner.heartbeatInterval = 1;
             store.heartbeatTasksForRunner = this.sandbox.stub().throws(new Error('test error'));
-            runner.stop = this.sandbox.stub();
+            runner.stop = this.sandbox.stub().resolves();
             var heartStream = runner.createHeartbeatSubscription(Rx.Observable.interval(1));
             streamOnCompletedWrapper(heartStream, done, function() {
                 expect(store.heartbeatTasksForRunner).to.have.been.calledOnce;
@@ -256,21 +248,23 @@ describe("Task-runner", function() {
 
         it('should mark itself not running', function() {
             runner.running = true;
-            runner.stop();
-            expect(runner.isRunning()).to.equal(false);
+            return runner.stop()
+            .then(function() {
+                expect(runner.isRunning()).to.equal(false);
+            });
         });
 
         it('should dispose all pipelines', function() {
-            var mockOne = { dispose: sinon.stub() },
-            mockTwo = { dispose: sinon.stub() };
-            runner.pipelines = [
-                mockOne,
-                mockTwo
-            ];
-            runner.stop();
-            expect(runner.pipelines.length).to.equal(0);
-            expect(mockOne.dispose).to.have.been.calledOnce;
-            expect(mockTwo.dispose).to.have.been.calledOnce;
+            var sub1 = { dispose: sinon.stub() };
+            var sub2 = { dispose: sinon.stub() };
+            runner.subscriptions = [sub1, sub2];
+
+            return runner.stop()
+            .then(function() {
+                expect(runner.subscriptions.length).to.equal(0);
+                expect(sub1.dispose).to.have.been.calledOnce;
+                expect(sub2.dispose).to.have.been.calledOnce;
+            });
         });
     });
 
@@ -301,28 +295,14 @@ describe("Task-runner", function() {
             var finishedTask = {
                 taskId: 'aTaskId',
                 context: { graphId: 'aGraphId'},
-                state: 'finished'
+                state: 'finished',
+                definition: { terminalOnStates: ['succeeded'] }
             };
+
             runner.publishTaskFinished(finishedTask)
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
             });
-        });
-    });
-
-    describe('stream handlers', function() {
-
-        beforeEach(function() {
-            this.sandbox.restore();
-            runner = TaskRunner.create();
-        });
-
-        it('stream success handler should return an observable', function() {
-            expect(runner.handleStreamSuccess()).to.be.an.instanceof(Rx.Observable);
-        });
-
-        it('stream error handler should return an empty observable', function() {
-            expect(runner.handleStreamError('test', {})).to.be.an.instanceof(Rx.Observable);
         });
     });
 
@@ -342,7 +322,8 @@ describe("Task-runner", function() {
                 taskId: 'aTaskId',
                 instanceId: 'anInstanceId',
                 context: { graphId: 'aGraphId'},
-                state: 'finished'
+                state: 'finished',
+                definition: { terminalOnStates: ['succeeded'] }
             };
             data = {
                 task: taskDef,
