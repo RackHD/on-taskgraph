@@ -13,6 +13,8 @@ describe("Task Runner", function() {
     store = {
         checkoutTask: function(){},
         getTaskById: function(){},
+        getOwnTasks: function(){},
+        expireLease: function(){},
         heartbeatTasksForRunner: function(){}
     },
     Promise,
@@ -34,7 +36,7 @@ describe("Task Runner", function() {
     var streamOnCompletedWrapper = function(stream, done, cb) {
             stream.subscribe(
                     function(){},
-                    function(){},
+                    function(err){done(err);},
                     asyncAssertWrapper(done, cb)
             );
     };
@@ -97,6 +99,27 @@ describe("Task Runner", function() {
             .then(asyncAssertWrapper(done, function() {
                 expect(runner.subscribeRunTask).to.have.been.calledOnce;
             }));
+        });
+    });
+
+    describe('initializePipeline', function() {
+        it('should create and subscribe to all of it\'s pipelines', function() {
+            runner = TaskRunner.create();
+            var runStub = {subscribe: this.sandbox.stub()};
+            var heartStub = {subscribe: this.sandbox.stub()};
+            var cancelStub = {subscribe: this.sandbox.stub()};
+
+            this.sandbox.stub(runner, 'createRunTaskSubscription').returns(runStub);
+            this.sandbox.stub(runner, 'createHeartbeatSubscription').returns(heartStub);
+            this.sandbox.stub(runner, 'createCancelTaskSubscription').returns(cancelStub);
+
+            runner.initializePipeline();
+            expect(runner.createRunTaskSubscription).to.have.been.calledOnce;
+            expect(runStub.subscribe).to.have.been.calledOnce;
+            expect(runner.createHeartbeatSubscription).to.have.been.calledOnce;
+            expect(heartStub.subscribe).to.have.been.calledOnce;
+            expect(runner.createCancelTaskSubscription).to.have.been.calledOnce;
+            expect(cancelStub.subscribe).to.have.been.calledOnce;
         });
     });
 
@@ -168,11 +191,18 @@ describe("Task Runner", function() {
 
         it('should handle stream errors without crashing the main stream', function(done) {
             runner.running = true;
+            var streamOnCompleteWrapper = function(stream, done, cb) {
+                stream.subscribe(
+                        runner.handleStreamSuccess.bind(runner, 'success'),
+                        function(err){done(err);},
+                        asyncAssertWrapper(done, cb)
+                );
+            };
             store.checkoutTask.onCall(1).throws(new Error('checkout error'));
             store.getTaskById.onCall(0).throws(new Error('get task error'));
-            runner.runTask = this.sandbox.stub().resolves();
+            runner.runTask = this.sandbox.stub().resolves({});
             var eSpy = sinon.spy(runner, 'handleStreamError');
-            runner.handleStreamSuccess = this.sandbox.stub();
+            var sSpy = sinon.spy(runner, 'handleStreamSuccess');
 
             var taskStream = runner.createRunTaskSubscription(
                     Rx.Observable.from([
@@ -181,8 +211,9 @@ describe("Task Runner", function() {
                             taskAndGraphId
                         ]));
 
-            streamOnCompletedWrapper(taskStream, done, function() {
+            streamOnCompleteWrapper(taskStream, done, function() {
                 expect(eSpy.callCount).to.equal(2);
+                expect(sSpy).to.be.calledOnce;
                 expect(runner.runTask).to.be.calledOnce;
             });
         });
@@ -194,9 +225,9 @@ describe("Task Runner", function() {
             this.sandbox.restore();
             runner = TaskRunner.create();
             this.sandbox.stub(store, 'heartbeatTasksForRunner').resolves();
+            this.sandbox.stub(store, 'getOwnTasks').resolves();
             this.sandbox.stub(runner, 'handleLostTasks').resolves();
             this.sandbox.stub(runner, 'handleUnownedTasks').resolves();
-            runner.handleStreamSuccess = this.sandbox.stub();
         });
 
         afterEach(function() {
@@ -235,6 +266,53 @@ describe("Task Runner", function() {
             streamOnCompletedWrapper(heartStream, done, function() {
                 expect(store.heartbeatTasksForRunner).to.have.been.calledOnce;
                 expect(runner.stop).to.have.been.calledOnce;
+            });
+        });
+
+        it('should stop unowned tasks', function(done) {
+            runner.running = true;
+            var stopStub = this.sandbox.stub();
+            runner.activeTasks.excessTask1 = {
+                taskId: 'excessTask1',
+                stop: stopStub
+            };
+
+            runner.activeTasks.excessTask2 = {
+                taskId: 'excessTask2',
+                stop: stopStub
+            };
+
+            runner.handleUnownedTasks.restore();
+            store.getOwnTasks.resolves(undefined);
+            store.heartbeatTasksForRunner.resolves(1);
+            var heartStream = runner.createHeartbeatSubscription(Rx.Observable.interval(1)).take(3);
+
+            streamOnCompletedWrapper(heartStream, done, function() {
+                expect(stopStub).to.have.been.calledTwice;
+                expect(runner.activeTasks).to.be.empty;
+            });
+        });
+
+        it('should expire lost tasks', function(done) {
+            runner.running = true;
+            var excessTask1 = {
+                taskId: 'excessTask1'
+            };
+
+            var excessTask2 = {
+                taskId: 'excessTask2'
+            };
+
+            runner.handleLostTasks.restore();
+            this.sandbox.stub(store, 'expireLease').resolves();
+            store.getOwnTasks.resolves([excessTask1, excessTask2]);
+            store.heartbeatTasksForRunner.resolves(1);
+            var heartStream = runner.createHeartbeatSubscription(Rx.Observable.interval(1)).take(3);
+
+            streamOnCompletedWrapper(heartStream, done, function() {
+                expect(store.expireLease).to.have.been.calledWith('excessTask1');
+                expect(store.expireLease).to.have.been.calledWith('excessTask2');
+                expect(runner.lostTasks).to.be.empty;
             });
         });
     });
@@ -303,6 +381,37 @@ describe("Task Runner", function() {
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
             });
+        });
+    });
+
+    describe('task cancellation', function() {
+
+        beforeEach(function() {
+            this.sandbox.restore();
+            runner = TaskRunner.create();
+        });
+
+        it("should wrap the taskMessenger's subscribeCancel method", function() {
+            taskMessenger.subscribeCancel = this.sandbox.stub();
+            runner.subscribeCancel();
+            expect(taskMessenger.subscribeCancel).to.have.been.calledOnce;
+        });
+
+        it('should cancel tasks fed through the cancelTask stream', function(done) {
+            runner.running = true;
+            var cancelStub = this.sandbox.stub();
+
+            runner.activeTasks.testTaskId = {
+                cancel: cancelStub,
+                toJSON: this.sandbox.stub()
+            };
+            var cancelStream = runner.createCancelTaskSubscription(
+                    Rx.Observable.just({taskId: 'testTaskId'}));
+
+            streamOnCompletedWrapper(cancelStream, done, function() {
+                expect(cancelStub).to.have.been.calledOnce;
+            });
+
         });
     });
 

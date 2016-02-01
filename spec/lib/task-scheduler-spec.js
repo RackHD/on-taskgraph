@@ -75,6 +75,7 @@ describe('Task Scheduler', function() {
         this.sandbox.spy(TaskScheduler.prototype, 'handleStreamSuccess');
         this.sandbox.stub(taskMessenger, 'subscribeRunTaskGraph').resolves({});
         this.sandbox.stub(taskMessenger, 'subscribeTaskFinished').resolves({});
+        this.sandbox.stub(taskMessenger, 'subscribeCancelGraph').resolves({});
         this.sandbox.stub(LeaseExpirationPoller, 'create').returns({
             start: sinon.stub(),
             stop: sinon.stub()
@@ -559,10 +560,11 @@ describe('Task Scheduler', function() {
         it('should handle failGraph errors', function(done) {
             var data = {
                 taskId: 'testtaskid',
-                state: Constants.TaskStates.Failed
+                state: Constants.TaskStates.Failed,
+                graphId: 'testgraphid'
             };
             var testError = new Error('test fail graph error');
-            store.setGraphDone.rejects(testError);
+            this.sandbox.stub(store, 'getActiveGraphById').rejects(testError);
             taskScheduler.failGraph.restore();
             observable = taskScheduler.createCheckGraphFinishedSubscription(
                 Rx.Observable.just(data));
@@ -570,7 +572,7 @@ describe('Task Scheduler', function() {
             streamCompletedWrapper(observable, done, function() {
                 expect(taskScheduler.handleStreamError).to.have.been.calledOnce;
                 expect(taskScheduler.handleStreamError).to.have.been.calledWith(
-                    'Error failing graph',
+                    'Error failing/cancelling graph',
                     testError
                 );
             });
