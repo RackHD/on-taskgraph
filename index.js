@@ -33,6 +33,22 @@ if (_.contains(process.argv, '-s') || _.contains(process.argv, '--scheduler')) {
 } else if (_.contains(process.argv, '-r') || _.contains(process.argv, '--runner')) {
     options.scheduler = false;
 }
+if (_.contains(process.argv, '-d') || _.contains(process.argv, '--domain')) {
+    _.reduce(process.argv, function(lastArg, arg) {
+        if (lastArg === '-d' || lastArg === '--domain') {
+            if (_.contains(['-s', '--scheduler', '-r', '--runner'], arg)) {
+                console.error('\nNo value for domain specified!');
+                process.exit(1);
+            }
+            options.domain = arg;
+        }
+        return arg;
+    });
+}
+if (_.last(process.argv) === '-d' || _.last(process.argv) === '--domain') {
+    console.error('\nNo value for domain specified!');
+    process.exit(1);
+}
 
 taskGraphRunner.start(options)
     .then(function () {
