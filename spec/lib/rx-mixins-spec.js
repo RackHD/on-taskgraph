@@ -60,28 +60,4 @@ describe('Rx Mixins', function () {
             }
         );
     });
-
-    it('should flatMapWithLossyMaxConcurrent', function(done) {
-        var results = [];
-        var counter = { count: 0, max: 2 };
-
-        Rx.Observable.from([1,2,3,4,5])
-        .flatMapWithLossyMaxConcurrent(counter, function(val) {
-            return Promise.resolve(val);
-        })
-        .subscribe(
-            function(val) {
-                results.push(val);
-            },
-            done,
-            function() {
-                try {
-                    expect(results).to.deep.equal([1,2]);
-                    done();
-                } catch (e) {
-                    done(e);
-                }
-            }
-        );
-    });
 });
