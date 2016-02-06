@@ -14,11 +14,11 @@ RUN cd /tmp \
 COPY . /RackHD/on-taskgraph/
 RUN cp -a /tmp/node_modules /RackHD/on-taskgraph/
 
-RUN apt-get update && apt-get install -y isc-dhcp-server
-
-ENV dhcpGateway $dhcpGateway
+RUN apk add --update dhcp
 
 EXPOSE 67
 EXPOSE 67/udp
 
-ENTRYPOINT [ "/RackHD/on-taskgraph/docker_entry.sh" ]
+RUN touch /var/lib/dhcp/dhcpd.leases
+
+CMD [ "/RackHD/on-taskgraph/docker_entry.sh" ]
