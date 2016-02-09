@@ -48,7 +48,7 @@ describe('Service Graph', function () {
                 injectableName: 'testGraph1',
                 serviceGraph: true,
                 instanceId: 'testid1',
-                _status: Constants.TaskStates.Pending,
+                _status: Constants.Task.States.Pending,
                 definition: graphDefinitions[0]
         };
         this.sandbox.stub(serviceGraph, 'createAndRunServiceGraph').resolves();
@@ -103,7 +103,7 @@ describe('Service Graph', function () {
     });
 
     it('should restart service graphs that have failed', function() {
-        graph._status = Constants.TaskStates.Failed;
+        graph._status = Constants.Task.States.Failed;
         store.getGraphDefinitions.resolves([ graphDefinitions[0] ]);
         store.getServiceGraphs.resolves([ graph ]);
 

@@ -69,7 +69,7 @@ describe("Task Runner", function() {
 
         beforeEach(function() {
             runner = TaskRunner.create();
-            this.sandbox.stub(runner, 'subscribeCancel').resolves();
+            this.sandbox.stub(runner, 'subscribeCancelTask').resolves();
             this.sandbox.stub(runner, 'subscribeRunTask').resolves();
             this.sandbox.stub(runner, 'initializePipeline');
             runner.running = false;
@@ -392,9 +392,9 @@ describe("Task Runner", function() {
         });
 
         it("should wrap the taskMessenger's subscribeCancel method", function() {
-            taskMessenger.subscribeCancel = this.sandbox.stub();
-            runner.subscribeCancel();
-            expect(taskMessenger.subscribeCancel).to.have.been.calledOnce;
+            taskMessenger.subscribeCancelTask = this.sandbox.stub();
+            runner.subscribeCancelTask();
+            expect(taskMessenger.subscribeCancelTask).to.have.been.calledOnce;
         });
 
         it('should cancel tasks fed through the cancelTask stream', function(done) {

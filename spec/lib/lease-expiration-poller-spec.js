@@ -49,8 +49,8 @@ describe("Lease Expiration Poller", function() {
 
     it('constructor', function() {
         expect(poller.running).to.equal(false);
-        expect(poller.leaseAdjust).to.equal(Constants.DefaultTaskLeaseAdjust);
-        expect(poller.pollInterval).to.equal(Constants.DefaultTaskLeaseAdjust * 2);
+        expect(poller.leaseAdjust).to.equal(Constants.Task.DefaultLeaseAdjust);
+        expect(poller.pollInterval).to.equal(Constants.Task.DefaultLeaseAdjust * 2);
         expect(poller.schedulerId).to.equal('testid');
         expect(poller.domain).to.equal('default');
     });

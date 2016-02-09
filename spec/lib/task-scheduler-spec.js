@@ -96,7 +96,7 @@ describe('Task Scheduler', function() {
         it('should be created with default values', function() {
             expect(taskScheduler.running).to.equal(false);
             expect(assert.uuid.bind(assert, taskScheduler.schedulerId)).to.not.throw(Error);
-            expect(taskScheduler.domain).to.equal(Constants.DefaultTaskDomain);
+            expect(taskScheduler.domain).to.equal(Constants.Task.DefaultDomain);
             expect(taskScheduler.evaluateTaskStream).to.be.an.instanceof(Rx.Subject);
             expect(taskScheduler.evaluateGraphStream).to.be.an.instanceof(Rx.Subject);
             expect(taskScheduler.checkGraphFinishedStream).to.be.an.instanceof(Rx.Subject);
@@ -526,7 +526,7 @@ describe('Task Scheduler', function() {
         it('should check if a graph is succeeded on a succeeded task state', function(done) {
             var data = {
                 taskId: 'testtaskid',
-                state: Constants.TaskStates.Failed
+                state: Constants.Task.States.Failed
             };
             taskScheduler.failGraph.resolves();
             observable = taskScheduler.createCheckGraphFinishedSubscription(
@@ -543,7 +543,7 @@ describe('Task Scheduler', function() {
         it('should fail a graph on a terminal, failed task state', function(done) {
             var data = {
                 taskId: 'testtaskid',
-                state: Constants.TaskStates.Succeeded
+                state: Constants.Task.States.Succeeded
             };
             taskScheduler.checkGraphSucceeded.resolves();
             observable = taskScheduler.createCheckGraphFinishedSubscription(
@@ -560,7 +560,7 @@ describe('Task Scheduler', function() {
         it('should handle failGraph errors', function(done) {
             var data = {
                 taskId: 'testtaskid',
-                state: Constants.TaskStates.Failed,
+                state: Constants.Task.States.Failed,
                 graphId: 'testgraphid'
             };
             var testError = new Error('test fail graph error');
@@ -584,7 +584,7 @@ describe('Task Scheduler', function() {
             var data = { graphId: 'testgraphid' };
             var graphData = {
                 instanceId: 'testid',
-                _status: Constants.TaskStates.Succeeded,
+                _status: Constants.Task.States.Succeeded,
                 ignoreThisField: 'please'
             };
             var dataDone = { graphId: 'testgraphid', done: true };
@@ -597,13 +597,13 @@ describe('Task Scheduler', function() {
                 expect(store.checkGraphFinished).to.have.been.calledWith(data);
                 expect(store.setGraphDone).to.have.been.calledOnce;
                 expect(store.setGraphDone).to.have.been.calledWith(
-                    Constants.TaskStates.Succeeded,
+                    Constants.Task.States.Succeeded,
                     dataDone
                 );
                 expect(taskScheduler.publishGraphFinished).to.have.been.calledOnce;
                 expect(taskScheduler.publishGraphFinished).to.have.been.calledWith({
                     instanceId: 'testid',
-                    _status: Constants.TaskStates.Succeeded
+                    _status: Constants.Task.States.Succeeded
                 });
             });
         });
@@ -614,7 +614,7 @@ describe('Task Scheduler', function() {
             var data = { graphId: 'testgraphid' };
             var graphData = {
                 instanceId: 'testid',
-                _status: Constants.TaskStates.Succeeded,
+                _status: Constants.Task.States.Succeeded,
                 ignoreThisField: 'please'
             };
             var dataDone = { graphId: 'testgraphid', done: false };

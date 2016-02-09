@@ -259,18 +259,18 @@ describe("Completed Task Poller", function() {
             this.sandbox.stub(store, 'checkGraphFinished').resolves();
 
             var data = {
-                state: Constants.TaskStates.Failed
+                state: Constants.Task.States.Failed
             };
 
             poller.handlePotentialFinishedGraph(data)
             .subscribe(subscribeWrapper(done, function() {
                 expect(store.setGraphDone).to.have.been.calledOnce;
                 expect(store.setGraphDone).to.have.been.calledWith(
-                    Constants.TaskStates.Failed,
+                    Constants.Task.States.Failed,
                     {
                         failed: true,
                         done: true,
-                        state: Constants.TaskStates.Failed
+                        state: Constants.Task.States.Failed
                     }
                 );
             }), done);
@@ -283,11 +283,11 @@ describe("Completed Task Poller", function() {
             });
             store.setGraphDone.resolves({
                 instanceId: 'testgraphid',
-                _status: Constants.TaskStates.Succeeded
+                _status: Constants.Task.States.Succeeded
             });
 
             var data = {
-                state: Constants.TaskStates.Succeeded
+                state: Constants.Task.States.Succeeded
             };
 
             poller.handlePotentialFinishedGraph(data)
@@ -295,20 +295,20 @@ describe("Completed Task Poller", function() {
                 expect(store.checkGraphFinished).to.have.been.calledOnce;
                 expect(store.checkGraphFinished).to.have.been.calledWith({
                     done: true,
-                    state: Constants.TaskStates.Succeeded
+                    state: Constants.Task.States.Succeeded
                 });
                 expect(store.setGraphDone).to.have.been.calledOnce;
                 expect(store.setGraphDone).to.have.been.calledWith(
-                    Constants.TaskStates.Succeeded,
+                    Constants.Task.States.Succeeded,
                     {
                         done: true,
-                        state: Constants.TaskStates.Succeeded
+                        state: Constants.Task.States.Succeeded
                     }
                 );
                 expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
                 expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
                     'testgraphid',
-                    Constants.TaskStates.Succeeded
+                    Constants.Task.States.Succeeded
                 );
             }), done);
         });
