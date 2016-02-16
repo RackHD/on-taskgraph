@@ -116,6 +116,29 @@ describe('Task Scheduler', function() {
             expect(taskScheduler.debug).to.equal(false);
         });
 
+        it('should be created with optional values', function() {
+            taskScheduler = TaskScheduler.create({
+                debug: true,
+                concurrent: {
+                    findReadyTasks: 25,
+                    updateTaskDependencies: 25,
+                    handleScheduleTaskEvent: 25,
+                    completeGraphs: 25,
+                    findUnevaluatedTasks: 0
+                }
+            });
+            expect(taskScheduler.concurrencyMaximums).to.deep.equal(
+                {
+                    findReadyTasks: { count: 0, max: 25 },
+                    updateTaskDependencies: { count: 0, max: 25 },
+                    handleScheduleTaskEvent: { count: 0, max: 25 },
+                    completeGraphs: { count: 0, max: 25 },
+                    findUnevaluatedTasks: { count: 0, max: 0 }
+                }
+            );
+            expect(taskScheduler.debug).to.equal(true);
+        });
+
         it('start', function() {
             var stub = sinon.stub();
             this.sandbox.stub(taskScheduler, 'subscribeRunTaskGraph').resolves(stub);

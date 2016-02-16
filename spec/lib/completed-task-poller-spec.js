@@ -45,7 +45,7 @@ describe("Completed Task Poller", function() {
         this.sandbox.stub(store, 'deleteTasks').resolves();
         this.sandbox.stub(store, 'setGraphDone').resolves();
         this.sandbox.stub(eventsProtocol, 'publishGraphFinished').resolves();
-        poller = Poller.create('test', {});
+        poller = Poller.create(null, {});
     });
 
     afterEach(function() {
@@ -84,6 +84,27 @@ describe("Completed Task Poller", function() {
         expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
         expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
             'testgraphid', 'succeeded');
+    });
+
+    it('should be created with default values', function() {
+        expect(poller.running).to.equal(false);
+        expect(poller.domain).to.equal(Constants.DefaultTaskDomain);
+        expect(poller.pollInterval).to.equal(1000);
+        expect(poller.concurrentCounter).to.deep.equal({ count: 0, max: 1 });
+        expect(poller.completedTaskBatchSize).to.equal(200);
+        expect(poller.debug).to.equal(false);
+    });
+
+    it('should be created with optional values', function() {
+        poller = Poller.create('testdomain', {
+            debug: true,
+            pollInterval: 2000,
+            completedTaskBatchSize: 100
+        });
+        expect(poller.domain).to.equal('testdomain');
+        expect(poller.pollInterval).to.equal(2000);
+        expect(poller.completedTaskBatchSize).to.equal(100);
+        expect(poller.debug).to.equal(true);
     });
 
     describe('processCompletedTasks', function() {
