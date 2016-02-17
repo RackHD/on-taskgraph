@@ -22,6 +22,26 @@ describe("Task Runner", function() {
     assert,
     Rx;
 
+    /*
+     * Helper methods to test inner stream creation methods.
+     * Since the class methods all return cold Observables, we can
+     * hijack the subscribe methods to those we control in the unit test.
+     * Since this is async, we have to use the Chai framework's done
+     * callback, so basically what we're doing is adding a helper method that does:
+
+     * Subscribe to the stream completed event (thus starting it), and on that
+     * event run a callback that includes our test assertions, and calls the
+     * done callback appropriately so that we can pass or fail the test.
+    */
+
+    var streamOnCompletedWrapper = function(stream, done, cb) {
+            stream.subscribe(
+                    function(){},
+                    function(err){done(err);},
+                    asyncAssertWrapper(done, cb)
+            );
+    };
+
     var asyncAssertWrapper = function(done, cb) {
         return function(data) {
             try {
@@ -31,14 +51,6 @@ describe("Task Runner", function() {
                 done(e);
             }
         };
-    };
-
-    var streamOnCompletedWrapper = function(stream, done, cb) {
-            stream.subscribe(
-                    function(){},
-                    function(err){done(err);},
-                    asyncAssertWrapper(done, cb)
-            );
     };
 
     before(function() {

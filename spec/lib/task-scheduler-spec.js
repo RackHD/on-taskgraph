@@ -13,19 +13,17 @@ describe('Task Scheduler', function() {
     var Promise;
     var Rx;
 
-    var asyncAssertWrapper = function(done, cb, subscription) {
-        return function(data) {
-            try {
-                cb(data);
-                if (subscription && subscription.subscription) {
-                    subscription.subscription.dispose();
-                }
-                done();
-            } catch (e) {
-                done(e);
-            }
-        };
-    };
+    /*
+     * Helper methods to test inner stream creation methods.
+     * Since the class methods all return cold Observables, we can
+     * hijack the subscribe methods to those we control in the unit test.
+     * Since this is async, we have to use the Chai framework's done
+     * callback, so basically what we're doing is adding a helper method that does:
+
+     * Subscribe to the stream completed event (thus starting it), and on that
+     * event run a callback that includes our test assertions, and calls the
+     * done callback appropriately so that we can pass or fail the test.
+    */
 
     var streamSuccessWrapper = function(stream, done, cb) {
         var subscription = {};
@@ -43,6 +41,20 @@ describe('Task Scheduler', function() {
             done,
             asyncAssertWrapper(done, cb, subscription)
         );
+    };
+
+    var asyncAssertWrapper = function(done, cb, subscription) {
+        return function(data) {
+            try {
+                cb(data);
+                if (subscription && subscription.subscription) {
+                    subscription.subscription.dispose();
+                }
+                done();
+            } catch (e) {
+                done(e);
+            }
+        };
     };
 
 
@@ -118,7 +130,11 @@ describe('Task Scheduler', function() {
 
         it('should be created with optional values', function() {
             taskScheduler = TaskScheduler.create({
+                domain: 'testdomain',
+                schedulerId: 'testid',
                 debug: true,
+                findUnevaluatedTasksLimit: 100,
+                pollInterval: 2000,
                 concurrent: {
                     findReadyTasks: 25,
                     updateTaskDependencies: 25,
@@ -136,19 +152,24 @@ describe('Task Scheduler', function() {
                     findUnevaluatedTasks: { count: 0, max: 0 }
                 }
             );
+            expect(taskScheduler.domain).to.equal('testdomain');
+            expect(taskScheduler.schedulerId).to.equal('testid');
             expect(taskScheduler.debug).to.equal(true);
+            expect(taskScheduler.pollInterval).to.equal(2000);
+            expect(taskScheduler.findUnevaluatedTasksLimit).to.equal(100);
         });
 
         it('start', function() {
             var stub = sinon.stub();
             this.sandbox.stub(taskScheduler, 'subscribeRunTaskGraph').resolves(stub);
             this.sandbox.stub(taskScheduler, 'subscribeTaskFinished').resolves(stub);
+            this.sandbox.stub(taskScheduler, 'subscribeCancelGraph').resolves(stub);
             return taskScheduler.start()
             .then(function() {
                 expect(taskScheduler.running).to.equal(true);
                 expect(LeaseExpirationPoller.create).to.have.been.calledOnce;
                 expect(taskScheduler.leasePoller.start).to.have.been.calledOnce;
-                expect(taskScheduler.subscriptions).to.deep.equal([stub, stub]);
+                expect(taskScheduler.subscriptions).to.deep.equal([stub, stub, stub]);
             });
         });
 
@@ -156,11 +177,15 @@ describe('Task Scheduler', function() {
         it('stop', function() {
             var runTaskGraphDisposeStub = sinon.stub().resolves();
             var taskFinishedDisposeStub = sinon.stub().resolves();
+            var cancelGraphDisposeStub = sinon.stub().resolves();
             this.sandbox.stub(taskScheduler, 'subscribeRunTaskGraph').resolves({
                 dispose: runTaskGraphDisposeStub
             });
             this.sandbox.stub(taskScheduler, 'subscribeTaskFinished').resolves({
                 dispose: taskFinishedDisposeStub
+            });
+            this.sandbox.stub(taskScheduler, 'subscribeCancelGraph').resolves({
+                dispose: cancelGraphDisposeStub
             });
             return taskScheduler.start()
             .then(function() {

@@ -13,6 +13,10 @@ describe("Lease Expiration Poller", function() {
         store,
         Rx;
 
+    /*
+     * Helper method for utilizing Chai's done callback and test assertions
+     * when passed as a callback to the .subscribe method for Rx observables.
+     */
     var subscribeWrapper = function(done, cb) {
         return function(data) {
             try {

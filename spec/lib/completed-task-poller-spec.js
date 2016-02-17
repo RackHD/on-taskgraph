@@ -14,6 +14,10 @@ describe("Completed Task Poller", function() {
         store,
         Rx;
 
+    /*
+     * Helper method for utilizing Chai's done callback and test assertions
+     * when passed as a callback to the .subscribe method for Rx observables.
+     */
     var subscribeWrapper = function(done, cb) {
         return function(data) {
             try {
@@ -31,7 +35,6 @@ describe("Completed Task Poller", function() {
             core.workflowInjectables
         ]);
         Rx = helper.injector.get('Rx');
-        //Promise = helper.injector.get('Promise');
         Poller = helper.injector.get('TaskGraph.CompletedTaskPoller');
         eventsProtocol = helper.injector.get('Protocol.Events');
         store = helper.injector.get('TaskGraph.Store');
@@ -88,7 +91,7 @@ describe("Completed Task Poller", function() {
 
     it('should be created with default values', function() {
         expect(poller.running).to.equal(false);
-        expect(poller.domain).to.equal(Constants.DefaultTaskDomain);
+        expect(poller.domain).to.equal(Constants.Task.DefaultDomain);
         expect(poller.pollInterval).to.equal(1000);
         expect(poller.concurrentCounter).to.deep.equal({ count: 0, max: 1 });
         expect(poller.completedTaskBatchSize).to.equal(200);
@@ -337,7 +340,7 @@ describe("Completed Task Poller", function() {
         it('should do nothing if the graph is not finished', function(done) {
             this.sandbox.stub(store, 'checkGraphFinished').resolves({ done: false });
 
-            poller.handlePotentialFinishedGraph({})
+            poller.handlePotentialFinishedGraph({ state: Constants.Task.States.Pending })
             .subscribe(subscribeWrapper(done, function() {
                 expect(store.setGraphDone).to.not.have.been.called;
                 expect(eventsProtocol.publishGraphFinished).to.not.have.been.called;
