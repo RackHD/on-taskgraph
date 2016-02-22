@@ -411,7 +411,7 @@ describe("Task Runner", function() {
 
         it('should cancel tasks fed through the cancelTask stream', function(done) {
             runner.running = true;
-            var cancelStub = this.sandbox.stub();
+            var cancelStub = this.sandbox.stub().resolves();
 
             runner.activeTasks.testTaskId = {
                 cancel: cancelStub,
