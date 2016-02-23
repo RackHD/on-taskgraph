@@ -1,32 +1,28 @@
-// Copyright 2015, EMC, Inc.
-/* jshint node:true */
+// Copyright 2016, EMC, Inc.
 
 'use strict';
 
-describe(require('path').basename(__filename), function () {
-    var loader;
-    var registry;
+describe('Loader', function () {
+    var di = require('di');
+    var core = require('on-core')(di, __dirname);
+
+    var loader,
+        store;
 
     before(function() {
         this.timeout(3000);
-        helper.setupInjector(
-            _.flattenDeep([
-                helper.require('/lib/task-graph'),
-                helper.require('/lib/scheduler'),
-                helper.require('/lib/registry'),
-                helper.require('/lib/loader'),
-                helper.require('/lib/stores/waterline'),
-                helper.require('/lib/stores/memory'),
-                require('on-tasks').injectables
-            ])
-        );
+        helper.setupInjector([
+            core.workflowInjectables,
+            require('on-tasks').injectables,
+            helper.require('/lib/loader')
+        ]);
+        loader = helper.injector.get('TaskGraph.DataLoader');
+        store = helper.injector.get('TaskGraph.Store');
+        this.sandbox = sinon.sandbox.create();
     });
 
     describe('definition loading', function() {
-        beforeEach("before loader-spec", function() {
-            loader = helper.injector.get('TaskGraph.DataLoader');
-            registry = helper.injector.get('TaskGraph.Registry');
-
+        beforeEach(function() {
             this.graphCatalog = [
                 { injectableName: 'Graph.Reboot.Node',
                   tasks: [ { label: 'reboot', taskName: 'Task.Obm.Node.Reboot' } ],
@@ -47,27 +43,33 @@ describe(require('path').basename(__filename), function () {
                   implementsTask: 'Task.Base.Obm.Node',
                   options: { action: 'powerOn' } },
             ];
-            registry.fetchGraphDefinitionCatalog = sinon.stub().resolves(
-                    _.cloneDeep(this.graphCatalog));
-            registry.fetchTaskDefinitionCatalog = sinon.stub().resolves(
-                    _.cloneDeep(this.taskCatalog));
+            this.sandbox.stub(store, 'getTaskDefinitions').resolves(this.taskCatalog);
+            this.sandbox.stub(store, 'getGraphDefinitions').resolves(this.graphCatalog);
+            this.sandbox.stub(store, 'persistGraphDefinition').resolves();
+            this.sandbox.stub(store, 'persistTaskDefinition').resolves();
         });
 
-        it('should load tasks and graphs on start', function() {
+        afterEach(function() {
+            this.sandbox.restore();
+        });
+
+        it('should load tasks and graphs', function() {
             var self = this;
-            loader.loadGraphs = sinon.stub().resolves(self.graphCatalog);
-            loader.loadTasks = sinon.stub().resolves(self.taskCatalog);
+            this.sandbox.spy(loader, 'persistTasks');
+            this.sandbox.spy(loader, 'persistGraphs');
             loader.graphData = _.cloneDeep(self.graphCatalog);
             loader.taskData = _.cloneDeep(self.taskCatalog);
+            loader.graphLibrary = [];
+            loader.taskLibrary = [];
 
-            return loader.start()
+            return loader.load()
             .then(function() {
-                expect(loader.loadGraphs.calledWith(self.graphCatalog)).to.equal(true);
-                expect(loader.loadTasks.calledWith(self.taskCatalog)).to.equal(true);
+                expect(loader.persistGraphs.calledWith(self.graphCatalog)).to.equal(true);
+                expect(loader.persistTasks.calledWith(self.taskCatalog)).to.equal(true);
             });
         });
 
-        it('should merge disk and database tasks on start', function() {
+        it('should merge disk and database tasks', function() {
             var self = this;
             var powerOffTask = { injectableName: 'Task.Obm.Node.PowerOff',
                                  properties: { power: {} },
@@ -86,22 +88,18 @@ describe(require('path').basename(__filename), function () {
             updatedRegistryTaskCatalog.push(pxeTask);
 
             // Each object has a unique document in them, to test merge with
-            registry.fetchTaskDefinitionCatalog =
-                sinon.stub().resolves(updatedRegistryTaskCatalog);
-            loader.taskData = _.cloneDeep(updatedTaskCatalog);
-
-            loader.loadTasks = sinon.stub().resolves([]);
-
-            loader.graphData = _.cloneDeep(self.graphCatalog);
-            loader.loadGraphs = sinon.stub().resolves(self.graphCatalog);
+            store.getTaskDefinitions.resolves(updatedRegistryTaskCatalog);
+            loader.taskLibrary = _.cloneDeep(updatedTaskCatalog);
+            loader.graphLibrary = _.cloneDeep(self.graphCatalog);
+            this.sandbox.spy(loader, 'persistTasks');
 
             var expectedResults = self.taskCatalog;
             expectedResults.push(powerOffTask);
             expectedResults.push(pxeTask);
 
-            return loader.start()
+            return loader.load()
             .then(function() {
-                expect(loader.loadTasks.calledWith(expectedResults)).to.equal(true);
+                expect(loader.persistTasks).to.have.been.calledWith(expectedResults);
             });
         });
 
@@ -124,22 +122,18 @@ describe(require('path').basename(__filename), function () {
             updatedRegistryGraphCatalog.push(pxeGraph);
 
             // Each object has a unique document in them, to test merge with
-            registry.fetchGraphDefinitionCatalog =
-                sinon.stub().resolves(updatedRegistryGraphCatalog);
-            loader.graphData = _.cloneDeep(updatedGraphCatalog);
-
-            loader.loadGraphs = sinon.stub().resolves([]);
-
-            loader.taskData = _.cloneDeep(self.taskCatalog);
-            loader.loadTasks = sinon.stub().resolves(self.taskCatalog);
+            store.getGraphDefinitions.resolves(updatedRegistryGraphCatalog);
+            loader.graphLibrary = _.cloneDeep(updatedGraphCatalog);
+            loader.taskLibrary = _.cloneDeep(self.taskCatalog);
+            this.sandbox.spy(loader, 'persistGraphs');
 
             var expectedResults = self.graphCatalog;
             expectedResults.push(powerOffGraph);
             expectedResults.push(pxeGraph);
 
-            return loader.start()
+            return loader.load()
             .then(function() {
-                expect(loader.loadGraphs.calledWith(expectedResults)).to.equal(true);
+                expect(loader.persistGraphs).to.have.been.calledWith(expectedResults);
             });
         });
     });

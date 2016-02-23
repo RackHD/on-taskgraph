@@ -1,31 +1,56 @@
-// Copyright 2015, EMC, Inc.
+// Copyright 2016, EMC, Inc.
 
 'use strict';
 
 var di = require('di'),
     _ = require('lodash'),
     core = require('on-core')(di),
-    tasks = require('on-tasks'),
     injector = new di.Injector(
         _.flattenDeep([
             core.injectables,
-            tasks.injectables,
-            require('./lib/task-graph'),
-            require('./lib/task-graph-runner'),
-            require('./lib/task-graph-subscriptions'),
-            require('./lib/loader'),
-            require('./lib/scheduler'),
-            require('./lib/registry'),
-            require('./lib/service-graph'),
-            require('./lib/stores/memory'),
-            require('./lib/stores/waterline')
+            core.workflowInjectables,
+            require('on-tasks').injectables,
+            require('./lib/task-graph-runner.js'),
+            require('./lib/task-runner.js'),
+            require('./lib/loader.js'),
+            require('./lib/task-scheduler.js'),
+            require('./lib/lease-expiration-poller.js'),
+            require('./lib/service-graph.js'),
+            require('./lib/completed-task-poller.js'),
+            require('./lib/rx-mixins.js')
         ])
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
     logger = injector.get('Logger').initialize('TaskGraph');
 
+var options = {
+    runner: true,
+    scheduler: true
+};
 
-taskGraphRunner.start()
+if (_.contains(process.argv, '-s') || _.contains(process.argv, '--scheduler')) {
+    options.runner = false;
+} else if (_.contains(process.argv, '-r') || _.contains(process.argv, '--runner')) {
+    options.scheduler = false;
+}
+if (_.contains(process.argv, '-d') || _.contains(process.argv, '--domain')) {
+    _.reduce(process.argv, function(lastArg, arg) {
+        if (lastArg === '-d' || lastArg === '--domain') {
+            if (_.contains(['-s', '--scheduler', '-r', '--runner'], arg)) {
+                console.error('\nNo value for domain specified!');
+                process.exit(1);
+            }
+            options.domain = arg;
+        }
+        return arg;
+    });
+}
+if (_.last(process.argv) === '-d' || _.last(process.argv) === '--domain') {
+    console.error('\nNo value for domain specified!');
+    process.exit(1);
+}
+
+taskGraphRunner.start(options)
     .then(function () {
         logger.info('Task Graph Runner Started.');
     })
@@ -52,4 +77,4 @@ process.on('SIGINT', function() {
                 process.exit(1);
             });
         });
-});
+    });
