@@ -12,13 +12,8 @@ RUN cd /tmp \
   && npm install --ignore-scripts --production
 
 COPY . /RackHD/on-taskgraph/
-RUN cp -a /tmp/node_modules /RackHD/on-taskgraph/
+RUN cp -a -f /tmp/node_modules /RackHD/on-taskgraph/
 
-RUN apk add --update dhcp
+VOLUME /var/lib/dhcp
 
-EXPOSE 67
-EXPOSE 67/udp
-
-RUN touch /var/lib/dhcp/dhcpd.leases
-
-CMD [ "/RackHD/on-taskgraph/docker_entry.sh" ]
+CMD [ "node", "/RackHD/on-taskgraph/index.js" ]
