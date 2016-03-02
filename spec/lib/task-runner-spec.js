@@ -374,7 +374,6 @@ describe("Task Runner", function() {
     });
 
     describe('publishTaskFinished', function() {
-
         before(function() {
             this.sandbox.restore();
             runner = TaskRunner.create();
@@ -383,15 +382,62 @@ describe("Task Runner", function() {
         it("should wrap the taskMessenger's publishTaskFinished", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
             var finishedTask = {
-                taskId: 'aTaskId',
+                instanceId: 'aTaskId',
                 context: { graphId: 'aGraphId'},
                 state: 'finished',
                 definition: { terminalOnStates: ['succeeded'] }
             };
 
-            runner.publishTaskFinished(finishedTask)
+            return runner.publishTaskFinished(finishedTask)
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
+                expect(taskMessenger.publishTaskFinished).to.have.been.calledWith(
+                    runner.domain,
+                    finishedTask.instanceId,
+                    finishedTask.context.graphId,
+                    finishedTask.state,
+                    undefined,
+                    finishedTask.context,
+                    finishedTask.definition.terminalOnStates
+                );
+            });
+        });
+
+        it("should call publishTaskFinished with an error message string", function() {
+            taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
+            var error = new Error('test error');
+            var finishedTask = {
+                taskId: 'aTaskId',
+                context: { graphId: 'aGraphId'},
+                state: 'finished',
+                error: error,
+                definition: { terminalOnStates: ['succeeded'] }
+            };
+
+            return runner.publishTaskFinished(finishedTask)
+            .then(function() {
+                expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
+                expect(taskMessenger.publishTaskFinished.firstCall.args[4])
+                    .to.contain('test error');
+            });
+        });
+
+        it("should call publishTaskFinished with an Rx error stack string", function() {
+            taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
+            var error = new Error('test error');
+            error.stack = error.toString();
+            var finishedTask = {
+                taskId: 'aTaskId',
+                context: { graphId: 'aGraphId'},
+                state: 'finished',
+                error: error,
+                definition: { terminalOnStates: ['succeeded'] }
+            };
+
+            return runner.publishTaskFinished(finishedTask)
+            .then(function() {
+                expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
+                expect(taskMessenger.publishTaskFinished.firstCall.args[4]).to.equal(error.stack);
             });
         });
     });
