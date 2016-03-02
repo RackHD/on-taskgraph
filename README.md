@@ -18,17 +18,6 @@ Copyright 2015-2016, EMC, Inc.
     brew install mongodb26
     brew install rabbitmq
 
-*It is highly recommended to create indexes in mongo to reduce the CPU footprint and increase performance*
-
-```
-$ mongo pxe
-> db.createCollection('taskdependencies')
-> db.createCollection('graphobjects')
-> db.taskdependencies.createIndex({ taskId: 1 })
-> db.taskdependencies.createIndex({ graphId: 1 })
-> db.taskdependencies.createIndex({ graphId: 1, state: 1 })
-```
-
 ## running
 
 *NOTE: requires RabbitMQ and Mongo to be running to start and test correctly.*
@@ -208,6 +197,12 @@ PUT
 ### Creating new graphs
 
 For more detailed information, see our [readthedocs page](http://rackhd.readthedocs.org/en/latest/rackhd/graphs.html?workflow-graphs).
+
+Graph definition files must be saved as javascript or json files in `./lib/graphs/` (nested directories are okay), and filenames must match the pattern 
+`*-graph.js` or `*-graph.json`. If a graph is saved as a `.js` file, it should export a javascript object conforming to the graph definition schema.
+If a graph is saved as a `.json` file, it must be valid json.
+
+Graph definitions can alternatively be uploaded through the API as detailed above in [API commands](#api-commands).
 
 Graphs are defined via a JSON definition that conform to this schema:
 
