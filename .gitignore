@@ -39,3 +39,11 @@ node_modules
 
 # IDE
 .idea
+
+# HWIMO-BUILD artifacts
+on-taskgraph_*.dsc
+on-taskgraph_*.tar.gz
+on-taskgraph_*.build
+on-taskgraph_*.changes
+on-taskgraph_*.deb
+packagebuild

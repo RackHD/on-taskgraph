@@ -10,8 +10,7 @@ git clone . packagebuild
 pushd packagebuild
 
 rm -rf node_modules
-npm install
-npm prune --production
+npm install --production
 git log -n 1 --pretty=format:%h.%ai.%s > commitstring.txt
 
 GITCOMMITDATE=$(git show -s --pretty="format:%ci")
