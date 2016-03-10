@@ -5,6 +5,9 @@ FROM rackhd/on-core
 RUN mkdir -p /RackHD/on-taskgraph
 WORKDIR /RackHD/on-taskgraph
 
+RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
+    && apk add --update ipmitool@testing net-snmp net-snmp-libs net-snmp-tools
+
 COPY ./package.json /tmp/
 RUN cd /tmp \
   && ln -s /RackHD/on-core /tmp/node_modules/on-core \
