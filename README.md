@@ -252,3 +252,17 @@ To run tests and get coverage for CI:
     ./node_modules/.bin/istanbul report cobertura
     # if you want HTML reports locally
     ./node_modules/.bin/istanbul report html
+
+## Building
+
+Unversioned packages are built automatically from travis-ci and uploaded to bintray.com. Using
+this repository is detailed in [the docs](http://rackhd.readthedocs.org/en/latest/rackhd/ubuntu_package_installation.html).
+
+Build scripts are placed in the `extra/` directory.
+
+  * `.travis.yml` will call the appropriate scripts in `extra/` to build an unversioned package.
+  * `extra/make-sysdeps.sh` can be used to install system level packages in a Ubuntu system.
+  * `extra/make-cicd.sh` will perform all the necessary build steps to generate a version package.
+
+If you want to build your own versioned packages, you can use the Vagrantfile provided in `extra/`.  Simply perform `vagrant up` and it will run all the necessary steps.
+
