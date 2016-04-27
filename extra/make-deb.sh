@@ -1,10 +1,17 @@
 #!/bin/bash
+set -ex
 
 # Ensure we're always in the right directory.
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd $SCRIPT_DIR/..
 
-BRANCH=$(git symbolic-ref --short -q HEAD)
+# Use the TRAVIS_BRANCH var if defined as travis vm
+# doesn't run the git symbolic-ref command.
+if [ -z "$TRAVIS_BRANCH" ]; then
+   BRANCH=$(git symbolic-ref --short -q HEAD)
+else
+   BRANCH=${TRAVIS_BRANCH}
+fi
 
 if [ -z "$DEBFULLNAME" ]; then
         export DEBFULLNAME=`git log -n 1 --pretty=format:%an`
@@ -37,8 +44,8 @@ echo "DCHOPTS:      $DCHOPTS"
 if [ -d packagebuild ]; then
   rm -rf packagebuild
 fi
-
-git clone . packagebuild
+mkdir packagebuild
+rsync -ar --exclude=packagebuild . packagebuild
 pushd packagebuild
 rm -rf node_modules
 npm install --production
