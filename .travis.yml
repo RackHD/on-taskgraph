@@ -33,7 +33,7 @@ deploy:
   key: $BINTRAY_KEY
   on:
     branch: master
-    node: "0.10"
+    node: "4"
 
 notifications:
   slack:
