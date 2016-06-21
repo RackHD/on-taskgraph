@@ -7,7 +7,9 @@ describe("Task Runner", function() {
     var core = require('on-core')(di, __dirname);
 
     var runner,
-    Task = {},
+    Task = {
+        create: function() {}
+    },
     TaskRunner,
     taskMessenger = {},
     store = {
@@ -502,26 +504,25 @@ describe("Task Runner", function() {
             this.sandbox.restore();
             runner = TaskRunner.create();
             stubbedTask = {};
-            stubbedTask = _.defaults({run: this.sandbox.stub()}, taskDef);
-            Task.create = this.sandbox.stub().returns(stubbedTask);
+            stubbedTask = _.defaults({run: this.sandbox.stub().resolves(finishedTask)}, taskDef);
             stubbedTask.definition = { injectableName: 'taskName'};
-            stubbedTask.run = this.sandbox.stub().resolves(finishedTask);
+            this.sandbox.stub(Task, 'create').resolves(stubbedTask);
             store.setTaskState = this.sandbox.stub().resolves();
-            runner.publishTaskFinished = this.sandbox.stub();
+            this.sandbox.stub(runner, 'publishTaskFinished');
         });
 
         it('should return an Observable', function() {
             expect(runner.runTask(data)).to.be.an.instanceof(Rx.Observable);
         });
 
-        it('should instantiate a task', function() {
-            runner.runTask(data).subscribe(function() {
+        it('should instantiate a task', function(done) {
+            streamOnCompletedWrapper(runner.runTask(data), done, function() {
                 expect(Task.create).to.have.been.calledOnce;
             });
         });
 
-        it('should call a task\'s run method', function() {
-            runner.runTask(data).subscribe(function() {
+        it('should call a task\'s run method', function(done) {
+            streamOnCompletedWrapper(runner.runTask(data), done, function() {
                 expect(stubbedTask.run).to.have.been.calledOnce;
             });
         });
@@ -537,14 +538,14 @@ describe("Task Runner", function() {
             });
         });
 
-        it('should publish a task finished event', function() {
-            runner.runTask(data).subscribe(function() {
+        it('should publish a task finished event', function(done) {
+            streamOnCompletedWrapper(runner.runTask(data), done, function() {
                 expect(runner.publishTaskFinished).to.have.been.calledOnce;
             });
         });
 
-        it('should set the state of a task', function() {
-            runner.runTask(data).subscribe(function() {
+        it('should set the state of a task', function(done) {
+            streamOnCompletedWrapper(runner.runTask(data), done, function() {
                 expect(store.setTaskState).to.have.been.calledOnce;
             });
         });
