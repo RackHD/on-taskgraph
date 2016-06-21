@@ -15,7 +15,7 @@ pushd packagebuild
 cp ../package.json .
 
 rm -rf node_modules
-npm install --production
+npm install --production --cache=`pwd`
 git log -n 1 --pretty=format:%h.%ai.%s > commitstring.txt
 
 GITCOMMITDATE=$(git show -s --pretty="format:%ci")
