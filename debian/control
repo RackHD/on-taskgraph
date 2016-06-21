@@ -7,6 +7,6 @@ Standards-Version: 3.9.4
 
 Package: on-taskgraph
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs, nodejs-legacy, npm, mongodb, snmp, ipmitool
+Depends: ${shlibs:Depends}, ${misc:Depends}, nodejs (>= 4.4.5-1nodesource1~), mongodb, snmp, ipmitool
 Suggests: python-pywbem, ansible, apt-mirror, amtterm
 Description: RackHD Imaging workflow taskgraph engine

@@ -1,13 +1,12 @@
 language: node_js
 
 node_js:
-  - "0.10"
   - "4"
-  - "5"
+  - "6"
 
 matrix:
   allow_failures:
-   - node_js: "5"
+   - node_js: "6"
 
 addons:
   apt:
@@ -34,7 +33,7 @@ deploy:
   key: $BINTRAY_KEY
   on:
     branch: master
-    node: "0.10"
+    node: "4"
 
 notifications:
   slack:
