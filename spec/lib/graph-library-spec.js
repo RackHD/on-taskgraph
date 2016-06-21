@@ -10,6 +10,7 @@ describe('Graph Library', function () {
         store,
         TaskGraph,
         taskLibrary,
+        env,
         Promise;
 
     function findAllValues(obj) {
@@ -33,12 +34,14 @@ describe('Graph Library', function () {
         loader = helper.injector.get('TaskGraph.DataLoader');
         store = helper.injector.get('TaskGraph.Store');
         taskLibrary = helper.injector.get('Task.taskLibrary');
+        env = helper.injector.get('Services.Environment');
         Promise = helper.injector.get('Promise');
         sinon.stub(store, 'getTaskDefinition', function(injectableName) {
             return Promise.resolve(_.find(taskLibrary, function(t) {
                 return t.injectableName === injectableName;
             }));
         });
+        sinon.stub(env, 'get').resolves({});
     });
 
     it("should validate all existing graphs not requiring user input for null values", function() {
