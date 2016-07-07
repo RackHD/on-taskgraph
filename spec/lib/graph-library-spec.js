@@ -42,6 +42,7 @@ describe('Graph Library', function () {
             }));
         });
         sinon.stub(env, 'get').resolves({});
+        return helper.injector.get('Services.Task').start();
     });
 
     it("should validate all existing graphs not requiring user input for null values", function() {
