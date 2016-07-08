@@ -280,7 +280,7 @@ describe("Completed Task Poller", function() {
 
     describe('handlePotentialFinishedGraph', function() {
         it('should set graph state to failed', function(done) {
-            this.sandbox.stub(store, 'checkGraphFinished').resolves();
+            this.sandbox.stub(store, 'checkGraphSucceeded').resolves();
 
             var data = {
                 state: Constants.Task.States.Failed
@@ -301,7 +301,7 @@ describe("Completed Task Poller", function() {
         });
 
         it('should set graph state to succeeded', function(done) {
-            this.sandbox.stub(store, 'checkGraphFinished', function(_data) {
+            this.sandbox.stub(store, 'checkGraphSucceeded', function(_data) {
                 _data.done = true;
                 return Promise.resolve(_data);
             });
@@ -316,8 +316,8 @@ describe("Completed Task Poller", function() {
 
             poller.handlePotentialFinishedGraph(data)
             .subscribe(subscribeWrapper(done, function() {
-                expect(store.checkGraphFinished).to.have.been.calledOnce;
-                expect(store.checkGraphFinished).to.have.been.calledWith({
+                expect(store.checkGraphSucceeded).to.have.been.calledOnce;
+                expect(store.checkGraphSucceeded).to.have.been.calledWith({
                     done: true,
                     state: Constants.Task.States.Succeeded
                 });
@@ -338,7 +338,7 @@ describe("Completed Task Poller", function() {
         });
 
         it('should do nothing if the graph is not finished', function(done) {
-            this.sandbox.stub(store, 'checkGraphFinished').resolves({ done: false });
+            this.sandbox.stub(store, 'checkGraphSucceeded').resolves({ done: false });
 
             poller.handlePotentialFinishedGraph({ state: Constants.Task.States.Pending })
             .subscribe(subscribeWrapper(done, function() {

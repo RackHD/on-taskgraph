@@ -543,8 +543,6 @@ describe('Task Scheduler', function() {
         var observable;
 
         beforeEach(function() {
-            this.sandbox.stub(store, 'setGraphDone');
-            this.sandbox.stub(store, 'checkGraphFinished');
             checkGraphFinishedStream = new Rx.Subject();
             taskScheduler = TaskScheduler.create();
             taskScheduler.running = true;
@@ -628,6 +626,8 @@ describe('Task Scheduler', function() {
 
         it('checkGraphSucceeded should persist and publish on finish', function(done) {
             this.sandbox.stub(taskScheduler, 'publishGraphFinished');
+            this.sandbox.stub(store, 'setGraphDone');
+            this.sandbox.stub(store, 'checkGraphSucceeded');
             taskScheduler.checkGraphSucceeded.restore();
             var data = { graphId: 'testgraphid' };
             var graphData = {
@@ -636,13 +636,13 @@ describe('Task Scheduler', function() {
                 ignoreThisField: 'please'
             };
             var dataDone = { graphId: 'testgraphid', done: true };
-            store.checkGraphFinished.resolves(dataDone);
+            store.checkGraphSucceeded.resolves(dataDone);
             store.setGraphDone.resolves(graphData);
 
             var observable = taskScheduler.checkGraphSucceeded(data);
             streamSuccessWrapper(observable, done, function() {
-                expect(store.checkGraphFinished).to.have.been.calledOnce;
-                expect(store.checkGraphFinished).to.have.been.calledWith(data);
+                expect(store.checkGraphSucceeded).to.have.been.calledOnce;
+                expect(store.checkGraphSucceeded).to.have.been.calledWith(data);
                 expect(store.setGraphDone).to.have.been.calledOnce;
                 expect(store.setGraphDone).to.have.been.calledWith(
                     Constants.Task.States.Succeeded,
@@ -658,6 +658,8 @@ describe('Task Scheduler', function() {
 
         it('checkGraphSucceeded should not set a graph as done if it is not', function(done) {
             this.sandbox.stub(taskScheduler, 'publishGraphFinished');
+            this.sandbox.stub(store, 'setGraphDone');
+            this.sandbox.stub(store, 'checkGraphSucceeded');
             taskScheduler.checkGraphSucceeded.restore();
             var data = { graphId: 'testgraphid' };
             var graphData = {
@@ -666,12 +668,12 @@ describe('Task Scheduler', function() {
                 ignoreThisField: 'please'
             };
             var dataDone = { graphId: 'testgraphid', done: false };
-            store.checkGraphFinished.resolves(dataDone);
+            store.checkGraphSucceeded.resolves(dataDone);
             store.setGraphDone.resolves(graphData);
 
             var observable = taskScheduler.checkGraphSucceeded(data);
             streamCompletedWrapper(observable, done, function() {
-                expect(store.checkGraphFinished).to.have.been.calledOnce;
+                expect(store.checkGraphSucceeded).to.have.been.calledOnce;
                 expect(store.setGraphDone).to.not.have.been.called;
                 expect(taskScheduler.publishGraphFinished).to.not.have.been.called;
             });
