@@ -13,6 +13,12 @@ else
    BRANCH=${TRAVIS_BRANCH}
 fi
 
+# this appends a datestring formatting specifically to be increasing
+# based on the last date of the commit in this branch to provide increasing
+# DCH version numbers for building debian packages for bintray.
+GITCOMMITDATE=$(git show -s --pretty="format:%ci")
+DATESTRING=$(date -d "$GITCOMMITDATE" -u +"%Y%m%d%H%M%SZ")
+
 if [ -z "$DEBFULLNAME" ]; then
         export DEBFULLNAME=`git log -n 1 --pretty=format:%an`
 fi
@@ -22,7 +28,7 @@ if [ -z "$DEBEMAIL" ]; then
 fi
 
 if [ -z "$DEBBRANCH" ]; then
-        export DEBBRANCH=`echo "${BRANCH}" | sed 's/[\/\_]/-/g'`
+        export DEBBRANCH=`echo "${BRANCH}-${DATESTRING}" | sed 's/[\/\_]/-/g'`
 fi
 
 if [ -z "$DEBPKGVER" ]; then
@@ -55,6 +61,6 @@ debuild --no-lintian --no-tgz-check -us -uc
 popd
 if [ ! -d deb ]; then
   mkdir deb
-fi 
+fi
 
 cp -a *.deb deb/
