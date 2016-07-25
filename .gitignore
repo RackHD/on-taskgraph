@@ -42,7 +42,7 @@ node_modules
 
 # HWIMO-BUILD artifacts
 on-taskgraph_*.dsc
-on-taskgraph_*.tar.gz
+on-taskgraph_*.tar.[gx]z
 on-taskgraph_*.build
 on-taskgraph_*.changes
 on-taskgraph_*.deb
