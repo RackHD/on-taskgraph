@@ -131,6 +131,8 @@ in a dedicated fashion only for that class of workflows.
 
 When running the on-http process, these are some common API commands you can send:
 
+Note: Can use `/api/2.0` as well unless there is an explicit 2.0 API example
+
 **Get available graphs**
 
 ```
@@ -182,6 +184,13 @@ This will return a serialized graph object.
 ```
 GET
 /api/1.1/nodes/<id>/workflows/active
+```
+
+**2.0 API to list active workflow running against the node
+
+```
+GET
+/api/2.0/nodes/<id>/workflows?active=true
 ```
 
 **Create a new graph definition**
