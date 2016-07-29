@@ -6,10 +6,12 @@
 .jshintrc
 .travis.yml
 debian/
+extra/
 Dockerfile
 Gruntfile.js
 HWIMO-*
 LICENSE
+node_modules/
 prototype/
 README.md
 spec/

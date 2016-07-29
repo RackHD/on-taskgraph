@@ -47,3 +47,6 @@ on-taskgraph_*.build
 on-taskgraph_*.changes
 on-taskgraph_*.deb
 packagebuild
+
+# Vagrant
+.vagrant/

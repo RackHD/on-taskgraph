@@ -1,16 +1,21 @@
 #!/bin/bash
 
-# Copyright 2015, EMC, Inc.
+# Copyright 2015, 2016, EMC, Inc.
 
 # debian packages expected...
 # apt-get install git pbuilder dh-make ubuntu-dev-tools devscripts
 # apt-get install nodejs nodejs-legacy npm
 
+set -e
+set -x
+
+rm -rf packagebuild
 git clone . packagebuild
 pushd packagebuild
+cp ../package.json .
 
 rm -rf node_modules
-npm install --production
+npm install --production --cache=`pwd`
 git log -n 1 --pretty=format:%h.%ai.%s > commitstring.txt
 
 GITCOMMITDATE=$(git show -s --pretty="format:%ci")

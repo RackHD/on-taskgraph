@@ -1,13 +1,12 @@
 language: node_js
 
 node_js:
-  - "0.10"
   - "4"
-  - "5"
+  - "6"
 
 matrix:
   allow_failures:
-   - node_js: "5"
+   - node_js: "6"
 
 addons:
   apt:
@@ -22,21 +21,10 @@ services:
  - rabbitmq
 
 after_success:
- - ./node_modules/.bin/istanbul cover -x "**/spec/**" ./node_modules/.bin/_mocha --report lcovonly -- $(find spec -name '*-spec.js') -R spec --require spec/helper.js
- - cat ./coverage/lcov.info | node_modules/.bin/coveralls
+ - ./extra/make-testcoveralls.sh
 
 before_deploy:
- - npm prune --production
- - mkdir -p packagebuild deb
- - cp -ar !(packagebuild) packagebuild/
- - pushd packagebuild
- - git log -n 1 --pretty=format:%h.%ai.%s > commitstring.txt
- - export DEBFULLNAME=`git log -n 1 --pretty=format:%an`
- - export DEBEMAIL=`git log -n 1 --pretty=format:%ae`
- - dch -l `echo "${TRAVIS_BRANCH}" | sed 's/[\/\_]/-/g'` -u low `git log -n 1 --pretty=oneline --abbrev-commit`
- - debuild --no-lintian --no-tgz-check -us -uc
- - popd
- - cp -a *.deb deb/
+ - ./extra/make-deb.sh
 
 deploy: 
   provider: bintray
@@ -45,7 +33,7 @@ deploy:
   key: $BINTRAY_KEY
   on:
     branch: master
-    node: "0.10"
+    node: "4"
 
 notifications:
   slack:
