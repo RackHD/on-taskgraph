@@ -90,7 +90,7 @@ data/event channels that should exist between concurrently running tasks.
 
 **Some architectural notes**
 
-This project is designed to be able to be run with any number of workflow processes active at any time for performance and high availability reasons. 
+This project is designed to be able to be run with any number of workflow processes active at any time for performance and high availability reasons.
 Workflow processes can be configured to handle different domains of tasks, and can be machine independent as long as the database and messaging are shared.
 
 *Atomic checkout*: All eligible Task Runners will receive requests to run tasks, but only one will succeed in checking out a lease to handle that request. Somewhat like a leased queue model, leveraging existing database technologies (currently MongoDB).
@@ -207,7 +207,7 @@ PUT
 
 For more detailed information, see our [readthedocs page](http://rackhd.readthedocs.org/en/latest/rackhd/graphs.html?workflow-graphs).
 
-Graph definition files must be saved as javascript or json files in `./lib/graphs/` (nested directories are okay), and filenames must match the pattern 
+Graph definition files must be saved as javascript or json files in `./lib/graphs/` (nested directories are okay), and filenames must match the pattern
 `*-graph.js` or `*-graph.json`. If a graph is saved as a `.js` file, it should export a javascript object conforming to the graph definition schema.
 If a graph is saved as a `.json` file, it must be valid json.
 
@@ -275,3 +275,4 @@ Build scripts are placed in the `extra/` directory.
 
 If you want to build your own versioned packages, you can use the Vagrantfile provided in `extra/`.  Simply perform `vagrant up` and it will run all the necessary steps.
 
+.
