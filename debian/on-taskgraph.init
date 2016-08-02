@@ -1,0 +1,48 @@
+#!/bin/sh
+
+. /lib/lsb/init-functions
+
+### BEGIN INIT INFO
+# Provides:          on-taskgraph
+# Required-Start:    $syslog $network mongodb rabbitmq-server
+# Required-Stop:     $syslog $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: on-taskgraph
+# Description:       RackHD on-taskgraph service
+### END INIT INFO
+
+DESC="on-taskgraph"
+
+CONFIG=/etc/default/on-taskgraph
+LOGFILE=/var/log/on-taskgraph.log
+
+do_start()
+{
+    if [ -f "$CONFIG" ]
+    then
+	cd /var/renasar/on-taskgraph
+	/usr/bin/nodejs /var/renasar/on-taskgraph/index.js >> "$LOGFILE" 2>&1 &
+	log_success_msg "Started on-taskgraph daemon"
+    else
+        log_failure_msg "Config file $CONFIG missing, not starting"
+    fi
+}
+
+
+ACTION=$1
+
+case "$ACTION" in
+
+    start)
+	do_start
+	;;
+    stop | restart | reload | force-reload | status)
+	# unimplemented
+	;;
+    *)
+	logger "Unknown action \"$ACTION\""
+	;;
+esac
+
+exit 0
