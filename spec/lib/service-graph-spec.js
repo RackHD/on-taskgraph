@@ -48,7 +48,7 @@ describe('Service Graph', function () {
                 injectableName: 'testGraph1',
                 serviceGraph: true,
                 instanceId: 'testid1',
-                _status: Constants.Task.States.Pending,
+                _status: Constants.Task.States.Running,
                 definition: graphDefinitions[0]
         };
         this.sandbox.stub(serviceGraph, 'createAndRunServiceGraph').resolves();
@@ -173,6 +173,16 @@ describe('Service Graph', function () {
             expect(persistStub).to.have.been.calledOnce;
             expect(taskGraphProtocol.runTaskGraph).to.have.been.calledOnce;
             expect(taskGraphProtocol.runTaskGraph).to.have.been.calledWith('testid');
+        });
+    });
+
+    it('should not create duplicate service graphs', function() {
+        store.getGraphDefinitions.resolves([ graphDefinitions[0] ]);
+        store.getServiceGraphs.resolves([ graph ]);
+
+        return serviceGraph.start('default')
+        .then(function() {
+            expect(serviceGraph.createAndRunServiceGraph).to.not.have.been.called;
         });
     });
 });
