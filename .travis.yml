@@ -4,17 +4,23 @@ node_js:
   - "4"
   - "6"
 
+env:
+  - CXX=g++-4.8
+
 matrix:
   allow_failures:
    - node_js: "6"
 
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
       - dh-make
       - devscripts
       - debhelper
       - git
+      - g++-4.8
 
 services:
  - mongodb
@@ -26,7 +32,7 @@ after_success:
 before_deploy:
  - ./extra/make-deb.sh
 
-deploy: 
+deploy:
   provider: bintray
   file: .bintray.json
   user: $BINTRAY_USER
