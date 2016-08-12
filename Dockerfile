@@ -10,7 +10,8 @@ RUN mkdir -p ./node_modules \
   && ln -s /RackHD/on-core/node_modules/di ./node_modules/di \
   && npm install --ignore-scripts --production \
   && echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
-  && apk add --update ipmitool@testing net-snmp net-snmp-libs net-snmp-tools
+  && apk add --update ipmitool@testing net-snmp net-snmp-libs net-snmp-tools \
+  && ln -s /usr/sbin/ipmitool /usr/bin/ipmitool
 
 VOLUME /var/lib/dhcp
 CMD [ "node", "/RackHD/on-taskgraph/index.js" ]
