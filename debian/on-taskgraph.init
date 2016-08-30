@@ -24,6 +24,10 @@ USAGE="Usage: $0 {start|stop|restart|status} [--force]"
 FORCE_OP=false
 RESTART=false
 
+if [ -f /etc/default/$NAME ]; then
+        . /etc/default/$NAME
+fi
+
 pid_file_exists() {
     [ -f "$PID_FILE" ]
 }
@@ -38,10 +42,8 @@ is_running() {
 }
 
 start_it() {
-    if [ ! -d $PID_DIR ]; then mkdir -p "$PID_DIR";  fi
-    chown $USER:$USER "$PID_DIR"
-    mkdir -p "$LOG_DIR"
-    chown $USER:$USER "$LOG_DIR"
+    if [ ! -d $PID_DIR ]; then mkdir -p "$PID_DIR"; fi
+    if [ ! -d $LOG_DIR ]; then mkdir -p "$LOG_DIR"; fi
 
     echo "Starting $NAME ..."
     /sbin/start-stop-daemon --background --start --quiet\
@@ -116,11 +118,14 @@ status_app() {
         then
             PID=$(get_pid)
             echo "$NAME running with pid $PID"
+            exit 0
         else
             echo "$NAME stopped, but pid file exists"
+            exit 1
         fi
     else
         echo "$NAME stopped"
+        exit 3
     fi
 }
 
