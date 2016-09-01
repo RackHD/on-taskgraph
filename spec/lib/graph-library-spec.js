@@ -25,6 +25,8 @@ describe('Graph Library', function () {
     }
 
     before(function() {
+        //This is time-consuming as some many injectables need be setup, so adding more timeout
+        this.timeout(5000);
         helper.setupInjector([
             core.workflowInjectables,
             require('on-tasks').injectables,
@@ -46,6 +48,8 @@ describe('Graph Library', function () {
     });
 
     it("should validate all existing graphs not requiring user input for null values", function() {
+        //There may be a lot graph need be validated, so this test case may be very time consuming
+        this.timeout(8000);
         return Promise.map(loader.graphLibrary, function(_graph) {
             if (_.isEmpty(_graph.options)) {
                 // Only validate tasks that don't explicitly have blanks
