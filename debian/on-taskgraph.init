@@ -24,8 +24,14 @@ USAGE="Usage: $0 {start|stop|restart|status} [--force]"
 FORCE_OP=false
 RESTART=false
 
-# Override defaults and don't start unless default file exists.
-. /etc/default/$NAME
+if [ ! -f "/etc/default/$NAME" ]
+then
+    echo "Service disabled due to absence of /etc/default/$NAME" 1>&2
+    exit 1
+else
+     . "/etc/default/$NAME"
+fi
+
 
 pid_file_exists() {
     [ -f "$PID_FILE" ]
