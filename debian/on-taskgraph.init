@@ -24,9 +24,8 @@ USAGE="Usage: $0 {start|stop|restart|status} [--force]"
 FORCE_OP=false
 RESTART=false
 
-if [ -f /etc/default/$NAME ]; then
-        . /etc/default/$NAME
-fi
+# Override defaults and don't start unless default file exists.
+. /etc/default/$NAME
 
 pid_file_exists() {
     [ -f "$PID_FILE" ]
