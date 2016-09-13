@@ -1,7 +1,5 @@
 #!/bin/sh
 
-. /lib/lsb/init-functions
-
 ### BEGIN INIT INFO
 # Provides:          on-taskgraph
 # Required-Start:    $syslog $network mongodb rabbitmq-server
@@ -12,37 +10,166 @@
 # Description:       RackHD on-taskgraph service
 ### END INIT INFO
 
-DESC="on-taskgraph"
+NAME="on-taskgraph"
+USER="root"
+APP_DIR="/var/renasar/$NAME"
+NODE_APP="index.js"
+PID_DIR="/var/run"
+PID_FILE="$PID_DIR/$NAME.pid"
+LOG_DIR="/var/log/rackhd"
+LOG_FILE="$LOG_DIR/$NAME.log"
+NODE_EXEC=$(which node)
 
-CONFIG=/etc/default/on-taskgraph
-LOGFILE=/var/log/on-taskgraph.log
+USAGE="Usage: $0 {start|stop|restart|status} [--force]"
+FORCE_OP=false
+RESTART=false
 
-do_start()
-{
-    if [ -f "$CONFIG" ]
+if [ ! -f "/etc/default/$NAME" ]
+then
+    echo "Service disabled due to absence of /etc/default/$NAME" 1>&2
+    exit 1
+else
+     . "/etc/default/$NAME"
+fi
+
+
+pid_file_exists() {
+    [ -f "$PID_FILE" ]
+}
+
+get_pid() {
+    echo "$(cat "$PID_FILE")"
+}
+
+is_running() {
+    PID=$(get_pid)
+    ! [ -z "$(ps aux | awk '{print $2}' | grep "^$PID$")" ]
+}
+
+start_it() {
+    if [ ! -d $PID_DIR ]; then mkdir -p "$PID_DIR"; fi
+    if [ ! -d $LOG_DIR ]; then mkdir -p "$LOG_DIR"; fi
+
+    echo "Starting $NAME ..."
+    /sbin/start-stop-daemon --background --start --quiet\
+        --make-pidfile --pidfile $PID_FILE \
+        -d $APP_DIR \
+        --startas /bin/bash -- -c "exec $NODE_EXEC $APP_DIR/$NODE_APP >> $LOG_FILE 2>&1"
+
+    echo "$NAME started with pid $(get_pid)"
+}
+
+stop_process() {
+    echo "Killing process $PID"
+    /sbin/start-stop-daemon -K -o --pidfile $PID_FILE
+}
+
+remove_pid_file() {
+    echo "Removing pid file"
+    rm -f "$PID_FILE"
+}
+
+start_app() {
+    if pid_file_exists
     then
-	cd /var/renasar/on-taskgraph
-	/usr/bin/nodejs /var/renasar/on-taskgraph/index.js >> "$LOGFILE" 2>&1 &
-	log_success_msg "Started on-taskgraph daemon"
+        if is_running
+        then
+            PID=$(get_pid)
+            echo "$NAME already running with pid $PID"
+            exit 1
+        else
+            echo "$NAME stopped, but pid file exists"
+            if [ $FORCE_OP = true ]
+            then
+                echo "Forcing start anyways"
+                remove_pid_file
+                start_it
+            fi
+        fi
     else
-        log_failure_msg "Config file $CONFIG missing, not starting"
+        start_it
     fi
 }
 
+stop_app() {
+    if pid_file_exists
+    then
+        if is_running
+        then
+            echo "Stopping $NAME ..."
+            stop_process
+            remove_pid_file
+            echo "$NAME stopped"
+        else
+            echo "$NAME already stopped, but pid file exists"
+            if [ $FORCE_OP = true ]
+            then
+                echo "Forcing stop anyways ..."
+                remove_pid_file
+                echo "$NAME stopped"
+            else
+                exit 1
+            fi
+        fi
+    else
+        echo "$NAME already stopped, pid file does not exist"
+    fi
+}
 
-ACTION=$1
+status_app() {
+    if pid_file_exists
+    then
+        if is_running
+        then
+            PID=$(get_pid)
+            echo "$NAME running with pid $PID"
+            exit 0
+        else
+            echo "$NAME stopped, but pid file exists"
+            exit 1
+        fi
+    else
+        echo "$NAME stopped"
+        exit 3
+    fi
+}
 
-case "$ACTION" in
+case "$2" in
+    --force)
+        FORCE_OP=true
+    ;;
 
-    start)
-	do_start
-	;;
-    stop | restart | reload | force-reload | status)
-	# unimplemented
-	;;
+    "")
+    ;;
+
     *)
-	logger "Unknown action \"$ACTION\""
-	;;
+        echo $USAGE
+        exit 1
+    ;;
 esac
 
-exit 0
+case "$1" in
+    start)
+        start_app
+    ;;
+
+    stop)
+        stop_app
+    ;;
+
+    restart)
+        FORCE_OP=true
+        stop_app
+        start_app
+    ;;
+
+    status)
+        status_app
+    ;;
+
+    *)
+        echo $USAGE
+        exit 1
+    ;;
+esac
+
