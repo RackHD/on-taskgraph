@@ -1,0 +1,25 @@
+{
+    <% if (friendlyName !== null) { %>
+    "friendlyName": "<%=friendlyName%>",
+    <% }%>
+    <% if (injectableName !== null ) { %>
+    "injectableName": "<%=injectableName%>",
+    <% }%>
+    <% if (implementsTask !== null) { %>
+    "implementsTask" : "<%=implementsTask%>",
+    <% }%>
+    <% if (hasOwnProperty("schemaRef")) { %>
+    "schemaRef" : "<%=schemaRef%>",
+    <% }%>
+    <% if (options !== null) { %>
+    "options": <%- JSON.stringify(options) %>,
+    <% } else  {%>
+    "options": {},
+    <% } %>
+    <% if (properties !== null) { %>
+    "properties": <%- JSON.stringify(properties) %>
+    <% } else  {%>
+    "properties": {}
+    <% } %>
+
+}

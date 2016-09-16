@@ -4,6 +4,7 @@
   "description": "",
   "main": "lib",
   "scripts": {
+    "install": "./scripts/post-install.sh",
     "doc": "jsdoc lib -r -d docs",
     "test": "mocha $(find spec -name '*-spec.js') -R spec --require spec/helper.js"
   },
@@ -26,7 +27,12 @@
     "node-uuid": "^1.4.2",
     "on-core": "git+https://github.com/RackHD/on-core.git",
     "on-tasks": "git+https://github.com/RackHD/on-tasks.git",
-    "rx": "^2.3.22"
+    "swagger-tools": "0.8.*",
+    "express": "~4.13.4",
+    "rx": "^2.3.22",
+    "tv4": "~1.2.7",
+    "ejs": "~2.5.2",
+    "es6-shim": "^0.22.2"
   },
   "devDependencies": {
     "chai": "^2.0.0",

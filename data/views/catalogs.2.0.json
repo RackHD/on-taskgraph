@@ -1,0 +1,16 @@
+{
+    "id": "<%= id %>",
+    "node": "<%=basepath%>/nodes/<%=node%>",
+
+    <% if (source !== null) { %>
+    "source": "<%= source %>",
+    <% } else { %>
+    "source": null,
+    <% } %>
+
+    <% if (data !== null) { %>
+    "data": <%- JSON.stringify(data) %>
+    <% } else { %>
+    "data": null
+    <% } %>
+}

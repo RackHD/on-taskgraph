@@ -1,0 +1,40 @@
+{
+    "title": "raritan-obm-service",
+    "definitions": {
+        "Obm": {
+            "description": "Raritan OBM settings",
+            "type": "object",
+            "properties": {
+                "nodeId": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "Host address",
+                            "type": "string"
+                        },
+                        "user": {
+                            "description": "Host username",
+                            "type": "string"
+                        },
+                        "password": {
+                            "description": "Host password",
+                            "type": "string"
+                        },
+                        "port": {
+                            "description": "Port",
+                            "type": "integer"
+                        }
+                    },
+                    "required": ["host", "user", "password", "port"]
+                }
+            },
+            "required": ["service", "config"]
+        }
+    }
+}

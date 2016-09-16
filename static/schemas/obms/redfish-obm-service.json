@@ -1,0 +1,57 @@
+{
+    "title": "redfish-obm-service",
+    "definitions": {
+        "Obm": {
+            "description": "Redfish OBM settings",
+            "type": "object",
+            "properties": {
+                "nodeId": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "Redfish address",
+                            "type": "string"
+                        },
+                        "user": {
+                            "description": "Redfish username",
+                            "type": "string"
+                        },
+                        "password": {
+                            "description": "Redfish password",
+                            "type": "string"
+                        },
+                        "verfiySSL": {
+                            "description": "Validate SSL/TLS certs on client request",
+                            "type": "boolean"
+                        },
+                        "protocol": {
+                            "description": "Request protocol",
+                            "type": "string",
+                            "enum": ["http", "https"]
+                        },
+                        "port": {
+                            "description": "Optional http(s) host port, default 80/443",
+                            "type": "string"
+                        },
+                        "root": {
+                            "description": "The Redfish resources target path",
+                            "type": "string"
+                        },
+                        "uri": {
+                            "description": "The Redfish endpoint address",
+                            "type": "string"
+                        }
+                    },
+                    "required": ["host", "user", "password", "root", "uri", "protocol"]
+                }
+            },
+            "required": ["service", "config"]
+        }
+    }
+}

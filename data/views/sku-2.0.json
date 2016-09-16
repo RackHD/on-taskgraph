@@ -1,0 +1,29 @@
+{
+  "name": "<%=name%>",
+  "id": "<%=id%>",
+  <% if (hasOwnProperty("httpStaticRoot")) { %>
+    "httpStaticRoot": <%- JSON.stringify(httpStaticRoot) %>,
+  <% }%>
+  <% if (hasOwnProperty("httpTemplateRoot")) { %>
+    "httpTemplateRoot": <%- JSON.stringify(httpTemplateRoot) %>,
+  <% }%>
+  <% if (hasOwnProperty("workflowRoot")) { %>
+    "workflowRoot": <%- JSON.stringify(workflowRoot) %>,
+  <% }%>
+  <% if (hasOwnProperty("taskRoot")) { %>
+    "taskRoot": <%- JSON.stringify(taskRoot) %>,
+  <% }%>
+  <% if (hasOwnProperty("httpProfileRoot")) { %>
+    "httpProfileRoot": <%- JSON.stringify(httpProfileRoot) %>,
+  <% }%>
+  <% if (hasOwnProperty("skuConfig")) { %>
+    "skuConfig": <%- JSON.stringify(skuConfig) %>,
+  <% }%>
+  <% if (hasOwnProperty("discoveryGraphName")) { %>
+    "discoveryGraphName": <%- JSON.stringify(discoveryGraphName) %>,
+  <% }%>
+  <% if (hasOwnProperty("discoveryGraphOptions")) { %>
+    "discoveryGraphOptions": <%- JSON.stringify(discoveryGraphOptions) %>,
+  <% }%>
+  "rules": <%- JSON.stringify(rules) %>
+}

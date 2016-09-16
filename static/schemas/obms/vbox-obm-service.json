@@ -1,0 +1,32 @@
+{
+    "title": "vbox-obm-service",
+    "definitions": {
+        "Obm": {
+            "description": "Vbox OBM settings",
+            "type": "object",
+            "properties": {
+                "nodeId": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "alias": {
+                            "description": "Alias",
+                            "type": "string"
+                        },
+                        "user": {
+                            "description": "Username",
+                            "type": "string"
+                        }
+                    },
+                    "required": ["alias", "user"]
+                }
+            },
+            "required": ["service", "config"]
+        }
+    }
+}

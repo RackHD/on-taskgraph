@@ -1,0 +1,58 @@
+{
+    "title": "Node.2.0",
+    "definitions": {
+        "PartialNode": {
+            "description": "A node discovered by RackHD",
+            "type": "object",
+            "properties": {
+                "autoDiscover": {
+                    "description": "Enable automatic discovery",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name of the node",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type of node",
+                    "type": "string",
+                    "enum": ["compute", "switch", "dae", "pdu", "mgmt", "enclosure", "rack"]
+                },
+                "obmSettings": {
+                    "description": "OBM settings",
+                    "type": "array"
+                },
+                "snmpSettings": {
+                    "description": "SNMP settings",
+                    "type": "object"
+                },
+                "bootSettings": {
+                    "description": "Default ipxe profile settings",
+                    "type": "object"
+                },
+                "relations": {
+                        "description": "Node relations",
+                        "type": "array"
+                },
+                "sshSettings": {
+                    "description": "SSH settings",
+                    "type": "object"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "uniqueItems": true
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "Node": {
+            "allOf": [
+                { "$ref": "#/definitions/PartialNode" },
+                { "required": [ "name" ] }
+            ]
+        }
+    }
+}

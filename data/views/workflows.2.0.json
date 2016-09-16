@@ -1,0 +1,75 @@
+{
+    <% if (hasOwnProperty("node")) { %>
+    "node": "<%=node%>",
+    <% }%>
+    <% if (hasOwnProperty("_status")) { %>
+    "status": "<%=_status%>",
+    <% }%>
+    <% if (hasOwnProperty("context")) { %>
+    "context": <%- JSON.stringify(context) %>,
+    <% }%>
+    <% if (hasOwnProperty("definition")) { %>
+    "definition": "<%=basepath%>/workflows/graphs/<%=definition.injectableName%>",
+    <% } %>
+
+    <% if (hasOwnProperty("domain")) { %>
+    "domain": "<%=domain%>",
+    <% } %>
+    <% if (hasOwnProperty("id")) { %>
+    "id": "<%=id%>",
+    <% } %>
+    "injectableName": "<%=injectableName%>",
+    <% if (hasOwnProperty("instanceId")) { %>
+    "instanceId": "<%=instanceId%>",
+    <% } %>
+    <% if (hasOwnProperty("logContext")) { %>
+    "logContext": <%- JSON.stringify(logContext) %>,
+    <% }%>
+    <% if (hasOwnProperty("name")) { %>
+    "name": "<%=name%>",
+    <% }%>
+    <% if (hasOwnProperty("serviceGraph")) { %>
+    "serviceGraph": "<%=serviceGraph%>",
+    <% }%>
+    "tasks": [
+        <% if (hasOwnProperty("tasks")) { %>
+        <%
+           var taskCount =  Object.keys(tasks).length;
+           var count = 0;
+        %>
+        <% _.forEach(tasks, function(value, i, arr) { %>
+            {
+                <% count += 1; %>
+                <% if (value.label) { %>
+                "label": "<%= value.label%>",
+                <% }%>
+                <% if (value.instanceId) { %>
+		"instanceId": "<%=value.instanceId%>",
+                <% }%>
+		<% if (value.error) { %>
+		"error": <%- JSON.stringify(value.error) %>,
+		<% } %>
+		<%  if (value.options) {   %>
+		"options": <%- JSON.stringify(value.options)%>,
+		<% } %>
+		<%  if (value.runJob) {   %>
+		"runJob": "<%=value.runJob%>",
+		<% } %>
+		<%  if (value.state) {   %>
+		"state": "<%=value.state%>",
+		<% } %>
+		<% if (value.taskStartTime) { %>
+		"taskStartTime": "<%=value.taskStartTime%>",
+		<% } %>
+		<%  if (value.terminalOnStates) {   %>
+		"terminalOnStates": <%- JSON.stringify(value.terminalOnStates)%>,
+		<% } %>
+		<%  if (value.waitingOn) {   %>
+		"waitingOn": <%- JSON.stringify(value.waitingOn)%>
+		<% } %>
+            }
+        <%= ( count > 0 && count < taskCount ) ? ',': '' %>
+	<% }); %>
+        <% } %>
+    ]
+}

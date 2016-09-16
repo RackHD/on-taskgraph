@@ -1,0 +1,94 @@
+{
+    "title": "workflowGraphs.2.0",
+    "definitions": {
+        "tasks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "label"
+                ],
+                "additionalProperties": false,
+                "oneOf": [
+                    {"required": ["taskName"]},
+                    {"required": ["taskDefinition"]}
+                ],
+                "minItems": 1,
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "taskName": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "taskDefinition": {
+                        "$ref": "#/definitions/taskDefinition"
+                    },
+                    "ignoreFailure": {
+                        "type": "boolean"
+                    },
+                    "waitOn": {
+                        "type": "object"
+                    }
+                }
+            }
+        },
+
+        "taskDefinition": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "friendlyName", "injectableName", "implementsTask", "options", "properties"
+            ],
+            "properties": {
+                "friendlyName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "injectableName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "implementsTask": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "options": {
+                    "type": "object"
+                },
+                "properties": {
+                    "type": "object"
+                },
+                "schemaRef": {
+                    "type": "string"
+                }
+            }
+        },
+
+        "workflowGraphsPut": {
+            "description": "schema for adding or modifying a workflow graph",
+            "required": [
+                "friendlyName", "injectableName", "tasks"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "friendlyName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "injectableName": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "options": {
+                    "type": "object"
+                },
+                "tasks": {
+                    "$ref": "#/definitions/tasks"
+                }
+            }
+        }
+    }
+}

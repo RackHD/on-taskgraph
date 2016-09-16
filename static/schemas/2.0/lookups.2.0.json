@@ -1,0 +1,31 @@
+{
+    "title": "Lookup.2.0",
+    "definitions": {
+        "LookupBase": {
+            "description": "A lookup record",
+            "type": "object",
+            "properties": {
+                "node": {
+                    "type": "string"
+                },
+                "ipAddress": {
+                    "type": "string",
+                    "format": "ipv4"
+                },
+                "macAddress": {
+                    "type": "string",
+                    "pattern": "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"
+                }
+            },
+            "additionalProperties": false
+        },
+        "LookupPost": {
+            "allOf": [
+                { "$ref": "#/definitions/LookupBase" },
+                { "required": [ "macAddress" ] }
+            ]
+        }
+    }
+}
+
+    

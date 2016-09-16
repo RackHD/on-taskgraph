@@ -1,0 +1,57 @@
+{
+    "title": "panduit-obm-service",
+    "definitions": {
+        "Obm": {
+            "description": "Panduit OBM settings",
+            "type": "object",
+            "properties": {
+                "nodeId": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "Host address",
+                            "type": "string"
+                        },
+                        "community": {
+                            "description": "Community",
+                            "type": "string"
+                        },
+                        "cyclePassword": {
+                            "description": "Cycle password",
+                            "type": "string"
+                        },
+                        "pduOutlets": {
+                            "type": "array",
+                            "properties": {
+                                "host": {
+                                    "type": "string"
+                                },
+                                "community": {
+                                    "type": "string"
+                                },
+                                "cyclePassword": {
+                                    "type": "string"
+                                },
+                                "pduNumber": {
+                                    "type": "integer"
+                                },
+                                "outletNumber": {
+                                    "type": "integer"
+                                }
+                            },
+                            "required": ["host", "community", "cyclePassword", "pduNumber", "outletNumber"]
+                        }
+                    },
+                    "required": ["host", "community", "cyclePassword", "pduOutlets"]
+                }
+            },
+            "required": ["service", "config"]
+        }
+    }
+}

@@ -1,0 +1,7 @@
+{
+  "identifier": "<%= identifier %>",
+  <% if (hasOwnProperty("exit")) { %>
+   "exit": "<%= exit %>",
+  <% } %> 
+  "tasks": <%- JSON.stringify(tasks) %>
+}

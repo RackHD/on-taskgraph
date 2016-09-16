@@ -1,0 +1,36 @@
+{
+    "title": "ipmi-obm-service",
+    "definitions": {
+        "Obm": {
+            "description": "IPMI OBM settings",
+            "type": "object",
+            "properties": {
+                "nodeId": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "BMC address",
+                            "type": "string"
+                        },
+                        "user": {
+                            "description": "IPMI username",
+                            "type": "string"
+                        },
+                        "password": {
+                            "description": "IPMI password",
+                            "type": "string"
+                        }
+                    },
+                    "required": ["host", "user", "password"]
+                }
+            },
+            "required": ["service", "config"]
+        }
+    }
+}

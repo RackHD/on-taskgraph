@@ -1,0 +1,36 @@
+{
+    "title": "servertech-obm-service",
+    "definitions": {
+        "Obm": {
+            "description": "Servertech OBM settings",
+            "type": "object",
+            "properties": {
+                "nodeId": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "Host address",
+                            "type": "string"
+                        },
+                        "community": {
+                            "description": "Community",
+                            "type": "string"
+                        },
+                        "port": {
+                            "description": "Port",
+                            "type": "integer"
+                        }
+                    },
+                    "required": ["host", "community", "port"]
+                }
+            },
+            "required": ["service", "config"]
+        }
+    }
+}

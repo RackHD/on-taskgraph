@@ -1,0 +1,32 @@
+{
+    "title": "amt-obm-service",
+    "definitions": {
+        "Obm": {
+            "description": "AMT OBM settings",
+            "type": "object",
+            "properties": {
+                "nodeId": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "Host address",
+                            "type": "string"
+                        },
+                        "password": {
+                            "description": "Host password",
+                            "type": "string"
+                        }
+                    },
+                    "required": ["host", "password"]
+                }
+            },
+            "required": ["service", "config"]
+        }
+    }
+}

@@ -1,0 +1,21 @@
+{
+    "title": "default-obm-service",
+    "definitions": {
+        "Obm": {
+            "description": "OBM settings",
+            "type": "object",
+            "properties": {
+                "nodeId": {
+                    "type": "string"
+                },
+                "service": {
+                    "type": "string"
+                },
+                "config": {
+                    "type": "object"
+                }
+            },
+            "required": ["service", "config"]
+        }
+    }
+}
