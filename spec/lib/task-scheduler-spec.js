@@ -603,6 +603,24 @@ describe('Task Scheduler', function() {
             checkGraphFinishedStream.onNext(data);
         });
 
+        it('it should should not fail a graph based on an ignored failure', function(done) {
+            var data = {
+                taskId: 'testtaskid',
+                state: Constants.Task.States.Failed,
+                ignoreFailure: true
+            };
+            taskScheduler.checkGraphSucceeded.resolves();
+            observable = taskScheduler.createCheckGraphFinishedSubscription(
+                checkGraphFinishedStream);
+
+            streamSuccessWrapper(observable, done, function() {
+                expect(taskScheduler.failGraph).to.not.have.been.called;
+            });
+
+            checkGraphFinishedStream.onNext(data);
+        });
+
+
         it('should handle failGraph errors', function(done) {
             var data = {
                 taskId: 'testtaskid',
