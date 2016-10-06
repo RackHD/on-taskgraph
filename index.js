@@ -19,8 +19,9 @@ var di = require('di'),
             require('./lib/service-graph.js'),
             require('./lib/completed-task-poller.js'),
             require('./lib/rx-mixins.js'),
-            helper.requireGlob(__dirname + '/controllers/services/**/*.js'),
-            helper.requireGlob(__dirname + '/controllers/view/**/*.js')
+            helper.requireGlob(__dirname + '/lib/services/**/*.js'),
+            helper.requireGlob(__dirname + '/api/rest/view/**/*.js'),
+            require('./api/rpc/index.js')
         ])
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
@@ -60,7 +61,7 @@ taskGraphRunner.start(options)
          // swaggerRouter configuration
          var options = {
              swaggerUi: '/swagger.json',
-             controllers: './controllers',
+             controllers: './api/rest',
              useStubs: process.env.NODE_ENV === 'development' ? true : false // Conditionally turn on stubs (mock mode)
          };
          // The Swagger document (require it, build it programmatically, fetch it from a URL, ...)

@@ -2,7 +2,7 @@
 
 'use strict';
 
-var injector = require('../index.js').injector;
+var injector = require('../../index.js').injector;
 var controller = injector.get('Http.Services.Swagger').controller;
 var tasksApiService = injector.get('Http.Services.Api.Tasks');
 var _ = injector.get('_'); // jshint ignore:line
@@ -10,7 +10,10 @@ var Errors = injector.get('Errors');
 var presenter = injector.get('common-api-presenter');
 
 var getBootstrap = controller( function (req, res) {
-    return tasksApiService.getBootstrap(req, res, req.swagger.params.macAddress.value);
+    var scope = res.locals.scope;
+    var ipAddress = res.locals.ipAddress;
+    var macAddress = req.swagger.params.macAddress.value;
+    return tasksApiService.getBootstrap(scope, ipAddress, macAddress);
 });
 
 var getTasksById = controller( {send204OnEmpty:true}, function (req){

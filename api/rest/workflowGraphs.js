@@ -2,7 +2,7 @@
 
 'use strict';
 
-var injector = require('../index.js').injector;
+var injector = require('../../index.js').injector;
 var controller = injector.get('Http.Services.Swagger').controller;
 var workflowApiService = injector.get('Http.Services.Api.Workflows');
 var _ = injector.get('_');    // jshint ignore:line
