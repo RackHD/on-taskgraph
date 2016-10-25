@@ -13,7 +13,7 @@ describe("Task Runner", function() {
     TaskRunner,
     taskMessenger = {},
     mockTaskGraph = {
-        prototype: { updateGraphProgress: function () {}}
+       updateGraphProgress: function () {}
     },
     TaskGraph,
     store = {
@@ -393,7 +393,7 @@ describe("Task Runner", function() {
             progress = {
                 graphId: finishedTask.context.graphId,
                 progress: {
-                    percentage: "na",
+                    percentage: null,
                     description: 'Task "' + finishedTask.definition.friendlyName + '" finished'
                 },
                 taskProgress: {
@@ -411,7 +411,7 @@ describe("Task Runner", function() {
 
         it("should wrap the taskMessenger's publishTaskFinished", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            this.sandbox.stub(TaskGraph.prototype, 'updateGraphProgress').resolves();
+            this.sandbox.stub(TaskGraph, 'updateGraphProgress').resolves();
             return runner.publishTaskFinished(finishedTask)
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
@@ -424,14 +424,14 @@ describe("Task Runner", function() {
                     finishedTask.context,
                     finishedTask.definition.terminalOnStates
                 );
-                expect(TaskGraph.prototype.updateGraphProgress).to.have.been.calledOnce;
-                expect(TaskGraph.prototype.updateGraphProgress).to.have.been.calledWith(progress);
+                expect(TaskGraph.updateGraphProgress).to.have.been.calledOnce;
+                expect(TaskGraph.updateGraphProgress).to.have.been.calledWith(progress);
             });
         });
 
         it("should call publishTaskFinished with an error message string", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            this.sandbox.stub(TaskGraph.prototype, 'updateGraphProgress').resolves();
+            this.sandbox.stub(TaskGraph, 'updateGraphProgress').resolves();
             finishedTask.error = new Error('test error');
             progress.progress.description += " with error"; 
             return runner.publishTaskFinished(finishedTask)
@@ -439,8 +439,8 @@ describe("Task Runner", function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
                 expect(taskMessenger.publishTaskFinished.firstCall.args[4])
                     .to.contain('test error');
-                expect(TaskGraph.prototype.updateGraphProgress).to.have.been.calledOnce;
-                expect(TaskGraph.prototype.updateGraphProgress).to.have.been.calledWith(progress);
+                expect(TaskGraph.updateGraphProgress).to.have.been.calledOnce;
+                expect(TaskGraph.updateGraphProgress).to.have.been.calledWith(progress);
             });
         });
 
@@ -475,7 +475,7 @@ describe("Task Runner", function() {
             progress = {
                     graphId: startedTask.context.graphId,
                     progress: {
-                        percentage: "na",
+                        percentage: null, 
                         description: 'Task "' + startedTask.definition.friendlyName + '" started',
                     },
                     taskProgress: {
@@ -493,11 +493,11 @@ describe("Task Runner", function() {
         });
 
         it("should wrap the taskMessenger's publishTaskStarted", function() {
-            this.sandbox.stub(TaskGraph.prototype, 'updateGraphProgress').resolves();
+            this.sandbox.stub(TaskGraph, 'updateGraphProgress').resolves();
             return runner.publishTaskStarted(startedTask)
             .then(function(){
-                expect(TaskGraph.prototype.updateGraphProgress).to.be.calledOnce;
-                expect(TaskGraph.prototype.updateGraphProgress).to.be.calledWith(progress);
+                expect(TaskGraph.updateGraphProgress).to.be.calledOnce;
+                expect(TaskGraph.updateGraphProgress).to.be.calledWith(progress);
             });
         });
 
