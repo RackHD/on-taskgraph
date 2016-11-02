@@ -24,8 +24,8 @@ USAGE="Usage: $0 {start|stop|restart|status}"
 RESTART=false
 
 # Time to wait for the server to die, in seconds
-DIETIME=0.5
-STARTTIME=0.1
+DIETIME=1
+STARTTIME=1
 if [ ! -f "/etc/default/$NAME" ]
 then
     echo "Service disabled due to absence of /etc/default/$NAME" 1>&2
