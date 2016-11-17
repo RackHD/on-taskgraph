@@ -9,6 +9,12 @@
 set -e
 set -x
 
+# $1 should be a file which contains the release version.
+# For example:  PKG_VERSION=1.2.3-rc-abc...
+if [ -f "$1" ];then
+    source $1
+fi
+
 rm -rf packagebuild
 git clone . packagebuild
 pushd packagebuild
@@ -18,18 +24,17 @@ rm -rf node_modules
 npm install --production --cache=`pwd`
 git log -n 1 --pretty=format:%h.%ai.%s > commitstring.txt
 
-GITCOMMITDATE=$(git show -s --pretty="format:%ci")
-DATESTRING=$(date -d "$GITCOMMITDATE" -u +"%Y-%m-%d-%H%M%SZ")
-
-PKG_VERSION="$DATESTRING"
-if [ -n "$BUILD_NUMBER" ]
-then
-  PKG_VERSION="${PKG_VERSION}-${BUILD_NUMBER}"
-fi
-
 export DEBEMAIL="hwimo robots <hwimo@hwimo.lab.emc.com>"
 export DEBFULLNAME="The HWIMO Robots"
 
-dch -v ${PKG_VERSION} autobuild
+if [ ! -z "$PKG_VERSION" ];then
+    if [[ $PKG_VERSION =~ ^[0-9.]+$ ]];then
+        dch -r ""
+    else
+        COMMIT_STR=`git log -n 1 --oneline`
+        dch -v $PKG_VERSION -u low $COMMIT_STR -b -m
+    fi
+fi
+
 debuild --no-lintian --no-tgz-check -us -uc
 popd
