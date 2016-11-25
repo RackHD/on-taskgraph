@@ -397,7 +397,6 @@ describe("Task Runner", function() {
                     description: 'Task "' + finishedTask.definition.friendlyName + '" finished'
                 },
                 taskProgress: {
-                    graphId: finishedTask.context.graphId,
                     taskId: finishedTask.instanceId,
                     taskName: finishedTask.definition.friendlyName,
                     progress: {
@@ -479,7 +478,6 @@ describe("Task Runner", function() {
                         description: 'Task "' + startedTask.definition.friendlyName + '" started',
                     },
                     taskProgress: {
-                        graphId: startedTask.context.graphId,
                         taskId: startedTask.instanceId,
                         taskName: startedTask.definition.friendlyName,
                         progress: {
