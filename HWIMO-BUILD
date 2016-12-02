@@ -30,7 +30,7 @@ export DEBFULLNAME="The HWIMO Robots"
 # compute it as below:
 if [ -z "$PKG_VERSION" ];then
     GIT_COMMIT_DATE=$(git show -s --pretty="format:%ci")
-    DATE_STRING=$(date -d "$GIT_COMMIT_DATE" -u +"%Y%m%d%H%M%SZ")
+    DATE_STRING=$(date -d "$GIT_COMMIT_DATE" -u +"%Y%m%dUTC")
 
     GIT_COMMIT_HASH=$(git show -s --pretty="format:%h")
 
@@ -39,7 +39,7 @@ if [ -z "$PKG_VERSION" ];then
     PKG_VERSION="$CHANGELOG_VERSION-$DATE_STRING-$GIT_COMMIT_HASH"
 fi
 
-if [[ $PKG_VERSION =~ ^[0-9.]+$ ]];then
+if [[ $PKG_VERSION =~ ^([0-9]+\.){2}[0-9]+$ ]];then
     # If version looks like 1.2.3, the build is official build.
     # So update the distribution of changelog from "UNRELEASED" to "unstable"
     dch -r ""
