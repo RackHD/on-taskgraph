@@ -391,18 +391,14 @@ describe("Task Runner", function() {
                 state: 'finished',
                 definition: { terminalOnStates: ['succeeded'], friendlyName: 'Test Task' }};
             progress = {
-                graphId: finishedTask.context.graphId,
                 progress: {
-                    percentage: null,
+                    value: null, maximum: null,
                     description: 'Task "' + finishedTask.definition.friendlyName + '" finished'
                 },
                 taskProgress: {
                     taskId: finishedTask.instanceId,
                     taskName: finishedTask.definition.friendlyName,
-                    progress: {
-                        percentage: "100%",
-                        description: "Task finished" 
-                    }
+                    progress: {value: 100, maximum: 100, description: "Task finished"}
                 }
             };
             runner = TaskRunner.create();
@@ -424,7 +420,8 @@ describe("Task Runner", function() {
                     finishedTask.definition.terminalOnStates
                 );
                 expect(TaskGraph.updateGraphProgress).to.have.been.calledOnce;
-                expect(TaskGraph.updateGraphProgress).to.have.been.calledWith(progress);
+                expect(TaskGraph.updateGraphProgress).to.have.been
+                    .calledWith(finishedTask.context.graphId, progress);
             });
         });
 
@@ -439,7 +436,8 @@ describe("Task Runner", function() {
                 expect(taskMessenger.publishTaskFinished.firstCall.args[4])
                     .to.contain('test error');
                 expect(TaskGraph.updateGraphProgress).to.have.been.calledOnce;
-                expect(TaskGraph.updateGraphProgress).to.have.been.calledWith(progress);
+                expect(TaskGraph.updateGraphProgress).to.have.been
+                    .calledWith(finishedTask.context.graphId, progress);
             });
         });
 
@@ -472,18 +470,14 @@ describe("Task Runner", function() {
                 state: 'Running',
                 definition: { terminalOnStates: ['succeeded'], friendlyName: 'Test Task' }};
             progress = {
-                    graphId: startedTask.context.graphId,
                     progress: {
-                        percentage: null, 
+                        value: null, maximum: null,
                         description: 'Task "' + startedTask.definition.friendlyName + '" started',
                     },
                     taskProgress: {
                         taskId: startedTask.instanceId,
                         taskName: startedTask.definition.friendlyName,
-                        progress: {
-                            percentage: "0%",
-                            description: "Task started" 
-                        }
+                        progress: {value: 0, maximum: 100, description: "Task started"}
                     }
                 };
             this.sandbox.restore();
@@ -495,7 +489,8 @@ describe("Task Runner", function() {
             return runner.publishTaskStarted(startedTask)
             .then(function(){
                 expect(TaskGraph.updateGraphProgress).to.be.calledOnce;
-                expect(TaskGraph.updateGraphProgress).to.be.calledWith(progress);
+                expect(TaskGraph.updateGraphProgress).to.be
+                    .calledWith(startedTask.context.graphId, progress);
             });
         });
 
