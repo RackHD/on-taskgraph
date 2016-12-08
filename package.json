@@ -29,6 +29,7 @@
     "grpc": "^1.0.0",
     "lodash": "^3.10.1",
     "lru-cache": "^2.5.0",
+    "minimist": "^1.2.0",
     "node-uuid": "^1.4.2",
     "on-core": "git+https://github.com/RackHD/on-core.git",
     "on-tasks": "git+https://github.com/RackHD/on-tasks.git",

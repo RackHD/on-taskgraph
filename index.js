@@ -21,7 +21,8 @@ var di = require('di'),
             require('./lib/rx-mixins.js'),
             helper.requireGlob(__dirname + '/lib/services/**/*.js'),
             helper.requireGlob(__dirname + '/api/rest/view/**/*.js'),
-            require('./api/rpc/index.js')
+            require('./api/rpc/index.js'),
+            helper.requireWrapper('consul', 'consul')
         ])
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
@@ -29,68 +30,69 @@ var di = require('di'),
 var app = require('express')();
 var http = require('http');
 var swaggerTools = require('swagger-tools');
+var parseArgs = require('minimist');
+
 var options = {
     runner: true,
     scheduler: true
 };
-if (_.contains(process.argv, '-s') || _.contains(process.argv, '--scheduler')) {
+var httpPort = 9005;
+var server;
+
+var argv = parseArgs(process.argv.slice(2));
+
+var options = {
+    runner: true,
+    scheduler: true,
+    domain: argv.domain || argv.d,
+    httpPort: argv['http-port'] || argv.p || 9005,
+}
+
+if (argv.scheduler || argv.s) {
     options.runner = false;
-} else if (_.contains(process.argv, '-r') || _.contains(process.argv, '--runner')) {
+} else if (argv.runner || argv.r) {
     options.scheduler = false;
-}
-if (_.contains(process.argv, '-d') || _.contains(process.argv, '--domain')) {
-    _.reduce(process.argv, function (lastArg, arg) {
-        if (lastArg === '-d' || lastArg === '--domain') {
-            if (_.contains(['-s', '--scheduler', '-r', '--runner'], arg)) {
-                console.error('\nNo value for domain specified!');
-                process.exit(1);
-            }
-            options.domain = arg;
-        }
-        return arg;
-    });
-}
-if (_.last(process.argv) === '-d' || _.last(process.argv) === '--domain') {
-    console.error('\nNo value for domain specified!');
-    process.exit(1);
 }
 
 taskGraphRunner.start(options)
      .then(function () {
-         logger.info('Task Graph Runner Started.');
-         // swaggerRouter configuration
-         var options = {
-             swaggerUi: '/swagger.json',
-             controllers: './api/rest',
-             useStubs: process.env.NODE_ENV === 'development' ? true : false // Conditionally turn on stubs (mock mode)
-         };
-         // The Swagger document (require it, build it programmatically, fetch it from a URL, ...)
-         var swaggerDoc = require('./api/swagger.json');
+        logger.info('Task Graph Runner Started.');
+        if (options.scheduler && options.httpPort) {
+             // swaggerRouter configuration
+             var swaggerOptions = {
+                 swaggerUi: '/swagger.json',
+                 controllers: './api/rest',
+                 useStubs: process.env.NODE_ENV === 'development' ? true : false // Conditionally turn on stubs (mock mode)
+             };
+             // The Swagger document (require it, build it programmatically, fetch it from a URL, ...)
+             var swaggerDoc = require('./api/swagger.json');
 
-         // Initialize the Swagger middleware
-         swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
-             // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
-             app.use(middleware.swaggerMetadata());
+             // Initialize the Swagger middleware
+             swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
+                 // Interpret Swagger resources and attach metadata to request - must be first in swagger-tools middleware chain
+                 app.use(middleware.swaggerMetadata());
 
-             // Validate Swagger requests
-             app.use(middleware.swaggerValidator());
+                 // Validate Swagger requests
+                 app.use(middleware.swaggerValidator());
 
-             // Route validated requests to appropriate controller
-             app.use(middleware.swaggerRouter(options));
+                 // Route validated requests to appropriate controller
+                 app.use(middleware.swaggerRouter(swaggerOptions));
 
-             // Serve the Swagger documents and Swagger UI
-             app.use(middleware.swaggerUi());
+                 // Serve the Swagger documents and Swagger UI
+                 app.use(middleware.swaggerUi());
 
-             // Start the server
-             var config = {
-                 hostname: '0.0.0.0',
-                 httpPort: 9005
-             }
-             http.createServer(app).listen(config.httpPort, config.hostname, function () {
-                 console.log('Your server is listening on port %d ', config.httpPort);
-                 console.log('Swagger-ui is available on http://%s:%d/docs', config.hostname, config.httpPort);
+                 // Start the server
+                 var config = {
+                     hostname: '0.0.0.0',
+                     httpPort: options.httpPort
+                 }
+                 server = http.createServer(app)
+                 server.listen(config.httpPort, config.hostname, function () {
+                     console.log('Your server is listening on port %d ', config.httpPort);
+                     console.log('Swagger-ui is available on http://%s:%d/docs', config.hostname, config.httpPort);
+                 });
              });
-         });
+        }
      })
     .catch(function (error) {
         //NOTE(heckj): I'm unclear why this is on the console directly and not
@@ -111,6 +113,7 @@ process.on('SIGINT', function () {
             logger.critical('Task Graph Runner Shutdown Error.', { error: error });
         })
         .finally(function () {
+            if (server) server.close();
             process.nextTick(function () {
                 process.exit(1);
             });
@@ -118,5 +121,6 @@ process.on('SIGINT', function () {
 });
 
 module.exports = {
-    injector: injector
+    injector: injector,
+    taskGraphRunner: taskGraphRunner
 };
