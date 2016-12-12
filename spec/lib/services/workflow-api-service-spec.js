@@ -36,8 +36,7 @@ describe('Http.Services.Api.Workflows', function () {
         helper.setupInjector([
             helper.requireGlob('/lib/*.js'),
             helper.requireGlob('/lib/services/*.js'),
-            helper.require('/api/rpc/runner/index.js'),
-            helper.require('/api/rpc/scheduler/index.js'),
+            helper.require('/api/rpc/index.js'),
             helper.di.simpleWrapper(mockConsul, 'consul'),
             require('on-tasks').injectables,
             core.workflowInjectables
