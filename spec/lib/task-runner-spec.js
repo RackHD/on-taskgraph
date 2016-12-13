@@ -256,8 +256,8 @@ describe("Task Runner", function() {
 
         it('should heartbeat Tasks on an interval', function(done) {
             runner.running = true;
-            runner.heartbeat = Rx.Observable.interval(1);
-            var heartStream = runner.createHeartbeatSubscription(runner.heartbeat).take(5);
+            runner.heartbeat = Rx.Observable.interval(1).take(5);
+            var heartStream = runner.createHeartbeatSubscription(runner.heartbeat);
             streamOnCompletedWrapper(heartStream, done, function() {
                 expect(store.heartbeatTasksForRunner.callCount).to.equal(5);
             });
