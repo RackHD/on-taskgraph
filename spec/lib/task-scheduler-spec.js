@@ -14,6 +14,7 @@ describe('Task Scheduler', function() {
     var Rx;
     var schedulerServer;
     var grpc;
+    var configuration;
 
     /*
      * Helper methods to test inner stream creation methods.
@@ -105,6 +106,12 @@ describe('Task Scheduler', function() {
         schedulerServer = helper.injector.get('TaskGraph.TaskScheduler.Server');
         grpc = helper.injector.get('grpc')();
         this.sandbox = sinon.sandbox.create();
+        configuration = helper.injector.get('Services.Configuration');
+        configuration.set('consulUrl', 'consol://localhost:8500');
+    });
+
+    after(function() {
+        configuration.set('consulUrl', undefined);
     });
 
     beforeEach(function() {
