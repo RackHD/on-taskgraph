@@ -11,7 +11,8 @@ describe('Graph Library', function () {
         TaskGraph,
         taskLibrary,
         env,
-        Promise;
+        Promise,
+        task;
 
     function findAllValues(obj) {
         var allValues = _.map(obj, function(v) {
@@ -38,12 +39,14 @@ describe('Graph Library', function () {
         taskLibrary = helper.injector.get('Task.taskLibrary');
         env = helper.injector.get('Services.Environment');
         Promise = helper.injector.get('Promise');
+        task = helper.injector.get('Task.Task');
         sinon.stub(store, 'getTaskDefinition', function(injectableName) {
             return Promise.resolve(_.find(taskLibrary, function(t) {
                 return t.injectableName === injectableName;
             }));
         });
         sinon.stub(env, 'get').resolves({});
+        sinon.stub(task.prototype, 'getSkuId').resolves({});
         return helper.injector.get('Services.Task').start();
     });
 
@@ -67,13 +70,29 @@ describe('Graph Library', function () {
                     }
                 });
                 if (!skip) {
-                    return TaskGraph.create('default', { definition: _graph });
+                    return TaskGraph.create(
+                        'default',
+                        {
+                            definition: _graph,
+                            context: {
+                                target: "123"
+                            }
+                        }
+                    );
                 }
             } else {
                 // Only validate tasks that don't explicitly have blanks
                 // in their definitions (to be filled in by users)
                 if (!_.contains(findAllValues(_graph.options), null)) {
-                    return TaskGraph.create('default', { definition: _graph });
+                    return TaskGraph.create(
+                        'default',
+                        {
+                            definition: _graph,
+                            context: {
+                                target: "123"
+                            }
+                        }
+                    );
                 }
             }
         });
