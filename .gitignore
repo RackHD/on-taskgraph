@@ -39,6 +39,7 @@ node_modules
 
 # IDE
 .idea
+.vscode/
 
 # HWIMO-BUILD artifacts
 on-taskgraph_*.dsc
