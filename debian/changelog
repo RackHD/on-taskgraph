@@ -1,3 +1,9 @@
+on-taskgraph (0.1.0) UNRELEASED; urgency=medium
+
+  * release 0.1.0
+
+ -- Joe Heck <joseph.heck@emc.com>  Tue, 10 Jan 2017 03:06:59 -0500
+
 on-taskgraph (1.1-1) unstable; urgency=low
 
   * Initial release
