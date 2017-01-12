@@ -1,7 +1,6 @@
 {
-    "maxerr"        : 50,     //Max errors before it fails the build
+    "maxerr"        : 50,
 
-    //Enforcing
     "bitwise" : true,
     "camelcase" : true,
     "curly" : true,
@@ -11,7 +10,7 @@
     "freeze" : true,
     "immed" : true,
     "indent" : 4,
-    "latedef" : "nofunc",        //allows function definitions to be ignored
+    "latedef" : "nofunc",
     "maxcomplexity" : false,
     "maxdepth" : false,
     "maxlen" : 100,
@@ -29,7 +28,6 @@
     "undef" : true,
     "unused" : true,
 
-    //Relaxing
     "asi" : false,
     "boss" : false,
     "debug" : false,
@@ -38,7 +36,7 @@
     "esnext" : false,
     "moz" : false,
     "evil" : false,
-    "expr" : true,     // true: Tolerate `ExpressionStatement` as Programs
+    "expr" : true,
     "funcscope" : false,
     "iterator" : false,
     "lastsemic" : false,
@@ -55,11 +53,9 @@
     "supernew" : false,
     "validthis" : false,
 
-    // Environments
     "node": true,
     "mocha": true,
 
-    //Custom Globals
     "predef" : [
         "_",
         "chai",
