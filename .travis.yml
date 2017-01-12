@@ -22,18 +22,8 @@ services:
 
 after_success:
  - ./extra/make-testcoveralls.sh
-
-before_deploy:
+ # below is the placeholder to leverage TravisCI to verify building capability is good. will be replaced by npm package build.
  - ./extra/make-deb.sh
-
-deploy: 
-  provider: bintray
-  file: .bintray.json
-  user: $BINTRAY_USER
-  key: $BINTRAY_KEY
-  on:
-    branch: master
-    node: "4"
 
 notifications:
   slack:
