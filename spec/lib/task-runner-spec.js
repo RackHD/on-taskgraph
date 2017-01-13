@@ -411,7 +411,7 @@ describe("Task Runner", function() {
 
         it("should wrap the taskMessenger's publishTaskFinished", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            this.sandbox.stub(TaskGraph, 'updateGraphProgress').resolves();
+            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
             return runner.publishTaskFinished(finishedTask)
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
@@ -424,14 +424,14 @@ describe("Task Runner", function() {
                     finishedTask.context,
                     finishedTask.definition.terminalOnStates
                 );
-                expect(TaskGraph.updateGraphProgress).to.have.been.calledOnce;
-                expect(TaskGraph.updateGraphProgress).to.have.been.calledWith(progress);
+                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
+                expect(taskMessenger.publishProgressEvent).to.have.been.calledWith(finishedTask.context.graphId, progress);
             });
         });
 
         it("should call publishTaskFinished with an error message string", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            this.sandbox.stub(TaskGraph, 'updateGraphProgress').resolves();
+            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
             finishedTask.error = new Error('test error');
             progress.progress.description += " with error"; 
             return runner.publishTaskFinished(finishedTask)
@@ -439,8 +439,8 @@ describe("Task Runner", function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
                 expect(taskMessenger.publishTaskFinished.firstCall.args[4])
                     .to.contain('test error');
-                expect(TaskGraph.updateGraphProgress).to.have.been.calledOnce;
-                expect(TaskGraph.updateGraphProgress).to.have.been.calledWith(progress);
+                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
+                expect(taskMessenger.publishProgressEvent).to.have.been.calledWith(finishedTask.context.graphId, progress);
             });
         });
 
@@ -493,11 +493,11 @@ describe("Task Runner", function() {
         });
 
         it("should wrap the taskMessenger's publishTaskStarted", function() {
-            this.sandbox.stub(TaskGraph, 'updateGraphProgress').resolves();
+            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
             return runner.publishTaskStarted(startedTask)
             .then(function(){
-                expect(TaskGraph.updateGraphProgress).to.be.calledOnce;
-                expect(TaskGraph.updateGraphProgress).to.be.calledWith(progress);
+                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
+                expect(taskMessenger.publishProgressEvent).to.have.been.calledWith(startedTask.context.graphId, progress);
             });
         });
 
@@ -623,7 +623,6 @@ describe("Task Runner", function() {
                         taskAndGraphId,
                         taskAndGraphId
                     ]));
-
 
             streamOnCompletedWrapper(taskStream, done, function() {
                 expect(runner.handleStreamError).to.be.called.once;
