@@ -82,11 +82,12 @@ describe("Completed Task Poller", function() {
     it('should publish if a graph is finished', function() {
         poller.publishGraphFinished({
             instanceId: 'testgraphid',
-            _status: 'succeeded'
+            _status: 'succeeded',
+            node: 'nodeId'
         });
         expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
         expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
-            'testgraphid', 'succeeded');
+            'testgraphid', 'succeeded', 'nodeId');
     });
 
     it('should be created with default values', function() {
