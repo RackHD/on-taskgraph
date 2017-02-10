@@ -253,6 +253,77 @@ describe('Task Scheduler', function() {
             });
         });
 
+        it('TaskFinishedProgressEvent should publish with taskMessenger', function() {
+            var uuid = helper.injector.get('uuid');
+            var task = {
+                graphId: uuid.v4(),
+                taskId: uuid.v4()
+            };
+
+            var data = {
+                graphId: task.graphId,
+                task: {
+                    state: 'succeeded',
+                    node: 'nodeId',
+                    friendlyName: "test task name"
+                }
+            };
+            this.sandbox.stub(taskMessenger, 'publishProgressEvent').resolves();
+            this.sandbox.stub(store, 'getTaskById').resolves(data);
+
+            var taskFriendlyName = data.task.friendlyName;
+            var progressData = {
+                progress: {
+                    value: null,
+                    maximum: null,
+                    description: 'Task "' + taskFriendlyName + '" finished',
+                },
+                taskProgress: {
+                    taskId: data.task.instanceId,
+                    taskName: taskFriendlyName,
+                    progress: {
+                        value: 100,
+                        maximum: 100,
+                        description: "Task finished"
+                    }
+                }
+            };
+
+            return taskScheduler.publishTaskFinishedProgressEvent(task)
+            .then(function() {
+                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
+                expect(taskMessenger.publishProgressEvent)
+                    .to.have.been.calledWith(data.graphId, progressData);
+            });
+        });
+
+        it('GraphFinishedProgressEvent should publish with taskMessenger', function() {
+            this.sandbox.stub(taskMessenger, 'publishProgressEvent').resolves();
+            var graph = {
+                instanceId: 'testgraphid',
+                _status: 'succeeded',
+                node: 'nodeId',
+                definition: {
+                    friendlyName: "test graph name"
+                }
+            };
+
+            var progressData = {
+                progress: {
+                    maximum: null,
+                    value: 0,
+                    description: 'Graph "' + graph.definition.friendlyName + '" finished'
+                }
+            };
+
+            return taskScheduler.publishGraphFinishedProgressEvent(graph)
+            .then(function() {
+                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
+                expect(taskMessenger.publishProgressEvent)
+                    .to.have.been.calledWith(graph.instanceId, progressData);
+            });
+        });
+
         it('publishScheduleTaskEvent should publish a run task event', function() {
             this.sandbox.stub(taskMessenger, 'publishRunTask').resolves({});
             var data = { taskId: 'testtaskid', graphId: 'testgraphid' };
@@ -651,6 +722,9 @@ describe('Task Scheduler', function() {
             var graphData = {
                 instanceId: 'testid',
                 _status: Constants.Task.States.Succeeded,
+                definition: {
+                    friendlyName: "test"
+                },
                 node: 'nodeId',
                 ignoreThisField: 'please'
             };

@@ -376,7 +376,7 @@ describe("Task Runner", function() {
     });
 
     describe('publishTaskFinished', function() {
-        var progress,finishedTask ;
+        var finishedTask;
         before(function() {
             this.sandbox.restore();
             finishedTask = {
@@ -384,23 +384,11 @@ describe("Task Runner", function() {
                 context: { graphId: 'aGraphId'},
                 state: 'finished',
                 definition: { terminalOnStates: ['succeeded'], friendlyName: 'Test Task' }};
-            progress = {
-                progress: {
-                    value: null, maximum: null,
-                    description: 'Task "' + finishedTask.definition.friendlyName + '" finished'
-                },
-                taskProgress: {
-                    taskId: finishedTask.instanceId,
-                    taskName: finishedTask.definition.friendlyName,
-                    progress: {value: 100, maximum: 100, description: "Task finished"}
-                }
-            };
             runner = TaskRunner.create();
         });
 
         it("should wrap the taskMessenger's publishTaskFinished", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
             return runner.publishTaskFinished(finishedTask)
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
@@ -413,25 +401,17 @@ describe("Task Runner", function() {
                     finishedTask.context,
                     finishedTask.definition.terminalOnStates
                 );
-                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
-                expect(taskMessenger.publishProgressEvent).to.have.been
-                    .calledWith(finishedTask.context.graphId, progress);
             });
         });
 
         it("should call publishTaskFinished with an error message string", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
             finishedTask.error = new Error('test error');
-            progress.progress.description += " with error"; 
             return runner.publishTaskFinished(finishedTask)
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
                 expect(taskMessenger.publishTaskFinished.firstCall.args[4])
                     .to.contain('test error');
-                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
-                expect(taskMessenger.publishProgressEvent).to.have.been
-                    .calledWith(finishedTask.context.graphId, progress);
             });
         });
 
