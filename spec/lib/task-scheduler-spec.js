@@ -279,12 +279,12 @@ describe('Task Scheduler', function() {
         it('publishGraphFinished should publish with the events protocol', function() {
             var eventsProtocol = helper.injector.get('Protocol.Events');
             this.sandbox.stub(eventsProtocol, 'publishGraphFinished').resolves();
-            var graph = { instanceId: 'testgraphid', _status: 'succeeded' };
+            var graph = { instanceId: 'testgraphid', _status: 'succeeded', node: 'nodeId' };
             return taskScheduler.publishGraphFinished(graph)
             .then(function() {
                 expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
                 expect(eventsProtocol.publishGraphFinished)
-                    .to.have.been.calledWith('testgraphid', 'succeeded');
+                    .to.have.been.calledWith('testgraphid', 'succeeded', 'nodeId');
             });
         });
 
@@ -689,6 +689,7 @@ describe('Task Scheduler', function() {
             var graphData = {
                 instanceId: 'testid',
                 _status: Constants.Task.States.Succeeded,
+                node: 'nodeId',
                 ignoreThisField: 'please'
             };
             var dataDone = { graphId: 'testgraphid', done: true };
@@ -707,7 +708,8 @@ describe('Task Scheduler', function() {
                 expect(taskScheduler.publishGraphFinished).to.have.been.calledOnce;
                 expect(taskScheduler.publishGraphFinished).to.have.been.calledWith({
                     instanceId: 'testid',
-                    _status: Constants.Task.States.Succeeded
+                    _status: Constants.Task.States.Succeeded,
+                    node: 'nodeId'
                 });
             });
         });

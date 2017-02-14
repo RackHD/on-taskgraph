@@ -1,5 +1,8 @@
-on-taskgraph (1.1-1) unstable; urgency=low
+on-taskgraph (1.2.0) UNRELEASED; urgency=low
 
   * Initial release
+  * release 1.0.0
+  * release 1.1.0
+  * release 1.2.0
 
- -- Joe Heck <joseph.heck@emc.com>  Fri, 31 Oct 2014 00:17:50 +0000
+ -- rackhd <rackhd@emc.com>  Fri, 10 Feb 2017 21:01:58 -0500
