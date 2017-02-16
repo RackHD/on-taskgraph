@@ -1,4 +1,4 @@
-// Copyright 2016-2017, Dell EMC, Inc.
+// Copyright © 2016-2017 Dell Inc. or its subsidiaries.  All Rights Reserved.
 
 'use strict';
 
