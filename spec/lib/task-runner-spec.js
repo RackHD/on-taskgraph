@@ -495,6 +495,16 @@ describe("Task Runner", function() {
             });
         });
 
+        it("publishTaskStartedProgressEvent should swallow the Errors", function() {
+            eventsProtocol.publishProgressEvent = this.sandbox.stub().resolves();
+            var error = new Error('getGraphById error');
+            store.getGraphById = this.sandbox.stub().rejects(error);
+            return runner.publishTaskStartedProgressEvent(task)
+            .then(function(){
+                expect(eventsProtocol.publishProgressEvent).to.not.be.called;
+            });
+        });
+
     });
 
     describe('task cancellation', function() {

@@ -307,6 +307,21 @@ describe('Task Scheduler', function() {
             });
         });
 
+        it('TaskFinishedProgressEvent should swallow the Errors', function() {
+            var task = {
+                graphId: 'graphId',
+                taskId: 'taskId'
+            };
+            this.sandbox.stub(eventsProtocol, 'publishProgressEvent').resolves();
+            var error = new Error('getGraphById error');
+            this.sandbox.stub(store, 'getGraphById').rejects(error);
+
+            return taskScheduler.publishTaskFinishedProgressEvent(task)
+            .then(function() {
+                expect(eventsProtocol.publishProgressEvent).to.not.be.called;
+            });
+        });
+
         it('GraphFinishedProgressEvent should publish with the events protocol', function() {
             this.sandbox.stub(eventsProtocol, 'publishProgressEvent').resolves();
             var graph = {
@@ -339,6 +354,23 @@ describe('Task Scheduler', function() {
                 expect(eventsProtocol.publishProgressEvent).to.have.been.calledOnce;
                 expect(eventsProtocol.publishProgressEvent)
                     .to.have.been.calledWith(graph.instanceId, progressData);
+            });
+        });
+
+        it('GraphFinishedProgressEvent should swallow the Errors', function() {
+            var error = new Error('eventsProtocol publishProgressEvent error');
+            this.sandbox.stub(eventsProtocol, 'publishProgressEvent').rejects(error);
+            var graph = {
+                instanceId: 'testgraphid',
+                _status: 'succeeded',
+                node: 'nodeId',
+                name: 'test graph name',
+                tasks: {}
+            };
+
+            return taskScheduler.publishGraphFinishedProgressEvent(graph, 'succeeded')
+            .then(function() {
+                expect(eventsProtocol.publishProgressEvent).to.have.been.calledOnce;
             });
         });
 
