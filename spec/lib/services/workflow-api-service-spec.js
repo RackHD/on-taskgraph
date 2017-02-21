@@ -1,4 +1,4 @@
-// Copyright 2016, EMC, Inc.
+// Copyright © 2016-2017 Dell Inc. or its subsidiaries.  All Rights Reserved.
 
 'use strict';
 
@@ -19,6 +19,7 @@ describe('Http.Services.Api.Workflows', function () {
     var Promise;
     var TaskGraph;
     var TaskGraphRunner;
+    var eventsProtocol;
 
     function mockConsul() {
         return {
@@ -49,6 +50,7 @@ describe('Http.Services.Api.Workflows', function () {
         Promise = helper.injector.get('Promise');
         TaskGraph = helper.injector.get('TaskGraph.TaskGraph');
         TaskGraphRunner = helper.injector.get('TaskGraph.Runner');
+        eventsProtocol = helper.injector.get('Protocol.Events');
     });
 
     beforeEach(function() {
@@ -99,6 +101,7 @@ describe('Http.Services.Api.Workflows', function () {
         this.sandbox.stub(workflowApiService, 'createActiveGraph');
         this.sandbox.stub(workflowApiService, 'runTaskGraph');
         this.sandbox.stub(env, 'get');
+        this.sandbox.stub(eventsProtocol, 'publishProgressEvent').resolves();
     });
 
     afterEach('Http.Services.Api.Profiles afterEach', function() {
@@ -110,6 +113,31 @@ describe('Http.Services.Api.Workflows', function () {
     });
 
     it('should create and run a graph not against a node', function () {
+        graph = {
+            instanceId: 'testgraphid',
+            name: 'testGraph',
+            node: null,
+            tasks: {
+                task1: {
+                    state: 'pending',
+                },
+                task2: {
+                    state: 'pending',
+                }
+            }
+        };
+
+        var data = {
+            graphId: graph.instanceId,
+            graphName: graph.name,
+            nodeId: null,
+            progress: {
+                maximum: 2,
+                value: 0,
+                percentage: '0%',
+                description: 'Graph "' + graph.name + '" started'
+            }
+        };
         workflowApiService.findGraphDefinitionByName.resolves(graphDefinition);
         workflowApiService.createActiveGraph.resolves(graph);
         TaskGraphRunner.taskScheduler.evaluateGraphStream.onNext.resolves();
@@ -129,6 +157,12 @@ describe('Http.Services.Api.Workflows', function () {
             expect(workflowApiService.createActiveGraph).to.have.been.calledWith(
                 graphDefinition, { test: 1 }, { test: 2 }, 'test'
             );
+            expect(eventsProtocol.publishProgressEvent).to.have.been.calledOnce;
+            expect(eventsProtocol.publishProgressEvent)
+                .to.have.been.calledWith(graph.instanceId, data);
+            expect(workflowApiService.runTaskGraph).to.have.been.calledOnce;
+            expect(workflowApiService.runTaskGraph)
+                .to.have.been.calledWith(graph.instanceId, 'test');
             //expect(TaskGraphRunner.taskScheduler.evaluateGraphStream.onNext).to.have.been.calledOnce;
             //expect(TaskGraphRunner.taskScheduler.evaluateGraphStream.onNext)
             //    .to.have.been.calledWith({ graphId: graph.instanceId });
