@@ -1,10 +1,11 @@
-// Copyright 2016, EMC, Inc.
+// Copyright © 2016-2017 Dell Inc. or its subsidiaries.  All Rights Reserved.
 
 'use strict';
 
 describe("Task Runner", function() {
     var di = require('di');
     var core = require('on-core')(di, __dirname);
+    var eventsProtocol;
 
     var runner,
     Task = {
@@ -68,6 +69,7 @@ describe("Task Runner", function() {
         Constants = helper.injector.get('Constants');
         assert = helper.injector.get('Assert');
         TaskRunner = helper.injector.get('TaskGraph.TaskRunner');
+        eventsProtocol = helper.injector.get('Protocol.Events');
         this.sandbox = sinon.sandbox.create();
     });
 
@@ -376,7 +378,7 @@ describe("Task Runner", function() {
     });
 
     describe('publishTaskFinished', function() {
-        var progress,finishedTask ;
+        var finishedTask;
         before(function() {
             this.sandbox.restore();
             finishedTask = {
@@ -384,23 +386,11 @@ describe("Task Runner", function() {
                 context: { graphId: 'aGraphId'},
                 state: 'finished',
                 definition: { terminalOnStates: ['succeeded'], friendlyName: 'Test Task' }};
-            progress = {
-                progress: {
-                    value: null, maximum: null,
-                    description: 'Task "' + finishedTask.definition.friendlyName + '" finished'
-                },
-                taskProgress: {
-                    taskId: finishedTask.instanceId,
-                    taskName: finishedTask.definition.friendlyName,
-                    progress: {value: 100, maximum: 100, description: "Task finished"}
-                }
-            };
             runner = TaskRunner.create();
         });
 
         it("should wrap the taskMessenger's publishTaskFinished", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
             return runner.publishTaskFinished(finishedTask)
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
@@ -413,31 +403,23 @@ describe("Task Runner", function() {
                     finishedTask.context,
                     finishedTask.definition.terminalOnStates
                 );
-                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
-                expect(taskMessenger.publishProgressEvent).to.have.been
-                    .calledWith(finishedTask.context.graphId, progress);
             });
         });
 
         it("should call publishTaskFinished with an error message string", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
             finishedTask.error = new Error('test error');
-            progress.progress.description += " with error"; 
             return runner.publishTaskFinished(finishedTask)
             .then(function() {
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
                 expect(taskMessenger.publishTaskFinished.firstCall.args[4])
                     .to.contain('test error');
-                expect(taskMessenger.publishProgressEvent).to.have.been.calledOnce;
-                expect(taskMessenger.publishProgressEvent).to.have.been
-                    .calledWith(finishedTask.context.graphId, progress);
             });
         });
 
         it("should call publishTaskFinished with an Rx error stack string", function() {
             taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
+            eventsProtocol.publishProgressEvent = this.sandbox.stub().resolves();
             var error = new Error('test error');
             error.stack = error.toString();
             var finishedTask = {
@@ -456,36 +438,70 @@ describe("Task Runner", function() {
         });
     });
 
-    describe('publishTaskStarted', function() {
-        var startedTask, progress;
+    describe('publishTaskStartedProgressEvent', function() {
+        var task, progressData, graph;
         before(function() {
-            startedTask = {
+            task = {
                 instanceId: 'aTaskId',
                 context: { graphId: 'aGraphId'},
-                state: 'Running',
-                definition: { terminalOnStates: ['succeeded'], friendlyName: 'Test Task' }};
-            progress = {
-                    progress: {
-                        value: null, maximum: null,
-                        description: 'Task "' + startedTask.definition.friendlyName + '" started',
-                    },
-                    taskProgress: {
-                        taskId: startedTask.instanceId,
-                        taskName: startedTask.definition.friendlyName,
-                        progress: {value: 0, maximum: 100, description: "Task started"}
+                state: 'pending',
+                definition: { terminalOnStates: ['succeeded'], friendlyName: 'Test Task' }
+            };
+            graph = {
+                instanceId: 'aGraphId',
+                name: 'test graph name',
+                node: 'nodeId',
+                tasks: {
+                    'aTaskId': {
+                        friendlyName: task.definition.friendlyName,
+                        state: task.state,
+                        terminalOnStates: ['succeeded']
                     }
-                };
+                }
+            };
+            progressData = {
+                graphId: graph.instanceId,
+                graphName: graph.name,
+                nodeId: graph.node,
+                progress: {
+                    value: 0,
+                    maximum: 1,
+                    percentage: '0%',
+                    description: 'Task "' + task.definition.friendlyName + '" started',
+                },
+                taskProgress: {
+                    taskId: task.instanceId,
+                    taskName: task.definition.friendlyName,
+                    progress: {
+                        value: 0,
+                        maximum: 100,
+                        percentage: '0%',
+                        description: "Task started"
+                    }
+                }
+            };
             this.sandbox.restore();
             runner = TaskRunner.create();
         });
 
-        it("should wrap the taskMessenger's publishTaskStarted", function() {
-            taskMessenger.publishProgressEvent = this.sandbox.stub().resolves();
-            return runner.publishTaskStarted(startedTask)
+        it("publishTaskStartedProgressEvent should publish with the events protocol", function() {
+            eventsProtocol.publishProgressEvent = this.sandbox.stub().resolves();
+            store.getGraphById = this.sandbox.stub().resolves(graph);
+            return runner.publishTaskStartedProgressEvent(task)
             .then(function(){
-                expect(taskMessenger.publishProgressEvent).to.be.calledOnce;
-                expect(taskMessenger.publishProgressEvent).to.be
-                    .calledWith(startedTask.context.graphId, progress);
+                expect(eventsProtocol.publishProgressEvent).to.be.calledOnce;
+                expect(eventsProtocol.publishProgressEvent).to.be
+                    .calledWith(task.context.graphId, progressData);
+            });
+        });
+
+        it("publishTaskStartedProgressEvent should swallow the Errors", function() {
+            eventsProtocol.publishProgressEvent = this.sandbox.stub().resolves();
+            var error = new Error('getGraphById error');
+            store.getGraphById = this.sandbox.stub().rejects(error);
+            return runner.publishTaskStartedProgressEvent(task)
+            .then(function(){
+                expect(eventsProtocol.publishProgressEvent).to.not.be.called;
             });
         });
 
@@ -556,7 +572,7 @@ describe("Task Runner", function() {
             this.sandbox.stub(Task, 'create').resolves(stubbedTask);
             store.setTaskState = this.sandbox.stub().resolves();
             this.sandbox.stub(runner, 'publishTaskFinished');
-            this.sandbox.stub(runner, 'publishTaskStarted');
+            this.sandbox.stub(runner, 'publishTaskStartedProgressEvent');
         });
 
         it('should return an Observable', function() {
