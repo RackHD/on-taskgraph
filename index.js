@@ -45,8 +45,8 @@ var options = {
     runner: true,
     scheduler: true,
     domain: argv.domain || argv.d,
-    httpPort: argv['http-port'] || argv.p || 9005,
-}
+    httpPort: argv['http-port'] || argv.p || 9005
+};
 
 if (argv.scheduler || argv.s) {
     options.runner = false;

@@ -2,7 +2,7 @@
 
 'use strict';
 
-describe('Http.Services.Api.Workflows', function () {
+describe('Taskgraph.Services.Api.Workflows', function () {
     var di = require('di');
     var core = require('on-core')(di, __dirname);
     var Errors;

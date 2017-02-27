@@ -1,17 +1,15 @@
 // Copyright 2016, EMC Inc.
 
 'use strict';
-var di = require('di');
-var core = require('on-core')(di);
-var helper = core.helper;
-var _ = require('lodash');
+
 var injector = require('../../index.js').injector;
-var workflowApiService = injector.get('Http.Services.Api.Workflows');
 var controller = injector.get('Http.Services.Swagger').controller;
 var addLinks = injector.get('Http.Services.Swagger').addLinksHeader;
+var workflowApiService = injector.get('Http.Services.Api.Workflows');
 var Errors = injector.get('Errors');
 var Constants = injector.get('Constants');
 var _ = injector.get('_');    // jshint ignore:line
+var sanitizer = injector.get('Sanitizer');
 
 /**
 * @api {get} /api/2.0/workflows GET /workflows
@@ -22,19 +20,24 @@ var _ = injector.get('_');    // jshint ignore:line
 * @apiSuccess {json} List of all workflows or if there are none an empty object.
 */
 
-var workflowsGet = controller(function (req, res) {
+var workflowsGet = controller(function(req, res) {
     var query;
     var options = {
-        skip: req.query.$skip,
-        limit: req.query.$top
+        skip: req.swagger.query.$skip,
+        limit: req.swagger.query.$top
     };
-    query = {}
-    if (req.query.active !== undefined) {
-        query = req.query.active === 'true' ?
-            { _status: Constants.Task.ActiveStates } :
-            { _status: { '!': Constants.Task.ActiveStates } };
+
+    query = req.query;
+    if (req.swagger.query.active !== undefined) {
+        query = req.swagger.query.active ?
+            _.merge({}, req.query, { _status: Constants.Task.ActiveStates }) :
+            _.merge({}, req.query, { _status: { '!': Constants.Task.ActiveStates } });
     }
+
     return workflowApiService.getAllWorkflows(query, options)
+    .tap(function(workflows) {
+        return addLinks(req, res, 'graphobjects', query);
+    });
 });
 
 /**
@@ -46,14 +49,9 @@ var workflowsGet = controller(function (req, res) {
 * @apiError Error problem was encountered, workflow was not run.
 */
 
-var workflowsPost = controller({ success: 201 }, function (req) {
-    var nodeId = req.query.nodeId;
+var workflowsPost = controller({success: 201}, function(req) {
     var configuration = _.defaults(req.swagger.query || {}, req.body || {});
-    if (nodeId != undefined) {
-        return workflowApiService.createAndRunGraph(configuration, nodeId);
-    } else {
-        return workflowApiService.createAndRunGraph(configuration);
-    }
+    return workflowApiService.createAndRunGraph(configuration);
 });
 
 /**
@@ -67,8 +65,12 @@ var workflowsPost = controller({ success: 201 }, function (req) {
 * @apiError NotFound There is no workflow with <code>instanceId</code>
 */
 
-var workflowsGetByInstanceId = controller(function (req) {
-    return workflowApiService.getWorkflowByInstanceId(req.swagger.params.identifier.value);
+var workflowsGetByInstanceId = controller(function(req) {
+    return workflowApiService.getWorkflowByInstanceId(req.swagger.params.identifier.value)
+    .then(function(graph) {
+        sanitizer.scrub(graph);
+        return graph;
+    });
 });
 
 /**
@@ -81,11 +83,11 @@ var workflowsGetByInstanceId = controller(function (req) {
 * @apiSuccess {json}  object.
 * @apiError NotFound There is no workflow with <code>instanceId</code>
 */
-var workflowsAction = controller({ success: 202 }, function (req) {
+var workflowsAction = controller({success: 202}, function(req) {
     var command = req.body.command;
 
     var actionFunctions = {
-        cancel: function () {
+        cancel: function() {
             return workflowApiService.cancelTaskGraph(req.swagger.params.identifier.value);
         }
     };
@@ -109,7 +111,7 @@ var workflowsAction = controller({ success: 202 }, function (req) {
 * @apiError NotFound The node with the identifier was not found <code>instanceId</code>
 */
 
-var workflowsDeleteByInstanceId = controller({ success: 204 }, function (req) {
+var workflowsDeleteByInstanceId = controller({success: 204}, function(req) {
     return workflowApiService.deleteTaskGraph(req.swagger.params.identifier.value);
 });
 
