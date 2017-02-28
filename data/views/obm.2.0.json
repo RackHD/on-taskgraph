@@ -1,8 +1,0 @@
-{
-  "id" : "<%=id%>",
-  <% if (node !== null) { %>
-  "node": "<%=basepath%>/nodes/<%=node%>",
-  <% } %>
-  "service": "<%= service %>",
-  "config": <%- JSON.stringify(config) %>
-}

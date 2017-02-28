@@ -1,6 +1,0 @@
-{
-    "id": "<%=id%>",
-    "hash": <%- JSON.stringify(hash) %>,
-    "name": "<%=name%>",
-    "scope": "<%=scope%>"
-}

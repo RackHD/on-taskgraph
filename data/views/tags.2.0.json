@@ -1,7 +1,0 @@
-{
-    "name": "<%=name%>",
-    <% if (hasOwnProperty("id")) { %>
-    "id": "<%=id%>",
-    <% } %>
-    "rules": <%- JSON.stringify(rules) %>
-}

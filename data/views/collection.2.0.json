@@ -1,3 +1,0 @@
-[<% collection.forEach(function(element, i, arr) { %>
-<%- element %><%= ( arr.length > 0 && i < arr.length-1 ) ? ',' : '' %>
-<% }); %>]
