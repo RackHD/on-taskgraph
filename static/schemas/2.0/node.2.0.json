@@ -16,15 +16,14 @@
                 "type": {
                     "description": "Type of node",
                     "type": "string",
-                    "enum": ["compute", "switch", "dae", "pdu", "mgmt", "enclosure", "rack"]
+                    "enum": ["compute-container", "compute", "switch", "dae", "pdu", "mgmt", "enclosure", "rack"]
                 },
-                "obmSettings": {
+                "obms": {
                     "description": "OBM settings",
-                    "type": "array"
-                },
-                "snmpSettings": {
-                    "description": "SNMP settings",
-                    "type": "object"
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    }
                 },
                 "bootSettings": {
                     "description": "Default ipxe profile settings",
@@ -34,11 +33,15 @@
                         "description": "Node relations",
                         "type": "array"
                 },
-                "sshSettings": {
-                    "description": "SSH settings",
-                    "type": "object"
-                },
                 "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "uniqueItems": true
+                    }
+                },
+                "identifiers": {
+                    "description": "Node Macs",
                     "type": "array",
                     "items": {
                         "type": "string",
@@ -51,7 +54,7 @@
         "Node": {
             "allOf": [
                 { "$ref": "#/definitions/PartialNode" },
-                { "required": [ "name" ] }
+                { "required": [ "name", "type" ] }
             ]
         }
     }
