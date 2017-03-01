@@ -9,7 +9,8 @@ describe("Schema API Service", function() {
     var template;
     var _;
     var testObj = {
-        'name': 'node1'
+        'name': 'node1',
+        'type': 'compute'
     };
 
     before(function() {
