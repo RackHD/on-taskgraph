@@ -30,8 +30,8 @@
                     "type": "object"
                 },
                 "relations": {
-                        "description": "Node relations",
-                        "type": "array"
+                    "description": "Node relations",
+                    "type": "array"
                 },
                 "tags": {
                     "type": "array",

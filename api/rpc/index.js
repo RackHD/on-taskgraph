@@ -66,16 +66,17 @@ function schedulerServerFactory(
                 self.options.hostname + (self.options.port ? ':' + self.options.port : ''),
                 grpc.ServerCredentials.createInsecure());
             self.gRPC.start();
-            console.log('gRPC is available on grpc://' + self.options.hostname + ':' + self.options.port);
+            console.log('gRPC is available on grpc://' +
+                (self.options.port ? self.options.hostname + ':' + self.options.port : ''));
         });
-    }
+    };
 
     SchedulerServer.prototype.stop = function() {
         var self = this;
         return Promise.try(function() {
             self.gRPC.forceShutdown();
         });
-    }
+    };
 
     function grpcWrapper(rpcEntry) {
         return function(call, callback) {

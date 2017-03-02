@@ -36,6 +36,7 @@ var options = {
     runner: true,
     scheduler: true
 };
+
 var httpPort = 9005;
 var server;
 
@@ -85,7 +86,7 @@ taskGraphRunner.start(options)
                  var config = {
                      hostname: '0.0.0.0',
                      httpPort: options.httpPort
-                 }
+                 };
                  server = http.createServer(app)
                  server.listen(config.httpPort, config.hostname, function () {
                      console.log('Your server is listening on port %d ', config.httpPort);

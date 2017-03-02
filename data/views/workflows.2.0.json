@@ -44,7 +44,7 @@
                 "label": "<%= value.label%>",
                 <% }%>
                 <% if (value.instanceId) { %>
-		"instanceId": "<%=value.instanceId%>",
+		        "instanceId": "<%=value.instanceId%>",
                 <% }%>
 		<% if (value.error) { %>
 		"error": <%- JSON.stringify(value.error) %>,
