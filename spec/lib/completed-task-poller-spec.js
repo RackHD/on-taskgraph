@@ -10,7 +10,8 @@ describe("Completed Task Poller", function() {
         poller,
         Constants,
         Promise,
-        eventsProtocol,
+        taskMessenger,
+        graphProgressService,
         store,
         Rx;
 
@@ -36,7 +37,8 @@ describe("Completed Task Poller", function() {
         ]);
         Rx = helper.injector.get('Rx');
         Poller = helper.injector.get('TaskGraph.CompletedTaskPoller');
-        eventsProtocol = helper.injector.get('Protocol.Events');
+        taskMessenger = helper.injector.get('Task.Messenger');
+        graphProgressService = helper.injector.get('Services.GraphProgress');
         store = helper.injector.get('TaskGraph.Store');
         Constants = helper.injector.get('Constants');
         Promise = helper.injector.get('Promise');
@@ -47,7 +49,8 @@ describe("Completed Task Poller", function() {
         this.sandbox.stub(store, 'findCompletedTasks').resolves();
         this.sandbox.stub(store, 'deleteTasks').resolves();
         this.sandbox.stub(store, 'setGraphDone').resolves();
-        this.sandbox.stub(eventsProtocol, 'publishGraphFinished').resolves();
+        this.sandbox.stub(taskMessenger, 'publishGraphFinished').resolves();
+        this.sandbox.stub(graphProgressService, 'publishGraphFinished').resolves();
         poller = Poller.create(null, {});
     });
 
@@ -77,17 +80,6 @@ describe("Completed Task Poller", function() {
         expect(poller.isRunning()).to.equal(false);
         poller.running = true;
         expect(poller.isRunning()).to.equal(true);
-    });
-
-    it('should publish if a graph is finished', function() {
-        poller.publishGraphFinished({
-            instanceId: 'testgraphid',
-            _status: 'succeeded',
-            node: 'nodeId'
-        });
-        expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
-        expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
-            'testgraphid', 'succeeded', 'nodeId');
     });
 
     it('should be created with default values', function() {
@@ -330,11 +322,16 @@ describe("Completed Task Poller", function() {
                         state: Constants.Task.States.Succeeded
                     }
                 );
-                expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
-                expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
-                    'testgraphid',
-                    Constants.Task.States.Succeeded
-                );
+                expect(taskMessenger.publishGraphFinished).to.have.been.calledOnce;
+                expect(taskMessenger.publishGraphFinished).to.have.been.calledWith({
+                    instanceId: 'testgraphid',
+                    _status: Constants.Task.States.Succeeded
+                });
+                expect(graphProgressService.publishGraphFinished).to.have.been.calledOnce;
+                expect(graphProgressService.publishGraphFinished).to.have.been.calledWith({
+                    instanceId: 'testgraphid',
+                    _status: Constants.Task.States.Succeeded
+                });
             }), done);
         });
 
@@ -344,7 +341,8 @@ describe("Completed Task Poller", function() {
             poller.handlePotentialFinishedGraph({ state: Constants.Task.States.Pending })
             .subscribe(subscribeWrapper(done, function() {
                 expect(store.setGraphDone).to.not.have.been.called;
-                expect(eventsProtocol.publishGraphFinished).to.not.have.been.called;
+                expect(taskMessenger.publishGraphFinished).to.not.have.been.called;
+                expect(graphProgressService.publishGraphFinished).to.not.have.been.called;
             }), done);
         });
     });
