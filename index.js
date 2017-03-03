@@ -56,6 +56,9 @@ if (argv.scheduler || argv.s) {
 }
 
 taskGraphRunner.start(options)
+     .then(function() {
+        return injector.get('Views').load();
+     })
      .then(function () {
         logger.info('Task Graph Runner Started.');
         if (options.scheduler && options.httpPort) {
