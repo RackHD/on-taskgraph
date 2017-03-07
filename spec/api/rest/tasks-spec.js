@@ -4,150 +4,135 @@
 'use strict';
 
 describe('Http.Api.Tasks', function () {
-    var taskProtocol;
-    var tasksApiService;
-    var taskGraphApiService;
-    var sandbox;
-    var lookupService;
-    var templates;
+    var mockery;
+    var tasksApi;
 
-    before('start HTTP server', function () {
-        this.timeout(20000);
-        return helper.startServer();
-    });
-
-    beforeEach('set up mocks', function () {
-        taskProtocol = helper.injector.get('Protocol.Task');
-        // Defaults, you can tack on .resolves().rejects().resolves(), etc. like so
-        taskProtocol.activeTaskExists = sinon.stub().resolves();
-        taskProtocol.requestCommands = sinon.stub().resolves({
-                                                            "identifier":"1234", 
-                                                            "tasks": [ {"cmd": "testfoo"}
-                                                             ]});
-        taskProtocol.respondCommands = sinon.stub();
-
-        tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
-        tasksApiService.getNode = sinon.stub();
-        taskGraphApiService = helper.injector.get("Http.Services.Api.Taskgraph.Scheduler");
-
-        lookupService = helper.injector.get('Services.Lookup');
-        lookupService.ipAddressToMacAddress = sinon.stub().resolves('00:11:22:33:44:55');
-
-        templates = helper.injector.get('Templates');
-
-        sandbox = sinon.sandbox.create();
-        return helper.reset().then(function(){
-          return helper.injector.get('Views').load();
-          });
-    });
-
-    afterEach('restoring stubs', function() {
-        function resetStubs(obj) {
-            _(obj).methods().forEach(function (method) {
-                if (obj[method] && obj[method].reset) {
-                    obj[method].reset();
+    before('setup mockery', function () {
+        this.timeout(10000);
+        
+        // setup injector with mock override injecatbles
+        var injectables = [
+            helper.di.simpleWrapper({
+                controller: function(opts, cb) {
+                    if (typeof(opts) === 'function') {
+                        cb = opts;
+                    }
+                    return cb;
                 }
-            }).value();
-        }
+            }, 'Http.Services.Swagger'),
+            helper.di.simpleWrapper({
+                getBootstrap: sinon.stub(),
+                getTasks: sinon.stub(),
+                postTasksById: sinon.stub()
+            }, 'Http.Services.Api.Tasks')
+        ];
+        helper.setupInjector(injectables);
 
-        resetStubs(taskProtocol.activeTaskExists);
-        resetStubs(taskProtocol.requestCommands);
-        resetStubs(taskProtocol.respondCommands);
-        resetStubs(tasksApiService.getNode);
-        resetStubs(lookupService.ipAddressToMacAddress);
+        // setup mockery such that index.injector is our test injector.
+        mockery = require('mockery');
+        mockery.registerMock('../../index.js', { injector: helper.injector });
+        mockery.enable();
 
-        sandbox.restore();
+        // Now require file to test
+        tasksApi = require('../../../api/rest/tasks');
     });
 
-    after('stop HTTP server', function () {
-        return helper.reset().then(function(){
-            return helper.stopServer();
-        });
+
+    after('disable mockery', function () {
+        mockery.deregisterMock('../../index.js');
+        mockery.disable();
     });
 
     describe('GET /tasks/:id', function () {
-        it("should send down tasks", function() {
-            taskProtocol.activeTaskExists.resolves(null);
-            sandbox.stub(taskGraphApiService, 'getTasksById').resolves({});
-            return helper.request().get('/api/2.0/tasks/testnodeid')
-            .expect(200)
-            .expect(function (res) {
-                expect(res.body).to.deep.equal({
-                                               "identifier":"1234",
-                                               "tasks": [ {"cmd": "testfoo"}
-                                               ]});
-            });
-        });
-
-        it("should return 404 if no active task exists", function() {
+        it("should get a task by id", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
-            taskProtocol.activeTaskExists.rejects(new tasksApiService.NoActiveTaskError());
-            return helper.request().get('/api/2.0/tasks/testnodeid')
-            .expect(404)
-            .expect(function (res) {
-                expect(res.body.message).to.deep.equal('Not Found');
-            });
+            tasksApiService.getTasks.resolves('a task');
+            return tasksApi.getTasksById({ swagger: { params: { identifier: { value: '123' } } } })
+                .should.eventually.equal('a task');
         });
 
-        it("should error if an active task exists but no commands are sent", function() {
-            sandbox.stub(taskGraphApiService, 'getTasksById').resolves({});
-            taskProtocol.requestCommands.rejects(new Error(''));
-            return helper.request().get('/api/2.0/tasks/testnodeid')
-            .expect(404);
+        it("should reject with not found if getTasks rejects", function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+
+            tasksApiService.getTasks.rejects('Not Found');
+            return tasksApi.getTasksById({ swagger: { params: { identifier: { value: '123' } } } })
+                .should.be.rejectedWith('Not Found');
+        });
+
+        it("should reject with not found if req is invalid", function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+            tasksApiService.getTasks.resolves();
+            return tasksApi.getTasksById(undefined)
+                .should.be.rejectedWith('Not Found');
         });
     });
 
     describe("GET /tasks/bootstrap.js", function() {
-        var stubTemplates;
-
-        before(function() {
-            stubTemplates = sinon.stub(templates, 'get');
-            stubTemplates.withArgs('bootstrap.js').resolves({
-                contents: 'test node id: <%= identifier %>'
-            });
+        it("should get bootstrap", function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+            tasksApiService.getBootstrap.resolves('bootstrap');
+            return tasksApi.getBootstrap({ swagger: { params: { macAddress: { value: '123' } } } })
+                .should.eventually.equal('bootstrap');
+        });
+        
+        it("should reject if getBootstrap rejects", function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+            tasksApiService.getBootstrap.rejects('No Bootstrap');
+            return tasksApi.getBootstrap({ swagger: { params: { macAddress: { value: '123' } } } })
+                .should.be.rejectedWith('No Bootstrap');
         });
 
-        after(function() {
-            stubTemplates.restore();
-        });
-
-       it("should render a bootstrap for the node", function() {
-            tasksApiService.getNode.resolves({ id: '123' });
-            return helper.request().get('/api/2.0/tasks/bootstrap.js?macAddress=00:11:22:33:44:55')
-                .expect(200)
-                .expect(function (res) {
-                    expect(tasksApiService.getNode).to.have.been.calledWith('00:11:22:33:44:55');
-                    expect(res.text).to.equal('test node id: 123');
-                });
-        });
-
-        it("should render a 404 if node not found", function() {
-            tasksApiService.getNode.resolves(null);
-            return helper.request()
-                .get('/api/2.0/tasks/bootstrap.js?macAddress=00:11:22:33:44:55')
-                .expect(404);
-        });
-
-        it("should render a 400 if tasksApiService.getNode errors", function() {
-            tasksApiService.getNode.rejects(new Error('asdf'));
-            return helper.request()
-                .get('/api/2.0/tasks/bootstrap.js?macAddress=00:11:22:33:44:55')
-                .expect(400);
+        it("should reject if req is invalid", function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+            tasksApiService.getBootstrap.resolves();
+            return tasksApi.getBootstrap(undefined)
+                .should.be.rejectedWith(/undefined/);
         });
     });
 
-    describe("POST /tasks/:id", function () {
-        it("should accept a large entity response", function() {
-            var data = { foo: new Array(200000).join('1') };
+    // Since sinon.stub() has no returnsArg method, add a Promise wrapper.
+    // This will allow a stub to return a promise resolving to one of its call
+    // arguments.
+    function _stubPromiseWrapper(stub) {
+        return function() {
+            return Promise.resolve(stub.apply(sinon, arguments));
+        };
+    }
 
-            sandbox.stub(taskGraphApiService, 'postTaskById').resolves({});
-            return helper.request().post('/api/2.0/tasks/123')
-            .send(data)
-            .expect(201)
-            .expect(function () {
-                expect(taskProtocol.respondCommands).to.have.been.calledWith('123', data);
-            })
-            .expect(201);
+    describe("POST /tasks/:id", function() {
+        beforeEach(function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+            tasksApiService.postTasksById = sinon.stub();
+        });
+
+        it("should post a task", function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+            tasksApiService.postTasksById = _stubPromiseWrapper(sinon.stub().returnsArg(1));
+            return tasksApi.postTaskById({ swagger: { params: { identifier: { value: '123' } } }, 
+                                           body: { foo: 'bar' } })
+                .then(function(body) {
+                    expect(body).to.deep.equal({ foo: 'bar' });
+                });
+        });
+
+        
+        it("should reject if postTaskById rejects", function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+            tasksApiService.postTasksById.rejects('post error');
+            return tasksApi.postTaskById({ swagger: { params: { identifier: { value: '123' } } }, 
+                                           body: { foo: 'bar' } })
+                .should.be.rejectedWith('post error');
+            
+        });
+
+        
+        it("should reject if postTaskById rejects", function() {
+            var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
+            tasksApiService.postTasksById.resolves();
+            return tasksApi.postTaskById({ swagger: undefined, 
+                                           body: { foo: 'bar' } })
+                .should.be.rejectedWith(/undefined/);
+            
         });
     });
 });
