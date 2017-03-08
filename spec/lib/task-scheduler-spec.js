@@ -7,6 +7,7 @@ describe('Task Scheduler', function() {
     var TaskGraph;
     var LeaseExpirationPoller;
     var taskMessenger;
+    var eventsProtocol;
     var graphProgressService;
     var store;
     var assert;
@@ -74,6 +75,7 @@ describe('Task Scheduler', function() {
         assert = helper.injector.get('Assert');
         Constants = helper.injector.get('Constants');
         taskMessenger = helper.injector.get('Task.Messenger');
+        eventsProtocol = helper.injector.get('Protocol.Events');
         graphProgressService = helper.injector.get('Services.GraphProgress');
         TaskScheduler = helper.injector.get('TaskGraph.TaskScheduler');
         TaskGraph = helper.injector.get('TaskGraph.TaskGraph');
@@ -642,7 +644,7 @@ describe('Task Scheduler', function() {
         });
 
         it('checkGraphSucceeded should persist and publish on finish', function(done) {
-            this.sandbox.stub(taskMessenger, 'publishGraphFinished');
+            this.sandbox.stub(eventsProtocol, 'publishGraphFinished').resolves();
             this.sandbox.stub(graphProgressService, 'publishGraphFinished');
             this.sandbox.stub(store, 'setGraphDone');
             this.sandbox.stub(store, 'checkGraphSucceeded');
@@ -670,12 +672,12 @@ describe('Task Scheduler', function() {
                     Constants.Task.States.Succeeded,
                     dataDone
                 );
-                expect(taskMessenger.publishGraphFinished).to.have.been.calledOnce;
-                expect(taskMessenger.publishGraphFinished).to.have.been.calledWith({
-                    instanceId: 'testid',
-                    _status: Constants.Task.States.Succeeded,
-                    node: 'nodeId'
-                });
+                expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
+                expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
+                    'testid',
+                    Constants.Task.States.Succeeded,
+                    'nodeId'
+                );
                 expect(graphProgressService.publishGraphFinished).to.have.been.calledOnce;
                 expect(graphProgressService.publishGraphFinished)
                     .to.have.been.calledWith(graphData);
@@ -683,7 +685,7 @@ describe('Task Scheduler', function() {
         });
 
         it('checkGraphSucceeded should not set a graph as done if it is not', function(done) {
-            this.sandbox.stub(taskMessenger, 'publishGraphFinished');
+            this.sandbox.stub(eventsProtocol, 'publishGraphFinished');
             this.sandbox.stub(graphProgressService, 'publishGraphFinished');
             this.sandbox.stub(store, 'setGraphDone');
             this.sandbox.stub(store, 'checkGraphSucceeded');
@@ -702,7 +704,7 @@ describe('Task Scheduler', function() {
             streamCompletedWrapper(observable, done, function() {
                 expect(store.checkGraphSucceeded).to.have.been.calledOnce;
                 expect(store.setGraphDone).to.not.have.been.called;
-                expect(taskMessenger.publishGraphFinished).to.not.be.called;
+                expect(eventsProtocol.publishGraphFinished).to.not.be.called;
                 expect(graphProgressService.publishGraphFinished).to.not.be.called;
             });
         });
