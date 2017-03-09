@@ -3,197 +3,112 @@
 
 'use strict';
 
-describe('Http.Api.Workflows.2.0', function () {
-    var workflowApiService;
-    var arpCache = {
-        getCurrent: sinon.stub().resolves([])
-    };
+describe('Http.Api.Workflow.Graphs', function () {
+    var mockery;
+    var graphsApi;
 
-    before('start HTTP server', function () {
-        this.timeout(5000);
-        workflowApiService = {
-            getGraphDefinitions: sinon.stub(),
-            workflowsGetGraphsByName: sinon.stub(),
-            defineTaskGraph: sinon.stub(),
-            destroyGraphDefinition: sinon.stub()
-        };
-
-        return helper.startServer([
-            dihelper.simpleWrapper(workflowApiService, 'Http.Services.Api.Workflows'),
-            dihelper.simpleWrapper(arpCache, 'ARPCache')
-        ]);
-    });
-
-    afterEach('set up mocks', function () {
-        workflowApiService.getGraphDefinitions.reset();
-        workflowApiService.workflowsGetGraphsByName.reset();
-        workflowApiService.defineTaskGraph.reset();
-        workflowApiService.destroyGraphDefinition.reset();
-    });
-
-    after('stop HTTP server', function () {
-        return helper.stopServer();
-    });
-
-    describe('workflowsGetGraphs', function () {
-        it('should retrieve the workflow Graphs', function () {
-            var graph = {
-                "friendlyName": "Dummy Pollers",
-                "injectableName": "Dummy.Poller.Create",
-                "tasks": [
-                    {
-                        "label": "create-redfish-pollers",
-                        "taskName": "Task.Pollers.CreateDefault"
+    before('setup mockery', function () {
+        this.timeout(10000);
+        var _ = require('lodash');
+        var workflowGraphMethods = [
+            'getGraphDefinitions',
+            'defineTaskGraph',
+            'destroyGraphDefinition'
+        ];
+        
+        // setup injector with mock override injecatbles
+        var injectables = [
+            helper.di.simpleWrapper({
+                controller: function(opts, cb) {
+                    if (typeof(opts) === 'function') {
+                        cb = opts;
                     }
-                ]
-            };
+                    return cb;
+                }
+            }, 'Http.Services.Swagger'),
+            helper.di.simpleWrapper(
+                _.reduce(workflowGraphMethods, function(obj, method) {
+                        obj[method] = sinon.stub();
+                        return obj;
+                    }, {}
+                ),
+                'Http.Services.Api.Workflows'
+            )
+        ];
+        helper.setupInjector(injectables);
 
-            workflowApiService.getGraphDefinitions.resolves([graph]);
+        // setup mockery such that index.injector is our test injector.
+        mockery = require('mockery');
+        mockery.registerMock('../../index.js', { injector: helper.injector });
+        mockery.enable();
 
-            return helper.request().get('/api/2.0/workflows/graphs')
-                .expect('Content-Type', /^application\/json/)
-                .expect(200)
-                .expect(function(res){
-                    expect(res.body[0])
-                        .to.have.property('tasks')
-                        .to.deep.equal([{"label": "create-redfish-pollers", "taskName": "/api/2.0/workflows/tasks/Task.Pollers.CreateDefault"}]);
+        // Now require file to test
+        graphsApi = require('../../../api/rest/workflowGraphs');
+    });
 
-                    expect(res.body[0])
-                        .to.have.property('friendlyName').that.equals('Dummy Pollers');
 
-                    expect(res.body[0])
-                        .to.have.property('injectableName').that.equals('Dummy.Poller.Create');
-                });
+    after('disable mockery', function () {
+        mockery.deregisterMock('../../index.js');
+        mockery.disable();
+    });
+
+    describe('GET /workflows/graphs/', function () {
+        it("should get all graphs", function() {
+            var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
+            graphsApiService.getGraphDefinitions.resolves(['graph1', 'graph2']);
+            return graphsApi.workflowsGetGraphs().should.eventually.deep.equal([ 'graph1', 'graph2' ]);
         });
 
-        it('should retrieve the workflow Graphs with inline task', function () {
-            var graph ={
-                "friendlyName": "Dummy Pollers",
-                "injectableName": "Dummy.Poller.Create",
-                "tasks": [
-                    {
-                        "label": "boot-graph",
-			"taskDefinition": {
-			"friendlyName": "Boot Graph",
-			"injectableName": "Task.Graph.Run.Boot",
-			"implementsTask": "Task.Base.Graph.Run",
-			"options": {
-			    "graphName": "Graph.BootstrapUbuntu",
-			    "defaults": {
-			        "graphOptions": {}
-			        }
-			    },
-                        "properties": {}
-                        }
-                  }
-                ]
-            };
-            var task = {
-                "friendlyName": "Boot Graph",
-                "injectableName": "Task.Graph.Run.Boot",
-                "implementsTask": "Task.Base.Graph.Run",
-                "options": {
-                    "graphName": "Graph.BootstrapUbuntu",
-                    "defaults": {
-                    "graphOptions": {}
-                    }
-                },
-                "properties": {}
-            };
+        it("should reject if getGraphDefinitions rejects", function() {
+            var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
+            graphsApiService.getGraphDefinitions.rejects('bad graph');
+            return graphsApi.workflowsGetGraphs().should.be.rejectedWith('bad graph');
+        });
+    }); 
+    
+    describe('GET /workflows/graphs/name', function () {
+        it("should get graph by name", function() {
+            var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
+            graphsApiService.getGraphDefinitions.resolves('graph1');
+            return graphsApi.workflowsGetGraphsByName({swagger: { params: { injectableName: { value: 'graph' } } } })
+                .should.eventually.equal('graph1');
+        });
 
-            workflowApiService.getGraphDefinitions.resolves([graph]);
+        it("should reject if getGraphDefinitions rejects", function() {
+            var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
+            graphsApiService.getGraphDefinitions.rejects('bad graph');
+            return graphsApi.workflowsGetGraphsByName({swagger: { params: { injectableName: { value: 'graph' } } } })
+                .should.be.rejectedWith('bad graph');
+        });
 
-            return helper.request().get('/api/2.0/workflows/graphs')
-                .expect('Content-Type', /^application\/json/)
-                .expect(200)
-                .expect(function(res){
-                    expect(res.body[0])
-                        .to.have.property('tasks')
-                        .to.deep.equal([{"label": "boot-graph", "taskDefinition": task } ]);
-                    expect(res.body[0])
-                        .to.have.property('friendlyName').that.equals('Dummy Pollers');
-
-                    expect(res.body[0])
-                        .to.have.property('injectableName').that.equals('Dummy.Poller.Create');
-                });
-
-
+        it("should reject if req is invalid", function() {
+            var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
+            graphsApiService.getGraphDefinitions.resolves();
+            return graphsApi.workflowsGetGraphsByName(undefined)
+                .should.be.rejectedWith(/undefined/);
         });
     });
 
-    describe('workflowsGetGraphsByName', function () {
-        it('should retrieve the graph by Name', function () {
-            var graph =
-            {
-                "friendlyName": "Dummy Pollers",
-                "injectableName": "Dummy.Poller.Create",
-                "tasks": [
-                    {
-                        "label": "create-redfish-pollers",
-                        "taskName": "Task.Pollers.CreateDefault"
-                    }
-                ]
-            };
-
-            workflowApiService.getGraphDefinitions.resolves(graph);
-
-            return helper.request().get('/api/2.0/workflows/graphs/' + graph.injectableName)
-                .expect('Content-Type', /^application\/json/)
-                .expect(200)
-                .expect(function() {
-                    expect(workflowApiService.getGraphDefinitions).to.have.been.calledOnce;
-                    expect(workflowApiService.getGraphDefinitions)
-                        .to.have.been.calledWith('Dummy.Poller.Create');
-                });
+    describe('PUT /workflows/graphs/', function () {
+        it("should put graph", function() {
+            var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
+            graphsApiService.defineTaskGraph.resolves('graph1');
+            return graphsApi.workflowsPutGraphs({body: { foo: 'bar' } })
+                .should.eventually.equal('graph1');
+        });
+        
+        it("should reject if defineTaskGraph rejects", function() {
+            var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
+            graphsApiService.defineTaskGraph.rejects('put failed');
+            return graphsApi.workflowsPutGraphs({body: { foo: 'bar' } })
+                .should.be.rejectedWith('put failed');
         });
 
-    });
-
-   describe('workflowsPutGraphs', function () {
-        it('should persist a graph', function () {
-            var graph =
-            {
-                "friendlyName": "Dummy Pollers",
-                "injectableName": "Dummy.Poller.Create",
-                "tasks": [
-                    {
-                        "label": "create-redfish-pollers",
-                        "taskName": "Task.Pollers.CreateDefault"
-                    }
-                ]
-            };
-            workflowApiService.defineTaskGraph.resolves(graph);
-
-            return helper.request().put('/api/2.0/workflows/graphs')
-            .send(graph)
-            .expect('Content-Type', /^application\/json/)
-            .expect(201, graph);
+        it("should reject if req is invalid", function() {
+            var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
+            graphsApiService.defineTaskGraph.rejects('put failed');
+            return graphsApi.workflowsPutGraphs(undefined)
+                .should.be.rejectedWith(/undefined/);
         });
-    });
-
-   describe('workflowsDeleteGraphsByName', function () {
-        it('should delete Graph by name', function () {
-            var graph =
-            {
-                "injectableName": "Graph.Example.RackHD",
-                "friendlyName": "Test.Graph",
-                "tasks": [
-                    {
-                        "label": "noop-1",
-                        "taskName": "Task.noop"
-                    }
-                ]
-            };
-            workflowApiService.destroyGraphDefinition.resolves(graph);
-
-            return helper.request().delete('/api/2.0/workflows/graphs/' + graph.injectableName)
-            .expect(204)
-            .expect(function() {
-                expect(workflowApiService.destroyGraphDefinition).to.have.been.calledOnce;
-                expect(workflowApiService.destroyGraphDefinition)
-                    .to.have.been.calledWith('Graph.Example.RackHD');
-            });
-        });
-    });
+    }); 
 });
-

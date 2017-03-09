@@ -29,7 +29,9 @@ var workflowsGetGraphs = controller(function() {
 * @apiGroup workflowGraphs
 */
 var workflowsGetGraphsByName = controller(function(req) {
-    return workflowApiService.getGraphDefinitions(req.swagger.params.injectableName.value);
+    return Promise.try(function() {
+        return workflowApiService.getGraphDefinitions(req.swagger.params.injectableName.value);
+    });
 });
 
 /**
@@ -43,7 +45,9 @@ var workflowsGetGraphsByName = controller(function(req) {
 */
 // Can include name in body to modify a specific graph
 var workflowsPutGraphs = controller({success: 201},function(req) {
-    return workflowApiService.defineTaskGraph(req.body);
+    return Promise.try(function() {
+        return workflowApiService.defineTaskGraph(req.body);
+    });
 });
 
 /**
