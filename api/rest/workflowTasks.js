@@ -19,7 +19,9 @@ var _ = injector.get('_');    // jshint ignore:line
 */
 
 var workflowsPutTask = controller({success: 201}, function(req) {
-    return workflowApiService.defineTask(req.body);
+    return Promise.try(function() {
+        return workflowApiService.defineTask(req.body);
+    });
 });
 
 /**
@@ -46,7 +48,9 @@ var workflowsGetAllTasks = controller(function() {
 */
 
 var workflowsGetTasksByName = controller(function(req) {
-    return workflowApiService.getWorkflowsTasksByName(req.swagger.params.injectableName.value);
+    return Promise.try(function() {
+        return workflowApiService.getWorkflowsTasksByName(req.swagger.params.injectableName.value);
+    });
 });
 
 /**
