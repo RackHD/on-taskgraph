@@ -92,11 +92,6 @@ var workflowsAction = controller({success: 202}, function(req) {
         }
     };
 
-    if (!_(actionFunctions).has(command)) {
-        throw new Errors.BadRequestError(
-            command + ' is not a valid workflow action'
-        );
-    }
     return actionFunctions[command]();
 });
 
