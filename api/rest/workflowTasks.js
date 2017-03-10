@@ -5,6 +5,7 @@
 var injector = require('../../index.js').injector;
 var controller = injector.get('Http.Services.Swagger').controller;
 var workflowApiService = injector.get('Http.Services.Api.Workflows');
+var Promise = injector.get('Promise');
 var _ = injector.get('_');    // jshint ignore:line
 
 

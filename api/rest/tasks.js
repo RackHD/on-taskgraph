@@ -7,6 +7,7 @@ var controller = injector.get('Http.Services.Swagger').controller;
 var tasksApiService = injector.get('Http.Services.Api.Tasks');
 var _ = injector.get('_'); // jshint ignore:line
 var Errors = injector.get('Errors');
+var Promise = injector.get('Promise');
 
 var getBootstrap = controller( function (req, res) {
     return Promise.try(function() {
