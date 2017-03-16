@@ -7,7 +7,9 @@ var workflowApiService = injector.get('Http.Services.Api.Workflows');
 var _ = injector.get('_');    // jshint ignore:line
 
 var workflowsPutTask = function(call) {
-    return workflowApiService.defineTask(JSON.parse(call.request.body));
+    return Promise.try(function() {
+        return workflowApiService.defineTask(JSON.parse(call.request.body));
+    });
 };
 
 var workflowsGetAllTasks = function() {
@@ -15,7 +17,9 @@ var workflowsGetAllTasks = function() {
 };
 
 var workflowsGetTasksByName = function(call) {
-    return workflowApiService.getWorkflowsTasksByName(call.request.injectableName);
+    return Promise.try(function() {
+        return workflowApiService.getWorkflowsTasksByName(call.request.injectableName);
+    });
 };
 
 var workflowsDeleteTasksByName = function(call) {

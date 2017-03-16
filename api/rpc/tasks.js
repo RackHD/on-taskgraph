@@ -8,14 +8,18 @@ var _ = injector.get('_'); // jshint ignore:line
 var Errors = injector.get('Errors');
 
 var getBootstrap = function(call) {
+    return Promise.try(function() {
     var scope = call.request.scope;
     var ipAddress = call.request.ipAddress;
     var macAddress = call.request.macAddress;
-    return tasksApiService.getBootstrap(scope, ipAddress, macAddress);
+        return tasksApiService.getBootstrap(scope, ipAddress, macAddress);
+    });
 };
 
 var getTasksById = function(call) {
-    return tasksApiService.getTasks(call.request.identifier)
+    return Promise.try(function() {
+        return tasksApiService.getTasks(call.request.identifier)
+    })
     .catch(function (err) {
         if (err.name === 'NoActiveTaskError') {
             return {};
@@ -26,7 +30,10 @@ var getTasksById = function(call) {
 };
 
 var postTaskById = function(call) {
-    return tasksApiService.postTasksById(call.request.identifier, JSON.parse(call.request.config));
+    return Promise.try(function() {
+        return tasksApiService.postTasksById(call.request.identifier,
+            JSON.parse(call.request.config));
+    });
 };
 
 module.exports = {

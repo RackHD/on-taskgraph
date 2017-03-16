@@ -11,11 +11,15 @@ var workflowsGetGraphs = function() {
 };
 
 var workflowsGetGraphsByName = function(call) {
-    return workflowApiService.getGraphDefinitions(call.request.injectableName);
+    return Promise.try(function() {
+        return workflowApiService.getGraphDefinitions(call.request.injectableName);
+    });
 };
 
 var workflowsPutGraphs = function(call) {
-    return workflowApiService.defineTaskGraph(JSON.parse(call.request.body));
+    return Promise.try(function() {
+        return workflowApiService.defineTaskGraph(JSON.parse(call.request.body));
+    });
 };
 
 var workflowsDeleteGraphsByName = function(call) {
