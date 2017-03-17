@@ -19,7 +19,6 @@ function schedulerServerFactory(
     _,
     Promise
 ) {
-    var grpc = require('grpc');
 
     function SchedulerServer(options) {
         this.options = options || {
@@ -35,8 +34,9 @@ function schedulerServerFactory(
         var self = this;
 
         return Promise.try(function() {
+            var grpc = require('grpc');
             var schedulerProto = grpc.load(self.options.protoFile).scheduler;
-
+            
             var tasks = require('./tasks.js');
             var workflowGraphs = require('./workflowGraphs.js');
             var workflows = require('./workflows.js');

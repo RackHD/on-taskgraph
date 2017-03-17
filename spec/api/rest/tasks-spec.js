@@ -31,7 +31,7 @@ describe('Http.Api.Tasks', function () {
         // setup mockery such that index.injector is our test injector.
         mockery = require('mockery');
         mockery.registerMock('../../index.js', { injector: helper.injector });
-        mockery.enable();
+        mockery.enable({ useCleanCache: true, warnOnUnregistered: false });
 
         // Now require file to test
         tasksApi = require('../../../api/rest/tasks');
@@ -39,7 +39,7 @@ describe('Http.Api.Tasks', function () {
 
 
     after('disable mockery', function () {
-        mockery.deregisterMock('../../index.js');
+        mockery.deregisterAll();
         mockery.disable();
     });
 

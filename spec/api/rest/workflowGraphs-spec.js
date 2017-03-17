@@ -40,7 +40,7 @@ describe('Http.Api.Workflow.Graphs', function () {
         // setup mockery such that index.injector is our test injector.
         mockery = require('mockery');
         mockery.registerMock('../../index.js', { injector: helper.injector });
-        mockery.enable();
+        mockery.enable({ useCleanCache: true, warnOnUnregistered: false });
 
         // Now require file to test
         graphsApi = require('../../../api/rest/workflowGraphs');
@@ -48,7 +48,7 @@ describe('Http.Api.Workflow.Graphs', function () {
 
 
     after('disable mockery', function () {
-        mockery.deregisterMock('../../index.js');
+        mockery.deregisterAll();
         mockery.disable();
     });
 
