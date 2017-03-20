@@ -195,6 +195,18 @@ describe("Task Runner", function() {
             });
         });
 
+        it('should filter when graph not found', function(done) {
+            runner.running = true;
+            var taskStream = runner.createRunTaskSubscription(Rx.Observable.just(taskAndGraphId));
+            store.getTaskById.resolves(undefined);
+
+            streamOnCompletedWrapper(taskStream, done, function() {
+                expect(store.checkoutTask).to.have.been.calledOnce;
+                expect(store.getTaskById).to.have.been.calledOnce;
+                expect(runner.runTask).to.not.have.been.called;
+            });
+        });
+
         it('should run a task', function(done) {
             runner.running = true;
             this.sandbox.stub(runner, 'handleStreamSuccess');
