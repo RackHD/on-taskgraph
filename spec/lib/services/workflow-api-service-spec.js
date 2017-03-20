@@ -20,6 +20,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
     var TaskGraph;
     var TaskGraphRunner;
     var eventsProtocol;
+    var taskGraphProtocol;
 
     function mockConsul() {
         return {
@@ -51,6 +52,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         TaskGraph = helper.injector.get('TaskGraph.TaskGraph');
         TaskGraphRunner = helper.injector.get('TaskGraph.Runner');
         eventsProtocol = helper.injector.get('Protocol.Events');
+        taskGraphProtocol = helper.injector.get('Protocol.TaskGraphRunner');
     });
 
     beforeEach(function() {
@@ -102,6 +104,8 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         this.sandbox.stub(workflowApiService, 'runTaskGraph');
         this.sandbox.stub(env, 'get');
         this.sandbox.stub(eventsProtocol, 'publishProgressEvent').resolves();
+        this.sandbox.stub(taskGraphProtocol, 'runTaskGraph');
+        this.sandbox.stub(taskGraphProtocol, 'cancelTaskGraph');
     });
 
     afterEach('Http.Services.Api.Profiles afterEach', function() {
@@ -396,6 +400,26 @@ describe('Taskgraph.Services.Api.Workflows', function () {
             .to.be.rejectedWith(Errors.BadRequestError, /duplicate/);
     });
 
+    it('should find a graph definition if it exists', function() {
+        workflowApiService.findGraphDefinitionByName.restore();
+        store.getGraphDefinitions.resolves([{ graph: 'foo' }]);
+        return workflowApiService.findGraphDefinitionByName('test')
+            .should.eventually.deep.equal({ graph: 'foo' });
+    });
+    
+    it('should get graph definitions', function() {
+        workflowApiService.findGraphDefinitionByName.restore();
+        store.getGraphDefinitions.resolves([{ graph: 'foo' }]);
+        return workflowApiService.getGraphDefinitions('test')
+            .should.eventually.deep.equal([{ graph: 'foo' }]);
+    });
+
+    it('should get task definitions', function() {
+        store.getTaskDefinitions.resolves([{ task: 'foo' }]);
+        return expect(workflowApiService.getTaskDefinitions('test'))
+            .to.eventually.deep.equal([{ task: 'foo' }]);
+    });
+    
     it('should throw a NotFoundError if a graph definition does not exist', function() {
         workflowApiService.findGraphDefinitionByName.restore();
         store.getGraphDefinitions.resolves(null);
@@ -437,6 +461,12 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         });
     });
 
+
+    it('should fail to put workflows tasks by name if task not found', function () {
+        store.getTaskDefinitions.resolves();
+        return expect(workflowApiService.putWorkflowsTasksByName(taskDefinition, task))
+            .to.be.rejectedWith(/Task definition not found/);
+    });
 
     it('should put workflows tasks by name', function () {
         store.getTaskDefinitions.resolves(task);
@@ -490,5 +520,77 @@ describe('Taskgraph.Services.Api.Workflows', function () {
                              };
         waterline.graphobjects.find.resolves(activeWorkflow);
         return expect(workflowApiService.getWorkflowByInstanceId()).to.become(activeWorkflow);
+    });
+
+    it('should run task graph', function() {
+        taskGraphProtocol.runTaskGraph.resolves({ foo: 'bar' });
+        workflowApiService.runTaskGraph.restore();
+        return workflowApiService.runTaskGraph('foo', 'default')
+        .then(function(result) {
+            expect(result).to.deep.equal({foo: 'bar'});
+        });
+    });
+    
+    it('should detect graph run failure', function() {
+        taskGraphProtocol.runTaskGraph.rejects('run error');
+        workflowApiService.runTaskGraph.restore();
+        return workflowApiService.runTaskGraph('foo', 'default')
+        .then(function(result) {
+            expect(result).to.be.undefined;
+        });
+    });
+
+    it('should cancel a running task graph', function() {
+        var workflow = {
+            active: sinon.stub().returns(true)
+        };
+        waterline.graphobjects.needOne.resolves(workflow);
+        return workflowApiService.cancelTaskGraph('foo')
+        .then(function(result) {
+            expect(taskGraphProtocol.cancelTaskGraph).to.have.been.called.once;
+        });
+    });
+
+    it('should fail to cancel an idle task graph', function() {
+        var workflow = {
+            active: sinon.stub().returns(false)
+        };
+        waterline.graphobjects.needOne.resolves(workflow);
+        return expect(workflowApiService.cancelTaskGraph('foo'))
+            .to.be.rejectedWith(/foo is not an active workflow/);
+    });
+
+    it('should delete a task graph', function() {
+        var workflow = {
+            active: sinon.stub().returns(false)
+        };
+        waterline.graphobjects.needOne.resolves(workflow);
+        return workflowApiService.deleteTaskGraph('foo')
+        .then(function(result) {
+            expect(store.deleteGraph).to.be.called.once;
+        });
+    });
+
+    it('should fail to delete a running task graph', function() {
+        var workflow = {
+            active: sinon.stub().returns(true)
+        };
+        waterline.graphobjects.needOne.resolves(workflow);
+        return expect(workflowApiService.deleteTaskGraph('foo'))
+            .to.be.rejectedWith(/Forbidden to delete an active workflow/);
+    });
+
+    it('should get all workflows', function() {
+        waterline.graphobjects.find.resolves({graph: 'test'});
+        return workflowApiService.getAllWorkflows()
+        .then(function(result) {
+            expect(result).to.deep.equal({graph: 'test'});
+        });
+    });
+    
+    it('should get all workflows', function() {
+        waterline.graphobjects.find.rejects('an error');
+        return expect(workflowApiService.getAllWorkflows())
+            .to.eventually.deep.equal({err: new Error('an error')});
     });
 });
