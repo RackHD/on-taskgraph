@@ -3,9 +3,6 @@ syntax = "proto3";
 package scheduler;
 
 service Scheduler {
-  rpc getBootstrap (getBootstrapRequest) returns (HttpReply) {}
-  rpc getTasksById (getTasksByIdRequest) returns (HttpReply) {}
-  rpc postTaskById (postTaskByIdRequest) returns (HttpReply) {}
   rpc workflowsGetGraphs (workflowsGetGraphsRequest) returns (HttpReply) {}
   rpc workflowsGetGraphsByName (workflowsGetGraphsByNameRequest) returns (HttpReply) {}
   rpc workflowsPutGraphs (workflowsPutGraphsRequest) returns (HttpReply) {}
@@ -20,21 +17,6 @@ service Scheduler {
   rpc workflowsGetTasksByName (workflowsGetTasksByNameRequest) returns (HttpReply) {}
   rpc workflowsDeleteTasksByName (workflowsDeleteTasksByNameRequest) returns (HttpReply) {}
 
-}
-
-message getBootstrapRequest {
-  repeated string scope = 1;
-  string ipAddress = 2;
-  string macAddress = 3;
-}
-
-message getTasksByIdRequest {
-  string identifier = 1;
-}
-
-message postTaskByIdRequest {
-  string identifier = 1;
-  string config = 2;
 }
 
 message workflowsGetGraphsRequest {

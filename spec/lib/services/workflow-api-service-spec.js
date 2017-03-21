@@ -119,10 +119,10 @@ describe('Taskgraph.Services.Api.Workflows', function () {
             node: null,
             tasks: {
                 task1: {
-                    state: 'pending',
+                    state: 'pending'
                 },
                 task2: {
-                    state: 'pending',
+                    state: 'pending'
                 }
             }
         };
