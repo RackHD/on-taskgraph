@@ -8,6 +8,7 @@ describe('Task Scheduler', function() {
     var LeaseExpirationPoller;
     var taskMessenger;
     var eventsProtocol;
+    var graphProgressService;
     var store;
     var assert;
     var Constants;
@@ -99,6 +100,7 @@ describe('Task Scheduler', function() {
         Constants = helper.injector.get('Constants');
         taskMessenger = helper.injector.get('Task.Messenger');
         eventsProtocol = helper.injector.get('Protocol.Events');
+        graphProgressService = helper.injector.get('Services.GraphProgress');
         TaskScheduler = helper.injector.get('TaskGraph.TaskScheduler');
         TaskGraph = helper.injector.get('TaskGraph.TaskGraph');
         LeaseExpirationPoller = helper.injector.get('TaskGraph.LeaseExpirationPoller');
@@ -275,137 +277,6 @@ describe('Task Scheduler', function() {
                 cb(data);
                 expect(taskScheduler.evaluateTaskStream.onNext).to.have.been.calledOnce;
                 expect(taskScheduler.evaluateTaskStream.onNext).to.have.been.calledWith(data);
-            });
-        });
-
-        it('publishGraphFinished should publish with the events protocol', function() {
-            this.sandbox.stub(eventsProtocol, 'publishGraphFinished').resolves();
-            var graph = { instanceId: 'testgraphid', _status: 'succeeded', node: 'nodeId' };
-            return taskScheduler.publishGraphFinished(graph)
-            .then(function() {
-                expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
-                expect(eventsProtocol.publishGraphFinished)
-                    .to.have.been.calledWith('testgraphid', 'succeeded', 'nodeId');
-            });
-        });
-
-        it('TaskFinishedProgressEvent should publish with the events protocol', function() {
-            var uuid = helper.injector.get('uuid');
-            var task = {
-                graphId: uuid.v4(),
-                taskId: uuid.v4()
-            };
-
-            var graph = {
-                instanceId: task.graphId,
-                name: 'test graph name',
-                node: 'nodeId',
-                tasks: {}
-            };
-            graph.tasks[task.taskId] = {
-                friendlyName: 'test task name',
-                state: 'succeeded',
-                terminalOnStates: ['succeeded']
-            };
-
-            this.sandbox.stub(eventsProtocol, 'publishProgressEvent').resolves();
-            this.sandbox.stub(store, 'getGraphById').resolves(graph);
-
-            var taskFriendlyName = 'test task name';
-            var progressData = {
-                graphId: graph.instanceId,
-                graphName: graph.name,
-                nodeId: 'nodeId',
-                progress: {
-                    value: 1,
-                    maximum: 1,
-                    percentage: '100%',
-                    description: 'Task "' + taskFriendlyName + '" finished',
-                },
-                taskProgress: {
-                    taskId: task.taskId,
-                    taskName: taskFriendlyName,
-                    progress: {
-                        value: 100,
-                        maximum: 100,
-                        percentage: '100%',
-                        description: 'Task finished'
-                    }
-                }
-            };
-
-            return taskScheduler.publishTaskFinishedProgressEvent(task)
-            .then(function() {
-                expect(eventsProtocol.publishProgressEvent).to.have.been.calledOnce;
-                expect(eventsProtocol.publishProgressEvent)
-                    .to.have.been.calledWith(task.graphId, progressData);
-            });
-        });
-
-        it('TaskFinishedProgressEvent should swallow the Errors', function() {
-            var task = {
-                graphId: 'graphId',
-                taskId: 'taskId'
-            };
-            this.sandbox.stub(eventsProtocol, 'publishProgressEvent').resolves();
-            var error = new Error('getGraphById error');
-            this.sandbox.stub(store, 'getGraphById').rejects(error);
-
-            return taskScheduler.publishTaskFinishedProgressEvent(task)
-            .then(function() {
-                expect(eventsProtocol.publishProgressEvent).to.not.be.called;
-            });
-        });
-
-        it('GraphFinishedProgressEvent should publish with the events protocol', function() {
-            this.sandbox.stub(eventsProtocol, 'publishProgressEvent').resolves();
-            var graph = {
-                instanceId: 'testgraphid',
-                _status: 'succeeded',
-                node: 'nodeId',
-                name: 'test graph name',
-                tasks: {}
-            };
-            graph.tasks.taskId = {
-                friendlyName: 'test task name',
-                state: 'succeeded',
-                terminalOnStates: ['succeeded']
-            };
-
-            var progressData = {
-                graphId: graph.instanceId,
-                graphName: graph.name,
-                nodeId: graph.node,
-                progress: {
-                    maximum: 1,
-                    value: 1,
-                    percentage: '100%',
-                    description: 'Graph "' + graph.name + '" ' + 'succeeded'
-                }
-            };
-
-            return taskScheduler.publishGraphFinishedProgressEvent(graph, 'succeeded')
-            .then(function() {
-                expect(eventsProtocol.publishProgressEvent).to.have.been.calledOnce;
-                expect(eventsProtocol.publishProgressEvent)
-                    .to.have.been.calledWith(graph.instanceId, progressData);
-            });
-        });
-
-        it('GraphFinishedProgressEvent should swallow the Errors', function() {
-            var error = new Error('eventsProtocol publishProgressEvent error');
-            this.sandbox.stub(eventsProtocol, 'publishProgressEvent').rejects(error);
-            var graph = {
-                instanceId: 'testgraphid',
-                _status: 'succeeded',
-                node: 'nodeId',
-                name: 'test graph name',
-                tasks: {}
-            };
-
-            return taskScheduler.publishGraphFinishedProgressEvent(graph, 'succeeded')
-            .then(function() {
-                expect(eventsProtocol.publishProgressEvent).to.have.been.calledOnce;
             });
         });
 
@@ -640,6 +511,7 @@ describe('Task Scheduler', function() {
         });
 
         it('should check if a graph is finished on a terminal task state', function(done) {
+            this.sandbox.stub(graphProgressService, 'publishTaskFinished');
             var data = {
                 terminalOnStates: ['succeeded'],
                 state: 'succeeded'
@@ -649,12 +521,15 @@ describe('Task Scheduler', function() {
             streamSuccessWrapper(observable, done, function() {
                 expect(checkGraphFinishedStream.onNext).to.have.been.calledOnce;
                 expect(checkGraphFinishedStream.onNext).to.have.been.calledWith(data);
+                expect(graphProgressService.publishTaskFinished).to.have.been.calledOnce;
+                expect(graphProgressService.publishTaskFinished).to.have.been.calledWith(data);
             });
 
             taskHandlerStream.onNext({});
         });
 
         it('should check for ready tasks in a graph if a task is non-terminal', function(done) {
+            this.sandbox.stub(graphProgressService, 'publishTaskFinished');
             var data = {
                 terminalOnStates: ['failed'],
                 state: 'succeeded',
@@ -667,12 +542,15 @@ describe('Task Scheduler', function() {
                 expect(evaluateGraphStream.onNext).to.have.been.calledWith({
                     graphId: 'testgraphid'
                 });
+                expect(graphProgressService.publishTaskFinished).to.have.been.calledOnce;
+                expect(graphProgressService.publishTaskFinished).to.have.been.calledWith(data);
             });
 
             taskHandlerStream.onNext({});
         });
 
         it('should handle errors related to updating task dependencies', function(done) {
+            this.sandbox.stub(graphProgressService, 'publishTaskFinished');
             var testError = new Error('test update dependencies error');
             store.setTaskStateInGraph.onFirstCall().rejects(testError);
             store.setTaskStateInGraph.resolves({});
@@ -691,6 +569,8 @@ describe('Task Scheduler', function() {
                     'Error updating task dependencies',
                     testError);
                 expect(taskScheduler.handleEvaluatedTask).to.have.been.calledOnce;
+                expect(graphProgressService.publishTaskFinished).to.have.been.calledOnce;
+                expect(graphProgressService.publishTaskFinished).to.have.been.calledWith({});
             });
         });
     });
@@ -802,7 +682,8 @@ describe('Task Scheduler', function() {
         });
 
         it('checkGraphSucceeded should persist and publish on finish', function(done) {
-            this.sandbox.stub(taskScheduler, 'publishGraphFinished');
+            this.sandbox.stub(eventsProtocol, 'publishGraphFinished').resolves();
+            this.sandbox.stub(graphProgressService, 'publishGraphFinished');
             this.sandbox.stub(store, 'setGraphDone');
             this.sandbox.stub(store, 'checkGraphSucceeded');
             taskScheduler.checkGraphSucceeded.restore();
@@ -829,17 +710,21 @@ describe('Task Scheduler', function() {
                     Constants.Task.States.Succeeded,
                     dataDone
                 );
-                expect(taskScheduler.publishGraphFinished).to.have.been.calledOnce;
-                expect(taskScheduler.publishGraphFinished).to.have.been.calledWith({
-                    instanceId: 'testid',
-                    _status: Constants.Task.States.Succeeded,
-                    node: 'nodeId'
-                });
+                expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
+                expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
+                    'testid',
+                    Constants.Task.States.Succeeded,
+                    'nodeId'
+                );
+                expect(graphProgressService.publishGraphFinished).to.have.been.calledOnce;
+                expect(graphProgressService.publishGraphFinished)
+                    .to.have.been.calledWith(graphData);
             });
         });
 
         it('checkGraphSucceeded should not set a graph as done if it is not', function(done) {
-            this.sandbox.stub(taskScheduler, 'publishGraphFinished');
+            this.sandbox.stub(eventsProtocol, 'publishGraphFinished');
+            this.sandbox.stub(graphProgressService, 'publishGraphFinished');
             this.sandbox.stub(store, 'setGraphDone');
             this.sandbox.stub(store, 'checkGraphSucceeded');
             taskScheduler.checkGraphSucceeded.restore();
@@ -857,7 +742,8 @@ describe('Task Scheduler', function() {
             streamCompletedWrapper(observable, done, function() {
                 expect(store.checkGraphSucceeded).to.have.been.calledOnce;
                 expect(store.setGraphDone).to.not.have.been.called;
-                expect(taskScheduler.publishGraphFinished).to.not.have.been.called;
+                expect(eventsProtocol.publishGraphFinished).to.not.be.called;
+                expect(graphProgressService.publishGraphFinished).to.not.be.called;
             });
         });
     });
