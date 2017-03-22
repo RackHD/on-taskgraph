@@ -6,7 +6,6 @@ var injector = require('../../index.js').injector;
 var controller = injector.get('Http.Services.Swagger').controller;
 var addLinks = injector.get('Http.Services.Swagger').addLinksHeader;
 var workflowApiService = injector.get('Http.Services.Api.Workflows');
-var Errors = injector.get('Errors');
 var Constants = injector.get('Constants');
 var _ = injector.get('_');    // jshint ignore:line
 var sanitizer = injector.get('Sanitizer');

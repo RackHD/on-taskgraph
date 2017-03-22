@@ -27,7 +27,7 @@ describe('TaskGraph.Runner', function () {
                     deregister: sinon.stub().resolves({})
                 }
             }
-        }
+        };
     }
 
     before('setup depedencies', function() {
@@ -87,7 +87,7 @@ describe('TaskGraph.Runner', function () {
                 runner: true,
                 scheduler: true,
                 domain: 'default'
-            }).then(function(result) {
+            }).then(function() {
                 expect(runnerStartStub).to.be.called.once;
                 expect(schedulerStartStub).to.be.called.once;
                 expect(completedTaskPollerStartStub).to.be.called.once;
@@ -100,7 +100,7 @@ describe('TaskGraph.Runner', function () {
                 runner: false,
                 scheduler: true,
                 domain: 'default'
-            }).then(function(result) {
+            }).then(function() {
                 expect(runnerStartStub).not.to.be.called;
                 expect(schedulerStartStub).to.be.called.once;
                 expect(completedTaskPollerStartStub).to.be.called.once;
@@ -113,7 +113,7 @@ describe('TaskGraph.Runner', function () {
                 runner: true,
                 scheduler: false,
                 domain: 'default'
-            }).then(function(result) {
+            }).then(function() {
                 expect(runnerStartStub).to.be.called.once;
                 expect(schedulerStartStub).not.to.be.called;
                 expect(completedTaskPollerStartStub).not.to.be.called;
@@ -133,7 +133,8 @@ describe('TaskGraph.Runner', function () {
             completedTaskPollerStopStub = sinon.stub();
             TaskRunner.create.returns({start: sinon.stub(), stop: runnerStopStub});
             TaskScheduler.create.returns({start: sinon.stub(), stop: schedulerStopStub});
-            CompletedTaskPoller.create.returns({start: sinon.stub(), stop: completedTaskPollerStopStub});
+            CompletedTaskPoller.create.returns({start: sinon.stub(),
+                                                stop: completedTaskPollerStopStub});
         });
 
         it('should stop both a scheduler and a runner', function() {
@@ -141,9 +142,9 @@ describe('TaskGraph.Runner', function () {
                 runner: true,
                 scheduler: true,
                 domain: 'default'
-            }).then(function(result) {
+            }).then(function() {
                 return taskGraphRunner.stop();
-            }).then(function(result) {
+            }).then(function() {
                 expect(runnerStopStub).to.be.called.once;
                 expect(schedulerStopStub).to.be.called.once;
                 expect(completedTaskPollerStopStub).to.be.called.once;
@@ -156,9 +157,9 @@ describe('TaskGraph.Runner', function () {
                 runner: false,
                 scheduler: true,
                 domain: 'default'
-            }).then(function(result) {
+            }).then(function() {
                 return taskGraphRunner.stop();
-            }).then(function(result) {
+            }).then(function() {
                 expect(runnerStopStub).not.to.be.called;
                 expect(schedulerStopStub).to.be.called.once;
                 expect(completedTaskPollerStopStub).to.be.called.once;
@@ -171,9 +172,9 @@ describe('TaskGraph.Runner', function () {
                 runner: true,
                 scheduler: false,
                 domain: 'default'
-            }).then(function(result) {
+            }).then(function() {
                 return taskGraphRunner.stop();
-            }).then(function(result) {
+            }).then(function() {
                 expect(runnerStopStub).to.be.called.once;
                 expect(schedulerStopStub).not.to.be.called;
                 expect(completedTaskPollerStopStub).not.to.be.called;

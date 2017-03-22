@@ -88,7 +88,7 @@ function schedulerServerFactory(
             })
             .catch(function(err) {
                 callback(err);
-            })
+            });
         };
     }
 

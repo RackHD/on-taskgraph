@@ -4,18 +4,16 @@
 
 var injector = require('../../index.js').injector;
 var workflowApiService = injector.get('Http.Services.Api.Workflows');
-var Errors = injector.get('Errors');
-var Constants = injector.get('Constants');
 var _ = injector.get('_');    // jshint ignore:line
 
 var workflowsGet = function (call) {
-    return workflowApiService.getAllWorkflows(JSON.parse(call.request.query))
+    return workflowApiService.getAllWorkflows(JSON.parse(call.request.query));
 };
 
 var workflowsPost = function (call) {
     var nodeId = call.request.nodeId;
     var configuration = JSON.parse(call.request.configuration);
-    if (nodeId != undefined) {
+    if (nodeId !== undefined) {
         return workflowApiService.createAndRunGraph(configuration, nodeId);
     } else {
         return workflowApiService.createAndRunGraph(configuration);

@@ -96,7 +96,8 @@ describe('Http.Api.WorkflowTasks.2.0', function () {
 
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getWorkflowsTasksByName.resolves("an instance of a graph");
-            return workflowTasksApi.workflowsGetTasksByName({ swagger: { params: {injectableName : { value: '123' } } } })
+            return workflowTasksApi.workflowsGetTasksByName({ swagger: { params:
+                {injectableName : { value: '123' } } } })
                 .should.eventually.equal('an instance of a graph');
         });
 
@@ -104,7 +105,8 @@ describe('Http.Api.WorkflowTasks.2.0', function () {
 
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getWorkflowsTasksByName.rejects('post error');
-            return workflowTasksApi.workflowsGetTasksByName({ swagger: { params: {injectableName : { value: '123' } } } })
+            return workflowTasksApi.workflowsGetTasksByName({ swagger: { params:
+                {injectableName : { value: '123' } } } })
                 .should.be.rejectedWith('post error');
         });
 
@@ -122,9 +124,9 @@ describe('Http.Api.WorkflowTasks.2.0', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.deleteWorkflowsTasksByName.resolves('deleted');
 
-            return workflowTasksApi.workflowsDeleteTasksByName({ swagger: { params: { injectableName: { value: '123' } } } })
+            return workflowTasksApi.workflowsDeleteTasksByName({ swagger: { params:
+                { injectableName: { value: '123' } } } })
                 .should.eventually.equal('deleted');
         });
     });
-
 });
