@@ -54,28 +54,27 @@ describe('Http.Api.Workflows.2.0', function () {
 
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getAllWorkflows.resolves('a workflows');
-            return workflowsApi.workflowsGet({ request: { query: '{ "$top": "undefined", "$skip": "undefined" }' } })
+            return workflowsApi.workflowsGet({ request: { query: 
+            	'{ "$top": "undefined", "$skip": "undefined" }' } })
                 .should.eventually.equal('a workflows');
-
         });
 
         it('should return an error if not found ', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getAllWorkflows.rejects('an error');
-            return workflowsApi.workflowsGet({ request: { query: '{ "$top": "undefined", "$skip": "undefined" }' } })
+            return workflowsApi.workflowsGet({ request: { query: 
+            	'{ "$top": "undefined", "$skip": "undefined" }' } })
                 .should.be.rejectedWith('an error');
-
         });
 
         it('should return a list of persisted graph objects, when query is sent', function () {
 
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getAllWorkflows.resolves('a workflows');
-            return workflowsApi.workflowsGet({ request: { query: '{ "$top": "1", "$skip": "1", "active": "true" }' }, "query": "test"  })
+            return workflowsApi.workflowsGet({ request: { query: 
+            	'{ "$top": "1", "$skip": "1", "active": "true" }' }, "query": "test"  })
                 .should.eventually.equal('a workflows');
-
         });
-
     });
 
     describe('POST /workflows', function () {
@@ -86,7 +85,6 @@ describe('Http.Api.Workflows.2.0', function () {
             workflowApiService.createAndRunGraph.resolves('a posted workflows');
             return workflowsApi.workflowsPost({ request: { configuration: '{ "value": "123" }' } })
                 .should.eventually.equal('a posted workflows');
-
         });
 
         it("should reject if workflowsPost rejects", function() {

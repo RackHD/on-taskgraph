@@ -30,7 +30,7 @@ describe('Taskgraph.Services.Api.Tasks', function () {
                     deregister: sinon.stub().resolves({})
                 }
             }
-        }
+        };
     }
 
     before('Taskgraph.Services.Api.Tasks before', function () {

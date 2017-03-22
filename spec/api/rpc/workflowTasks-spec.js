@@ -42,12 +42,10 @@ describe('Taskgraph.Api.WorkflowTasks.Rpc', function () {
         workflowTasksApi = require('../../../api/rpc/workflowTasks');
     });
 
-
     after('disable mockery', function () {
         mockery.deregisterMock('../../index.js');
         mockery.disable();
     });
-
 
     describe('PUT /workflows/tasks', function () {
 
@@ -79,15 +77,14 @@ describe('Taskgraph.Api.WorkflowTasks.Rpc', function () {
 
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getTaskDefinitions.resolves(['task1', 'task2']);
-            return workflowTasksApi.workflowsGetAllTasks().should.eventually.deep.equal(['task1', 'task2']);
-
+            return workflowTasksApi.workflowsGetAllTasks()
+            .should.eventually.deep.equal(['task1', 'task2']);
         });
 
         it('should return an error if not found ', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getTaskDefinitions.rejects('an error');
             return workflowTasksApi.workflowsGetAllTasks().should.be.rejectedWith('an error');
-
         });
     });
 
@@ -96,7 +93,8 @@ describe('Taskgraph.Api.WorkflowTasks.Rpc', function () {
 
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getWorkflowsTasksByName.resolves("an instance of a graph");
-            return workflowTasksApi.workflowsGetTasksByName( { request: {injectableName : { value: '123' } } } )
+            return workflowTasksApi.workflowsGetTasksByName( { request: 
+            {injectableName : { value: '123' } } } )
                 .should.eventually.equal('an instance of a graph');
         });
 
@@ -104,7 +102,8 @@ describe('Taskgraph.Api.WorkflowTasks.Rpc', function () {
 
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getWorkflowsTasksByName.rejects('post error');
-            return workflowTasksApi.workflowsGetTasksByName( { request: {injectableName : { value: '123' } } } )
+            return workflowTasksApi.workflowsGetTasksByName( { request: 
+            {injectableName : { value: '123' } } } )
                 .should.be.rejectedWith('post error');
         });
 
@@ -122,9 +121,9 @@ describe('Taskgraph.Api.WorkflowTasks.Rpc', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.deleteWorkflowsTasksByName.resolves('deleted');
 
-            return workflowTasksApi.workflowsDeleteTasksByName( { request: {injectableName : { value: '123' } } } )
+            return workflowTasksApi.workflowsDeleteTasksByName( { request: 
+            {injectableName : { value: '123' } } } )
                 .should.eventually.equal('deleted');
         });
     });
-
 });

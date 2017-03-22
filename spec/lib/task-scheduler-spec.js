@@ -71,14 +71,14 @@ describe('Task Scheduler', function() {
                     deregister: sinon.stub().resolves({})
                 }
             }
-        }
+        };
     }
 
     function mockGrpc() {
         return {
             start: sinon.stub().resolves({}),
             stop: sinon.stub().resolves({})
-        }
+        };
     }
 
     before(function() {

@@ -31,7 +31,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
                     deregister: sinon.stub().resolves({})
                 }
             }
-        }
+        };
     }
 
     before('Http.Services.Api.Workflows before', function() {
@@ -546,7 +546,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         };
         waterline.graphobjects.needOne.resolves(workflow);
         return workflowApiService.cancelTaskGraph('foo')
-        .then(function(result) {
+        .then(function() {
             expect(taskGraphProtocol.cancelTaskGraph).to.have.been.called.once;
         });
     });
@@ -566,7 +566,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         };
         waterline.graphobjects.needOne.resolves(workflow);
         return workflowApiService.deleteTaskGraph('foo')
-        .then(function(result) {
+        .then(function() {
             expect(store.deleteGraph).to.be.called.once;
         });
     });
