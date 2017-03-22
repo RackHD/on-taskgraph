@@ -79,15 +79,14 @@ describe('Http.Api.WorkflowTasks.2.0', function () {
 
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getTaskDefinitions.resolves(['task1', 'task2']);
-            return workflowTasksApi.workflowsGetAllTasks().should.eventually.deep.equal(['task1', 'task2']);
-
+            return workflowTasksApi.workflowsGetAllTasks()
+            .should.eventually.deep.equal(['task1', 'task2']);
         });
 
         it('should return an error if not found ', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.getTaskDefinitions.rejects('an error');
             return workflowTasksApi.workflowsGetAllTasks().should.be.rejectedWith('an error');
-
         });
     });
 

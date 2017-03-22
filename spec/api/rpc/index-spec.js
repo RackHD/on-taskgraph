@@ -7,11 +7,6 @@
 // Since sinon.stub() has no returnsArg method, add a Promise wrapper.
 // This will allow a stub to return a promise resolving to one of its call
 // arguments.
-function _stubPromiseWrapper(stub) {
-    return function() {
-        return Promise.resolve(stub.apply(sinon, arguments));
-    };
-}
 
 function _buildMock(methods) {
     return _.reduce(methods, function(obj, method) {
@@ -22,7 +17,6 @@ function _buildMock(methods) {
 
 describe('TaskGraph.TaskScheduler.Server', function () {
     var mockery;
-    var tasksApi;
 
     before('setup mockery', function () {
         this.timeout(10000);
@@ -86,7 +80,7 @@ describe('TaskGraph.TaskScheduler.Server', function () {
             grpc.Server.returns({ addProtoService: addProtoServiceSpy,
                                   bind: sinon.stub(),
                                   start: sinon.stub(),
-                                  forceShutdown: sinon.stub() })
+                                  forceShutdown: sinon.stub() });
             grpc.ServerCredentials = { createInsecure: sinon.stub() };
         });
         
@@ -120,7 +114,8 @@ describe('TaskGraph.TaskScheduler.Server', function () {
                 var callback = sinon.stub();
                 graphs.workflowsGetGraphs.resolves({foo: 'bar'});
                 return wrappedStub({ }, callback).then(function() {
-                    expect(callback).to.have.been.calledWith(null, { response: JSON.stringify({foo: 'bar'}) });
+                    expect(callback).to.have.been.calledWith(null, 
+                    		{ response: JSON.stringify({foo: 'bar'}) });
                 });
             });
         });

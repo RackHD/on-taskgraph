@@ -56,7 +56,8 @@ describe('Taskgraph.Api.Workflows.Rpc', function () {
         it("should get all graphs", function() {
             var graphsApiService = helper.injector.get('Http.Services.Api.Workflows');
             graphsApiService.getGraphDefinitions.resolves(['graph1', 'graph2']);
-            return graphsApi.workflowsGetGraphs().should.eventually.deep.equal([ 'graph1', 'graph2' ]);
+            return graphsApi.workflowsGetGraphs()
+            .should.eventually.deep.equal([ 'graph1', 'graph2' ]);
         });
 
         it("should reject if getGraphDefinitions rejects", function() {
