@@ -21,6 +21,8 @@ describe('Taskgraph.Services.Api.Workflows', function () {
     var TaskGraphRunner;
     var eventsProtocol;
     var taskGraphProtocol;
+    var graphId;
+    var nodeId;
 
     function mockConsul() {
         return {
@@ -53,6 +55,9 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         TaskGraphRunner = helper.injector.get('TaskGraph.Runner');
         eventsProtocol = helper.injector.get('Protocol.Events');
         taskGraphProtocol = helper.injector.get('Protocol.TaskGraphRunner');
+        var uuid = helper.injector.get('uuid');
+        graphId = uuid.v4();
+        nodeId = uuid.v4();
     });
 
     beforeEach(function() {
@@ -73,7 +78,10 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         waterline.taskdefinitions = {
             destroy: sinon.stub().resolves({ injectableName: 'test' })
         };
-        graph = { instanceId: 'testgraphid' };
+        graph = {
+            instanceId: graphId,
+            name: 'Graph.Test'
+        };
         task = { instanceId: 'testtaskid' };
         workflow = { id: 'testid', _status: 'cancelled' };
         graphDefinition = { injectableName: 'Graph.Test' };
@@ -106,6 +114,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         this.sandbox.stub(eventsProtocol, 'publishProgressEvent').resolves();
         this.sandbox.stub(taskGraphProtocol, 'runTaskGraph');
         this.sandbox.stub(taskGraphProtocol, 'cancelTaskGraph');
+        this.sandbox.stub(eventsProtocol, 'publishGraphStarted').resolves();
     });
 
     afterEach('Http.Services.Api.Profiles afterEach', function() {
@@ -118,9 +127,10 @@ describe('Taskgraph.Services.Api.Workflows', function () {
 
     it('should create and run a graph not against a node', function () {
         graph = {
-            instanceId: 'testgraphid',
+            instanceId: graphId,
+            _status: 'running',
             name: 'testGraph',
-            node: null,
+            node: nodeId,
             tasks: {
                 task1: {
                     state: 'pending'
@@ -134,7 +144,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         var data = {
             graphId: graph.instanceId,
             graphName: graph.name,
-            nodeId: null,
+            nodeId: nodeId,
             progress: {
                 maximum: 2,
                 value: 0,
@@ -161,15 +171,15 @@ describe('Taskgraph.Services.Api.Workflows', function () {
             expect(workflowApiService.createActiveGraph).to.have.been.calledWith(
                 graphDefinition, { test: 1 }, { test: 2 }, 'test'
             );
+            expect(eventsProtocol.publishGraphStarted).to.have.been.calledOnce;
+            expect(eventsProtocol.publishGraphStarted)
+                .to.have.been.calledWith(graph.instanceId, 'running', nodeId);
             expect(eventsProtocol.publishProgressEvent).to.have.been.calledOnce;
             expect(eventsProtocol.publishProgressEvent)
                 .to.have.been.calledWith(graph.instanceId, data);
             expect(workflowApiService.runTaskGraph).to.have.been.calledOnce;
             expect(workflowApiService.runTaskGraph)
                 .to.have.been.calledWith(graph.instanceId, 'test');
-            //expect(TaskGraphRunner.taskScheduler.evaluateGraphStream.onNext).to.have.been.calledOnce;
-            //expect(TaskGraphRunner.taskScheduler.evaluateGraphStream.onNext)
-            //    .to.have.been.calledWith({ graphId: graph.instanceId });
         });
     });
 
@@ -310,7 +320,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
                 context: { test: 2 },
                 domain: 'test'
             }, 'testnodeid')
-        ).to.eventually.match(/Unable to run multiple task graphs against a single target/);
+        ).to.be.rejectedWith(/Unable to run multiple task graphs against a single target/);
     });
 
     it('should throw error if the graph name is missing', function() {
@@ -320,8 +330,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
                 context: { test: 2 },
                 domain: 'test'
             }, 'testnodeid')
-        ).to.be.eventually.have.property('message').that.includes(
-            'Graph name is missing or in wrong format');
+        ).to.be.rejectedWith(Errors.BadRequestError, /Graph name is missing or in wrong format/)
     });
 
     it('should throw error if the graph name is in wrong format', function() {
@@ -333,8 +342,8 @@ describe('Taskgraph.Services.Api.Workflows', function () {
                     context: { test: 2 },
                     domain: 'test'
                 }, 'testnodeid')
-            ).to.eventually.have.property('message').that.includes(
-                'Graph name is missing or in wrong format');
+            ).to.be.rejectedWith(Errors.BadRequestError,
+                /Graph name is missing or in wrong format/);
         });
     });
 
@@ -347,7 +356,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
                 context: { test: 2 },
                 domain: 'test'
             }, 'testnodeid')
-        ).to.eventually.have.property('message').that.includes('Not Found');
+        ).to.be.rejectedWith(Errors.NotFoundError);
     });
 
     it('should return a BadRequestError on a graph creation/validation failure', function () {
@@ -366,8 +375,8 @@ describe('Taskgraph.Services.Api.Workflows', function () {
                 context: { test: 2 },
                 domain: 'test'
             }, 'testnodeid')
-        ).to.eventually.have.property('message').that.includes(
-                'The task label \'duplicate\' is used more than once');
+        ).to.be.rejectedWith(Errors.BadRequestError,
+            /The task label \'duplicate\' is used more than once/);
     });
 
     it('should return a NotFoundError if the node was not found', function () {
@@ -588,9 +597,9 @@ describe('Taskgraph.Services.Api.Workflows', function () {
         });
     });
     
-    it('should get all workflows', function() {
+    it('should throw error getting all workflows', function() {
         waterline.graphobjects.find.rejects('an error');
         return expect(workflowApiService.getAllWorkflows())
-            .to.eventually.deep.equal({err: new Error('an error')});
+            .to.be.rejectedWith({err: new Error('an error')});
     });
 });
