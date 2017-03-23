@@ -19,7 +19,7 @@ describe('Http.Api.WorkflowTasks.2.0', function () {
                         }
                         return cb;
                 },
-                addLinksHeader: function(req,res,collection,query) {
+                addLinksHeader: function() {
                         return "data";
                 }
             }, 'Http.Services.Swagger'),

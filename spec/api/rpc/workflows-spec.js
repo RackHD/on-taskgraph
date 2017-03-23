@@ -19,7 +19,7 @@ describe('Http.Api.Workflows.2.0', function () {
                     }
                     return cb;
                 },
-                addLinksHeader: function(req,res,collection,query) {
+                addLinksHeader: function() {
                     return "data";
                 }
             }, 'Http.Services.Swagger'),
@@ -121,8 +121,8 @@ describe('Http.Api.Workflows.2.0', function () {
         it('should cancel a task, with proper command', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.cancelTaskGraph.resolves('cancelled workflow');
-            return workflowsApi.workflowsAction({ request: { identifier: '123' } ,
-                request: { command: 'cancel' } })
+            return workflowsApi.workflowsAction({ request: { identifier: '123' ,
+                  command: 'cancel' } })
                 .should.eventually.equal('cancelled workflow');
         });
     });
@@ -136,5 +136,4 @@ describe('Http.Api.Workflows.2.0', function () {
                 .should.eventually.equal('deleted workflow instance');
         });
     });
-
 });

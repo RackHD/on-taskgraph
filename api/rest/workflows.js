@@ -34,7 +34,7 @@ var workflowsGet = controller(function(req, res) {
     }
 
     return workflowApiService.getAllWorkflows(query, options)
-    .tap(function(workflows) {
+    .tap(function() {
         return addLinks(req, res, 'graphobjects', query);
     });
 });

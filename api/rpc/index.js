@@ -46,7 +46,7 @@ function schedulerServerFactory(
                 workflowsGetGraphs: grpcWrapper(workflowGraphs.workflowsGetGraphs),
                 workflowsGetGraphsByName: grpcWrapper(workflowGraphs.workflowsGetGraphsByName),
                 workflowsPutGraphs: grpcWrapper(workflowGraphs.workflowsPutGraphs),
-                workflowsDeleteGraphsByName: grpcWrapper(workflowGraphs.workflowsDeleteGraphsByName),
+                workflowsDeleteGraphsByName: grpcWrapper(workflowGraphs.workflowsDeleteGraphsByName), // jshint ignore:line
                 workflowsGet: grpcWrapper(workflows.workflowsGet),
                 workflowsPost: grpcWrapper(workflows.workflowsPost),
                 workflowsGetByInstanceId: grpcWrapper(workflows.workflowsGetByInstanceId),

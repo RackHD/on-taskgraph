@@ -19,7 +19,7 @@ describe('Taskgraph.Api.WorkflowTasks.Rpc', function () {
                     }
                     return cb;
                 },
-                addLinksHeader: function(req,res,collection,query) {
+                addLinksHeader: function() {
                     return "data";
                 }
             }, 'Http.Services.Swagger'),

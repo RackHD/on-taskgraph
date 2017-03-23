@@ -19,7 +19,7 @@ var getTasksById = controller( function (req){
     return Promise.try(function() {
         return tasksApiService.getTasks(req.swagger.params.identifier.value);
     })
-    .catch(function (err) {
+    .catch(function () {
         throw new Errors.NotFoundError('Not Found');
     });
 });
