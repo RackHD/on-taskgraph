@@ -5,6 +5,7 @@
 var injector = require('../../index.js').injector;
 var workflowApiService = injector.get('Http.Services.Api.Workflows');
 var _ = injector.get('_');    // jshint ignore:line
+var Promise = injector.get('Promise');
 
 var workflowsGetGraphs = function() {
     return workflowApiService.getGraphDefinitions();
