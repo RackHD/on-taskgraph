@@ -26,7 +26,12 @@ describe('TaskGraph.TaskScheduler.Server', function () {
             'workflowsGetGraphs',
             'workflowsGetGraphsByName',
             'workflowsPutGraphs',
-            'workflowsDeleteGraphs',
+            'workflowsDeleteGraphs'
+        ];
+        var tasksMethods = [
+            'getBootstrap',
+            'getTaskById',
+            'postTaskById'
         ];
         var workflowsMethods = [
             'workflowsGet',
@@ -53,6 +58,7 @@ describe('TaskGraph.TaskScheduler.Server', function () {
         mockery = require('mockery');
         mockery.registerMock('./workflowGraphs.js', _buildMock(workflowsGraphMethods));
         mockery.registerMock('./workflowTasks.js', _buildMock(workflowsTasksMethods));
+        mockery.registerMock('./tasks.js', _buildMock(tasksMethods));
         mockery.registerMock('./workflows.js', _buildMock(workflowsMethods));
         mockery.registerMock('grpc', _buildMock(gprcMethods));
         mockery.enable({ useCleanCache: true, warnOnUnregistered: false });

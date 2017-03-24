@@ -37,12 +37,16 @@ function schedulerServerFactory(
             var grpc = require('grpc');
             var schedulerProto = grpc.load(self.options.protoFile).scheduler;
 
+            var tasks = require('./tasks.js');
             var workflowGraphs = require('./workflowGraphs.js');
             var workflows = require('./workflows.js');
             var workflowTasks = require('./workflowTasks.js');
 
             self.gRPC = new grpc.Server();
             self.gRPC.addProtoService(schedulerProto.Scheduler.service, {
+                getBootstrap: grpcWrapper(tasks.getBootstrap),
+                getTasksById: grpcWrapper(tasks.getTasksById),
+                postTaskById: grpcWrapper(tasks.postTaskById),
                 workflowsGetGraphs: grpcWrapper(workflowGraphs.workflowsGetGraphs),
                 workflowsGetGraphsByName: grpcWrapper(workflowGraphs.workflowsGetGraphsByName),
                 workflowsPutGraphs: grpcWrapper(workflowGraphs.workflowsPutGraphs),
@@ -88,7 +92,7 @@ function schedulerServerFactory(
             })
             .catch(function(err) {
                 callback(err);
-            });
+            })
         };
     }
 
