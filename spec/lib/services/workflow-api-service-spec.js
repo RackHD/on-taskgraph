@@ -330,7 +330,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
                 context: { test: 2 },
                 domain: 'test'
             }, 'testnodeid')
-        ).to.be.rejectedWith(Errors.BadRequestError, /Graph name is missing or in wrong format/)
+        ).to.be.rejectedWith(Errors.BadRequestError, /Graph name is missing or in wrong format/);
     });
 
     it('should throw error if the graph name is in wrong format', function() {

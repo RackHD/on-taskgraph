@@ -10,7 +10,7 @@ describe('Taskgraph.Api.Tasks.Rpc', function () {
     before('setup mockery', function () {
         this.timeout(10000);
 
-        // setup injector with mock override injecatbles
+        // setup injector with mock override injectables
         var injectables = [
             helper.di.simpleWrapper({
                 controller: function(opts, cb) {
@@ -22,8 +22,10 @@ describe('Taskgraph.Api.Tasks.Rpc', function () {
             }, 'Http.Services.Swagger'),
             helper.di.simpleWrapper({
                 getBootstrap: sinon.stub(),
-                getTasks: sinon.stub(),
-                postTasksById: sinon.stub()
+                getTasksById: sinon.stub(),
+                postTasksById: sinon.stub(),
+                activeTaskExists: sinon.stub()
+
             }, 'Http.Services.Api.Tasks')
         ];
         helper.setupInjector(injectables);
@@ -46,7 +48,8 @@ describe('Taskgraph.Api.Tasks.Rpc', function () {
     describe('GET /tasks/:id', function () {
         it("should get a task by id", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
-            tasksApiService.getTasks.resolves('a task');
+            tasksApiService.activeTaskExists.resolves('true');
+            tasksApiService.getTasksById.resolves('a task');
             return tasksApi.getTasksById({ request: { identifier: '123' } })
                 .should.eventually.equal('a task');
         });
@@ -54,14 +57,14 @@ describe('Taskgraph.Api.Tasks.Rpc', function () {
         it("should reject with not found if getTasks rejects", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
 
-            tasksApiService.getTasks.rejects('Not Found');
+            tasksApiService.getTasksById.rejects('Not Found');
             return tasksApi.getTasksById({ request: { identifier: '123' } })
                 .should.be.rejectedWith('Not Found');
         });
 
         it("should reject with not found if req is invalid", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
-            tasksApiService.getTasks.resolves();
+            tasksApiService.getTasksById.resolves();
             return tasksApi.getTasksById(undefined)
                 .should.be.rejectedWith('Not Found');
         });
@@ -71,16 +74,16 @@ describe('Taskgraph.Api.Tasks.Rpc', function () {
         it("should get bootstrap", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
             tasksApiService.getBootstrap.resolves('bootstrap');
-            return tasksApi.getBootstrap( { request: { scope: '' } }, { request: { ipAddress: '123' } },
-                { request: { macAddress: '10.20.30' } } )
+            return tasksApi.getBootstrap( { request: { scope: '' } },
+                { request: { ipAddress: '123' } }, { request: { macAddress: '10.20.30' } } )
                 .should.eventually.equal('bootstrap');
         });
 
         it("should reject if getBootstrap rejects", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
             tasksApiService.getBootstrap.rejects('No Bootstrap');
-            return tasksApi.getBootstrap( { request: { scope: '' } }, { request: { ipAddress: '123' } },
-                { request: { macAddress: '10.20.30' } } )
+            return tasksApi.getBootstrap( { request: { scope: '' } },
+                { request: { ipAddress: '123' } }, { request: { macAddress: '10.20.30' } } )
                 .should.be.rejectedWith('No Bootstrap');
         });
 
@@ -110,19 +113,18 @@ describe('Taskgraph.Api.Tasks.Rpc', function () {
         it("should post a task", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
             tasksApiService.postTasksById = _stubPromiseWrapper(sinon.stub().returnsArg(1));
-            return tasksApi.postTaskById({ request: { identifier: '123' },
-                request: { config: '{ "foo": "bar" }' } })
+            return tasksApi.postTaskById({ request: { identifier: '123',
+                config: '{ "foo": "bar" }' } })
                 .then(function(body) {
                     expect(body).to.deep.equal({ foo: 'bar' });
                 });
         });
 
-
         it("should reject if postTaskById rejects", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
             tasksApiService.postTasksById.rejects('post error');
-            return tasksApi.postTaskById({ request: { identifier: '123' },
-                request: { config: '{ "foo": "bar" }' } })
+            return tasksApi.postTaskById({ request: { identifier: '123' ,
+                config: '{ "foo": "bar" }' } })
                 .should.be.rejectedWith('post error');
 
         });

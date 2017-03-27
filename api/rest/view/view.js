@@ -1,7 +1,7 @@
 // Copyright 2015, EMC, Inc.
-var di = require('di');
-
 'use strict';
+
+var di = require('di');
 
 module.exports = viewServiceFactory;
 

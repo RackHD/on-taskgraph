@@ -91,8 +91,8 @@ taskGraphRunner.start(options)
                  };
                  server = http.createServer(app);
                  server.listen(config.httpPort, config.hostname, function () {
-                     console.log('Your server is listening on port %d ', config.httpPort);
-                     console.log('Swagger-ui is available on http://%s:%d/docs', config.hostname,
+                     logger.info('Your server is listening on port %d ', config.httpPort);
+                     logger.info('Swagger-ui is available on http://%s:%d/docs', config.hostname,
                                                                                  config.httpPort);
                  });
              });

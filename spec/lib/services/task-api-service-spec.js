@@ -91,6 +91,7 @@ describe('Taskgraph.Services.Api.Tasks', function () {
 
         this.sandbox.stub(taskProtocol, 'activeTaskExists');
         this.sandbox.stub(taskProtocol, 'respondCommands');
+        this.sandbox.stub(taskProtocol, 'requestCommands');
         this.sandbox.stub(lookupService, 'ipAddressToMacAddress');
         this.sandbox.stub(templates, 'get');
         this.sandbox.stub(env, 'get');
@@ -114,15 +115,16 @@ describe('Taskgraph.Services.Api.Tasks', function () {
 
     it('should get tasks by id', function () {
         taskProtocol.activeTaskExists.resolves(task);
+        taskProtocol.requestCommands.resolves(task);
 
-        return taskApiService.getTasks('testtaskid')
+        return taskApiService.getTasksById('testtaskid')
             .then(function(task) {
                 expect(task).to.deep.equal({instanceId: 'testtaskid'});
             });
     });
 
     it('should throw error for undefined taskId', function(){
-       return taskApiService.getTasks(undefined)
+       return taskApiService.getTasksById(undefined)
            .should.be.rejectedWith(/undefined/);
 
     });
@@ -147,14 +149,8 @@ describe('Taskgraph.Services.Api.Tasks', function () {
         waterline.nodes.findByIdentifier.resolves({id: 'testnodeid'});
         templates.get.resolves({ contents: "testContents" } );
         lookupService.ipAddressToMacAddress.resolves('1.2.3.4');
-        var res = { locals:
-            {
-                scope: ['test'],
-                ipAddress: '1.2.3.4'
-            }
-        };
 
-        return taskApiService.getBootstrap({}, res, 'testMacAddress')
+        return taskApiService.getBootstrap(['test'], '1.2.3.4', 'testMacAddress')
             .then(function() {
                 expect(templates.get).to.have.been.calledOnce;
                 expect(templates.get).to.have.been.calledWith('bootstrap.js', ['test']);
