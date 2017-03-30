@@ -10,15 +10,19 @@ di.annotate(schedulerServerFactory,
     new di.Inject(
         'Assert',
         '_',
-        'Promise'
+        'Promise',
+        'Logger'
     )
 );
 
 function schedulerServerFactory(
     assert,
     _,
-    Promise
+    Promise,
+    Logger
 ) {
+
+    var logger = Logger.initialize(schedulerServerFactory);
 
     function SchedulerServer(options) {
         this.options = options || {
@@ -66,7 +70,7 @@ function schedulerServerFactory(
                 self.options.hostname + (self.options.port ? ':' + self.options.port : ''),
                 grpc.ServerCredentials.createInsecure());
             self.gRPC.start();
-            console.log('gRPC is available on grpc://' +
+            logger.info('gRPC is available on grpc://' +
                 (self.options.port ? self.options.hostname + ':' + self.options.port : ''));
         });
     };
@@ -92,7 +96,7 @@ function schedulerServerFactory(
             })
             .catch(function(err) {
                 callback(err);
-            })
+            });
         };
     }
 
