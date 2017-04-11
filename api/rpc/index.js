@@ -1,5 +1,4 @@
-// Copyright 2016, EMC, Inc.
-
+// Copyright © 2017 Dell Inc. or its subsidiaries. All Rights Reserved
 'use strict';
 
 var di = require('di');
@@ -71,7 +70,7 @@ function schedulerServerFactory(
                 grpc.ServerCredentials.createInsecure());
             self.gRPC.start();
             logger.info('gRPC is available on grpc://' +
-                (self.options.port ? self.options.hostname + ':' + self.options.port : ''));
+                (self.options.port ? self.options.hostname + ':' + self.options.port : self.options.hostname));
         });
     };
 
