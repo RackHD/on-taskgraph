@@ -14,6 +14,9 @@ describe('Task Scheduler', function() {
     var Constants;
     var Promise;
     var Rx;
+    var schedulerServer;
+    var grpc;
+    var configuration;
 
     /*
      * Helper methods to test inner stream creation methods.
@@ -59,6 +62,24 @@ describe('Task Scheduler', function() {
         };
     };
 
+    function mockConsul() {
+        return {
+            agent: {
+                service: {
+                    list: sinon.stub().resolves({}),
+                    register: sinon.stub().resolves({}),
+                    deregister: sinon.stub().resolves({})
+                }
+            }
+        };
+    }
+
+    function mockGrpc() {
+        return {
+            start: sinon.stub().resolves({}),
+            stop: sinon.stub().resolves({})
+        };
+    }
 
     before(function() {
         var di = require('di');
@@ -70,7 +91,10 @@ describe('Task Scheduler', function() {
             tasks.injectables,
             require('../../lib/task-scheduler'),
             require('../../lib/lease-expiration-poller'),
-            require('../../lib/rx-mixins')
+            require('../../lib/rx-mixins'),
+            require('../../api/rpc/index.js'),
+            helper.di.simpleWrapper(mockConsul, 'consul'),
+            helper.di.simpleWrapper(mockGrpc, 'grpc')
         ]));
         assert = helper.injector.get('Assert');
         Constants = helper.injector.get('Constants');
@@ -83,7 +107,15 @@ describe('Task Scheduler', function() {
         store = helper.injector.get('TaskGraph.Store');
         Rx = helper.injector.get('Rx');
         Promise = helper.injector.get('Promise');
+        schedulerServer = helper.injector.get('TaskGraph.TaskScheduler.Server');
+        grpc = helper.injector.get('grpc')();
         this.sandbox = sinon.sandbox.create();
+        configuration = helper.injector.get('Services.Configuration');
+        configuration.set('consulUrl', 'consol://localhost:8500');
+    });
+
+    after(function() {
+        configuration.set('consulUrl', undefined);
     });
 
     beforeEach(function() {
@@ -96,7 +128,9 @@ describe('Task Scheduler', function() {
             start: sinon.stub(),
             stop: sinon.stub()
         });
-    });
+        this.sandbox.stub(schedulerServer.prototype, 'start').resolves({});
+        this.sandbox.stub(schedulerServer.prototype, 'stop').resolves({});
+   });
 
     afterEach(function() {
         this.sandbox.restore();
@@ -168,6 +202,7 @@ describe('Task Scheduler', function() {
             this.sandbox.stub(taskScheduler, 'subscribeRunTaskGraph').resolves(stub);
             this.sandbox.stub(taskScheduler, 'subscribeTaskFinished').resolves(stub);
             this.sandbox.stub(taskScheduler, 'subscribeCancelGraph').resolves(stub);
+
             return taskScheduler.start()
             .then(function() {
                 expect(taskScheduler.running).to.equal(true);
@@ -330,6 +365,7 @@ describe('Task Scheduler', function() {
 
                 taskScheduler = TaskScheduler.create();
                 taskScheduler.running = true;
+                taskScheduler.gRPC = grpc;
 
                 this.sandbox.stub(taskScheduler, 'findReadyTasks');
                 this.sandbox.stub(taskScheduler, 'handleScheduleTaskEvent');
@@ -446,6 +482,7 @@ describe('Task Scheduler', function() {
 
             taskScheduler = TaskScheduler.create();
             taskScheduler.running = true;
+            taskScheduler.gRPC = grpc;
 
             observable = taskScheduler.createUpdateTaskDependenciesSubscription(
                 taskHandlerStream,
@@ -547,6 +584,7 @@ describe('Task Scheduler', function() {
             checkGraphFinishedStream = new Rx.Subject();
             taskScheduler = TaskScheduler.create();
             taskScheduler.running = true;
+            taskScheduler.gRPC = grpc;
             this.sandbox.stub(taskScheduler, 'checkGraphSucceeded');
             this.sandbox.stub(taskScheduler, 'failGraph');
         });

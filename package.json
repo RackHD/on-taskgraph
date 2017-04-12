@@ -4,6 +4,7 @@
   "description": "",
   "main": "lib",
   "scripts": {
+    "install": "./scripts/post-install.sh",
     "doc": "jsdoc lib -r -d docs",
     "test": "mocha $(find spec -name '*-spec.js') -R spec --require spec/helper.js"
   },
@@ -19,14 +20,22 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
+    "consul": "^0.26.0",
     "di": "git+https://github.com/RackHD/di.js.git",
     "dot-object": "^0.6.0",
+    "ejs": "~2.5.2",
+    "es6-shim": "^0.22.2",
+    "express": "~4.13.4",
+    "grpc": "^1.0.0",
     "lodash": "^3.10.1",
     "lru-cache": "^2.5.0",
+    "minimist": "^1.2.0",
     "node-uuid": "^1.4.2",
     "on-core": "git+https://github.com/RackHD/on-core.git",
     "on-tasks": "git+https://github.com/RackHD/on-tasks.git",
-    "rx": "^2.3.22"
+    "rx": "^2.3.22",
+    "swagger-tools": "0.8.*",
+    "tv4": "~1.2.7"
   },
   "devDependencies": {
     "chai": "^2.0.0",
@@ -43,6 +52,7 @@
     "jsdoc": "^3.3.0-alpha13",
     "jshint": "^2.5.11",
     "mocha": "^2.1.0",
+    "mockery": "^2.0.0",
     "sinon": "^1.12.2",
     "sinon-as-promised": "^2.0.3",
     "sinon-chai": "^2.7.0",

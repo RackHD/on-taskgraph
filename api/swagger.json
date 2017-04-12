@@ -1,0 +1,902 @@
+{
+  "basePath": "/api/2.0",
+  "consumes": [
+    "application/json"
+  ],
+  "definitions": {
+    "Error": {
+      "properties": {
+        "code": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "fields": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "ErrorResponse": {
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "VersionsResponse": {
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ]
+    },
+    "Action": {
+      "description": "Action object",
+      "properties": {
+        "command": {
+          "description": "Command to execute",
+          "enum": [
+            "cancel"
+          ],
+          "type": "string"
+        },
+        "options": {
+          "description": "Command options object",
+          "type": "object"
+        }
+      },
+      "required": [
+        "command"
+      ]
+    },
+    "GenericObj": {
+      "type": "object"
+    },
+    "PostTasks": {
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/definitions/WorkflowTask"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "PostWorkflow": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "options": {
+          "properties": {
+            "default": {
+              "properties": {
+                "graphOptions": {
+                  "type": "object"
+                },
+                "nodeId": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "WorkflowGraph": {
+      "properties": {
+        "friendlyName": {
+          "type": "string"
+        },
+        "injectableName": {
+          "type": "string"
+        },
+        "options": {
+          "type": "object"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/definitions/WorkflowGraphTask"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "WorkflowGraphTask": {
+      "properties": {
+        "ignoreFailure": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        },
+        "taskName": {
+          "type": "string"
+        },
+        "waitOn": {
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "WorkflowTask": {
+      "properties": {
+        "friendlyName": {
+          "type": "string"
+        },
+        "implementsTask": {
+          "type": "string"
+        },
+        "injectableName": {
+          "type": "string"
+        },
+        "options": {
+          "type": "object"
+        },
+        "properties": {
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "info": {
+    "title": "onTaskClient",
+    "version": "0.0.1"
+  },
+  "paths": {
+    "/tasks/bootstrap.js": {
+      "get": {
+        "description": "Used internally by the system - get tasks bootstrap.js\n",
+        "operationId": "getBootstrap",
+        "parameters": [
+          {
+            "description": "Query string containing the mac address",
+            "in": "query",
+            "name": "macAddress",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved bootstrap.js",
+            "schema": {
+              "$ref": "#/definitions/VersionsResponse"
+            }
+          },
+          "default": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "summary": "Get tasks bootstrap.js\n",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "x-swagger-router-controller": "tasks"
+    },
+    "/tasks/{identifier}": {
+      "get": {
+        "description": "Get the specified task.\n",
+        "operationId": "getTasksById",
+        "parameters": [
+          {
+            "description": "The task identifier\n",
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved a single task\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "There specified task was not found\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get a task\n",
+        "tags": [
+          "tasks"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read"
+        ]
+      },
+      "post": {
+        "description": "Start the specified task\n",
+        "operationId": "postTaskById",
+        "parameters": [
+          {
+            "description": "The task identifier\n",
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The obm settings to apply\n",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PostTasks"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully posted the specified task\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The specified task was not found\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Post a task\n",
+        "tags": [
+          "tasks"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write"
+        ],
+        "x-view": "tasks.2.0.json"
+      },
+      "x-swagger-router-controller": "tasks"
+    },
+    "/workflows": {
+      "get": {
+        "description": "Get list workflow that have been run, or are currently running.\n",
+        "operationId": "workflowsGet",
+        "parameters": [
+          {
+            "description": "Query string to search for specific workflow properties\n",
+            "in": "query",
+            "name": "active",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "description": "Query string specifying properties to search for",
+            "in": "query",
+            "name": "$skip",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "description": "Query string specifying properties to search for",
+            "in": "query",
+            "name": "$top",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfull retrieved workflows\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get a list of workflow instances\n",
+        "tags": [
+          "workflows"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "workflowsRead"
+        ],
+        "x-view": "workflows.2.0.json"
+      },
+      "post": {
+        "description": "Run a workflow by specifying a workflow graph injectable name.\nThe workflow is not associated with a node.\n",
+        "operationId": "workflowsPost",
+        "parameters": [
+          {
+            "description": "The body must contain the name property with the\nvalue set to the injectable name of the workflow\ngraph to run\n",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/PostWorkflow"
+            }
+          },
+          {
+            "description": "pass node id",
+            "in": "query",
+            "name": "nodeId",
+            "required": false,
+            "type": "string"
+          },
+
+          {
+            "description": "Optionally specify the injectable name of the workflow graph to run",
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully posted the workflow\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Workflow was not run\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Upload failed",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Run a workflow\n",
+        "tags": [
+          "workflows"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "workflowsWrite"
+        ]
+      },
+      "x-swagger-router-controller": "workflows"
+    },
+    "/workflows/graphs": {
+      "get": {
+        "description": "Get a list of all workflow graphs available to run.\n",
+        "operationId": "workflowsGetGraphs",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all workflow graphs\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get list of workflow graphs\n",
+        "tags": [
+          "graphs"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "workflowsRead"
+        ],
+        "x-view": "workflowGraphs.2.0.json"
+      },
+      "put": {
+        "description": "Create or modify a workflow graph in the graph library.\n",
+        "operationId": "workflowsPutGraphs",
+        "parameters": [
+          {
+            "description": "The workflow graph properties",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/WorkflowGraph"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully updated workflow graph\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Workflow graph was not updated\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Upload failed",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Put a graph\n",
+        "tags": [
+          "graphs"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "workflowsWrite"
+        ],
+        "x-swagger-schema": "workflowGraphs.2.0.json#/definitions/workflowGraphsPut"
+      },
+      "x-swagger-router-controller": "workflowGraphs"
+    },
+    "/workflows/graphs/{injectableName}": {
+      "delete": {
+        "description": "Delete the workflow graph with the specified value of the injectableName property.\n",
+        "operationId": "workflowsDeleteGraphsByName",
+        "parameters": [
+          {
+            "description": "The workflow graph injectable name\n",
+            "in": "path",
+            "name": "injectableName",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the specified workflow graph\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The graph with the specified injectable name was not found\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Delete a workflow graph\n",
+        "tags": [
+          "graphs"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "workflowsRemove"
+        ]
+      },
+      "get": {
+        "description": "Get the workflow graph with the specified value of the injectableName property.\n",
+        "operationId": "workflowsGetGraphsByName",
+        "parameters": [
+          {
+            "description": "The workflow graph injectable name\n",
+            "in": "path",
+            "name": "injectableName",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the workflow graph with the specified injectable name\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get a workflow graph\n",
+        "tags": [
+          "graphs"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "workflowsRead"
+        ],
+        "x-view": "workflowGraphs.2.0.json"
+      },
+      "x-swagger-router-controller": "workflowGraphs"
+    },
+    "/workflows/tasks": {
+      "get": {
+        "description": "Get a list of all workflow tasks that can be added to a workflow.\n",
+        "operationId": "workflowsGetAllTasks",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved workflow tasks\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get list of workflow tasks\n",
+        "tags": [
+          "tasks"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "workflowsRead"
+        ],
+        "x-view": "workflowTasks.2.0.json"
+      },
+      "put": {
+        "description": "Create or update a workflow task in the library of tasks.\n",
+        "operationId": "workflowsPutTask",
+        "parameters": [
+          {
+            "description": "The workflow task properties",
+            "in": "body",
+            "name": "body",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/WorkflowTask"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully updated workflow task\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Put workflow task failed\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Upload failed",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Put a workflow task\n",
+        "tags": [
+          "tasks"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "workflowsWrite"
+        ]
+      },
+      "x-swagger-router-controller": "workflowTasks"
+    },
+    "/workflows/tasks/{injectableName}": {
+      "delete": {
+        "description": "Delete the workflow task with the specified value of the injectableName property.\n",
+        "operationId": "workflowsDeleteTasksByName",
+        "parameters": [
+          {
+            "description": "The task injectable name\n",
+            "in": "path",
+            "name": "injectableName",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the specified task\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The task with the specified injectable name was not found\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Delete a workflow task\n",
+        "tags": [
+          "tasks"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "workflowsRemove"
+        ]
+      },
+      "get": {
+        "description": "Get the task with the specified value of the injectableName property.\n",
+        "operationId": "workflowsGetTasksByName",
+        "parameters": [
+          {
+            "description": "The task injectable name\n",
+            "in": "path",
+            "name": "injectableName",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the task with the specified injectable name\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get a workflow task\n",
+        "tags": [
+          "tasks"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "workflowsRead"
+        ],
+        "x-view": "workflowTasks.2.0.json"
+      },
+      "x-swagger-router-controller": "workflowTasks"
+    },
+    "/workflows/{identifier}": {
+      "delete": {
+        "description": "Delete the workflow with the specified instance identifier.\n",
+        "operationId": "workflowsDeleteByInstanceId",
+        "parameters": [
+          {
+            "description": "The workflow instance identifier\n",
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the specified workflow\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The specified workflow was not found\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Delete a workflow\n",
+        "tags": [
+          "workflows"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "workflowsRemove"
+        ]
+      },
+      "get": {
+        "description": "Get the workflow with the specified instance identifier.\n",
+        "operationId": "workflowsGetByInstanceId",
+        "parameters": [
+          {
+            "description": "The workflow instance identifier\n",
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the specified workflow\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get a workflow\n",
+        "tags": [
+          "workflows"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "workflowsRead"
+        ],
+        "x-view": "workflows.2.0.json"
+      },
+      "x-swagger-router-controller": "workflows"
+    },
+    "/workflows/{identifier}/action": {
+      "put": {
+        "description": "Perform the specified action on the workflow with the specified\ninstance identifier. Currently, the cancel action is supported.\n",
+        "operationId": "workflowsAction",
+        "parameters": [
+          {
+            "description": "The workflow instance identifier\n",
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The action property with the value of the desired action",
+            "in": "body",
+            "name": "action",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Action"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successfully performed the action on the specified workflow\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The workflow with the identifier was not found\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Perform an action on a workflow\n",
+        "tags": [
+          "workflows"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "workflowsModify"
+        ]
+      },
+      "x-swagger-router-controller": "workflows"
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "tags": [
+    {
+      "description": "RackHD 2.0 API",
+      "name": "/api/2.0"
+    }
+  ]
+}
