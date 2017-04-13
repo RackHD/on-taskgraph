@@ -516,7 +516,6 @@ describe("Task Runner", function() {
                         taskAndGraphId
                     ]));
 
-
             streamOnCompletedWrapper(taskStream, done, function() {
                 expect(runner.handleStreamError).to.be.called.once;
                 expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
