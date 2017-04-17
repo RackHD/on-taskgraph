@@ -8,7 +8,7 @@ WORKDIR /RackHD/on-taskgraph
 RUN mkdir -p ./node_modules \
   && ln -s /RackHD/on-core ./node_modules/on-core \
   && ln -s /RackHD/on-core/node_modules/di ./node_modules/di \
-  && npm install --ignore-scripts --production \
+  && npm install --production \
   && apt-get install -y libsnmp-dev snmp-mibs-downloader snmp \
   && download-mibs
 
