@@ -4,6 +4,7 @@
 
 var di = require('di'),
     _ = require('lodash'),
+    consul = require('consul'),
     core = require('on-core')(di),
     helper = core.helper,
     injector = new di.Injector(
@@ -22,7 +23,7 @@ var di = require('di'),
             helper.requireGlob(__dirname + '/lib/services/**/*.js'),
             helper.requireGlob(__dirname + '/api/rest/view/**/*.js'),
             require('./api/rpc/index.js'),
-            helper.requireWrapper('consul', 'consul')
+            helper.simpleWrapper(consul, 'consul')
         ])
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
