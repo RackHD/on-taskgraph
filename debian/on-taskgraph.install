@@ -2,5 +2,6 @@ node_modules /var/renasar/on-taskgraph
 lib /var/renasar/on-taskgraph
 api /var/renasar/on-taskgraph
 data /var/renasar/on-taskgraph
+scheduler.proto /var/renasar/on-taskgraph
 index.js /var/renasar/on-taskgraph
 commitstring.txt /var/renasar/on-taskgraph
