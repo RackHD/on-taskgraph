@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Dell-SMI/on-taskgraph.git"
+    "url": "https://github.com/RackHD/on-taskgraph.git"
   },
   "keywords": [
     "task",
@@ -31,8 +31,8 @@
     "lru-cache": "^2.5.0",
     "minimist": "^1.2.0",
     "node-uuid": "^1.4.2",
-    "on-core": "git+https://github.com/Dell-SMI/on-core.git",
-    "on-tasks": "git+https://github.com/Dell-SMI/on-tasks.git",
+    "on-core": "git+https://github.com/RackHD/on-core.git",
+    "on-tasks": "git+https://github.com/RackHD/on-tasks.git",
     "rx": "^2.3.22",
     "swagger-tools": "0.8.*",
     "tv4": "~1.2.7"

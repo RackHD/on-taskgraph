@@ -1,6 +1,6 @@
 # Copyright 2016, EMC, Inc.
 
-FROM docker-registry.smi.delllabs.net/dell_smi/on-tasks
+FROM rackhd/on-tasks:devel
 
 COPY . /RackHD/on-taskgraph/
 WORKDIR /RackHD/on-taskgraph
