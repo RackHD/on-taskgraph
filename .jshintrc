@@ -1,25 +1,24 @@
 {
-    "maxerr"        : 50,     //Max errors before it fails the build
+    "maxerr"        : 50,
 
-    //Enforcing
     "bitwise" : true,
-    "camelcase" : true,
+    "camelcase" : false,
     "curly" : true,
     "es3" : false,
     "eqeqeq" : true,
     "forin" : true,
     "freeze" : true,
-    "immed" : true,
-    "indent" : 4,
-    "latedef" : "nofunc",        //allows function definitions to be ignored
+    "immed" : false,
+    "indent" : false,
+    "latedef" : "nofunc",
     "maxcomplexity" : false,
     "maxdepth" : false,
-    "maxlen" : 100,
+    "maxlen" : false,
     "maxparams" : false,
     "maxstatements" : false,
-    "newcap" : true,
+    "newcap" : false,
     "noarg" : true,
-    "noempty" : true,
+    "noempty" : false,
     "nonbsp" : true,
     "nonew" : true,
     "plusplus" : true,
@@ -29,37 +28,34 @@
     "undef" : true,
     "unused" : true,
 
-    //Relaxing
     "asi" : false,
     "boss" : false,
     "debug" : false,
     "eqnull" : false,
     "es5" : false,
-    "esnext" : false,
+    "esnext" : true,
     "moz" : false,
     "evil" : false,
-    "expr" : true,     // true: Tolerate `ExpressionStatement` as Programs
+    "expr" : true,
     "funcscope" : false,
     "iterator" : false,
     "lastsemic" : false,
-    "laxbreak" : false,
-    "laxcomma" : false,
+    "laxbreak" : true,
+    "laxcomma" : true,
     "loopfunc" : false,
-    "multistr" : false,
+    "multistr" : true,
     "noyield" : false,
     "notypeof" : false,
     "proto" : false,
     "scripturl" : false,
     "shadow" : false,
-    "sub" : false,
+    "sub" : true,
     "supernew" : false,
     "validthis" : false,
 
-    // Environments
     "node": true,
     "mocha": true,
 
-    //Custom Globals
     "predef" : [
         "_",
         "chai",

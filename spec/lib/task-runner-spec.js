@@ -1,10 +1,11 @@
-// Copyright 2016, EMC, Inc.
+// Copyright © 2016-2017 Dell Inc. or its subsidiaries.  All Rights Reserved.
 
 'use strict';
 
 describe("Task Runner", function() {
     var di = require('di');
     var core = require('on-core')(di, __dirname);
+    var graphProgressService;
 
     var runner,
     Task = {
@@ -68,6 +69,7 @@ describe("Task Runner", function() {
         Constants = helper.injector.get('Constants');
         assert = helper.injector.get('Assert');
         TaskRunner = helper.injector.get('TaskGraph.TaskRunner');
+        graphProgressService = helper.injector.get('Services.GraphProgress');
         this.sandbox = sinon.sandbox.create();
     });
 
@@ -193,6 +195,18 @@ describe("Task Runner", function() {
             });
         });
 
+        it('should filter when graph not found', function(done) {
+            runner.running = true;
+            var taskStream = runner.createRunTaskSubscription(Rx.Observable.just(taskAndGraphId));
+            store.getTaskById.resolves(undefined);
+
+            streamOnCompletedWrapper(taskStream, done, function() {
+                expect(store.checkoutTask).to.have.been.calledOnce;
+                expect(store.getTaskById).to.have.been.calledOnce;
+                expect(runner.runTask).to.not.have.been.called;
+            });
+        });
+
         it('should run a task', function(done) {
             runner.running = true;
             this.sandbox.stub(runner, 'handleStreamSuccess');
@@ -250,8 +264,8 @@ describe("Task Runner", function() {
 
         it('should heartbeat Tasks on an interval', function(done) {
             runner.running = true;
-            runner.heartbeat = Rx.Observable.interval(1);
-            var heartStream = runner.createHeartbeatSubscription(runner.heartbeat).take(5);
+            runner.heartbeat = Rx.Observable.interval(1).take(5);
+            var heartStream = runner.createHeartbeatSubscription(runner.heartbeat);
             streamOnCompletedWrapper(heartStream, done, function() {
                 expect(store.heartbeatTasksForRunner.callCount).to.equal(5);
             });
@@ -375,75 +389,6 @@ describe("Task Runner", function() {
         });
     });
 
-    describe('publishTaskFinished', function() {
-        before(function() {
-            this.sandbox.restore();
-            runner = TaskRunner.create();
-        });
-
-        it("should wrap the taskMessenger's publishTaskFinished", function() {
-            taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            var finishedTask = {
-                instanceId: 'aTaskId',
-                context: { graphId: 'aGraphId'},
-                state: 'finished',
-                definition: { terminalOnStates: ['succeeded'] }
-            };
-
-            return runner.publishTaskFinished(finishedTask)
-            .then(function() {
-                expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
-                expect(taskMessenger.publishTaskFinished).to.have.been.calledWith(
-                    runner.domain,
-                    finishedTask.instanceId,
-                    finishedTask.context.graphId,
-                    finishedTask.state,
-                    undefined,
-                    finishedTask.context,
-                    finishedTask.definition.terminalOnStates
-                );
-            });
-        });
-
-        it("should call publishTaskFinished with an error message string", function() {
-            taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            var error = new Error('test error');
-            var finishedTask = {
-                taskId: 'aTaskId',
-                context: { graphId: 'aGraphId'},
-                state: 'finished',
-                error: error,
-                definition: { terminalOnStates: ['succeeded'] }
-            };
-
-            return runner.publishTaskFinished(finishedTask)
-            .then(function() {
-                expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
-                expect(taskMessenger.publishTaskFinished.firstCall.args[4])
-                    .to.contain('test error');
-            });
-        });
-
-        it("should call publishTaskFinished with an Rx error stack string", function() {
-            taskMessenger.publishTaskFinished = this.sandbox.stub().resolves();
-            var error = new Error('test error');
-            error.stack = error.toString();
-            var finishedTask = {
-                taskId: 'aTaskId',
-                context: { graphId: 'aGraphId'},
-                state: 'finished',
-                error: error,
-                definition: { terminalOnStates: ['succeeded'] }
-            };
-
-            return runner.publishTaskFinished(finishedTask)
-            .then(function() {
-                expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
-                expect(taskMessenger.publishTaskFinished.firstCall.args[4]).to.equal(error.stack);
-            });
-        });
-    });
-
     describe('task cancellation', function() {
 
         beforeEach(function() {
@@ -508,7 +453,8 @@ describe("Task Runner", function() {
             stubbedTask.definition = { injectableName: 'taskName'};
             this.sandbox.stub(Task, 'create').resolves(stubbedTask);
             store.setTaskState = this.sandbox.stub().resolves();
-            this.sandbox.stub(runner, 'publishTaskFinished');
+            taskMessenger.publishTaskFinished = this.sandbox.stub();
+            graphProgressService.publishTaskStarted = this.sandbox.stub();
         });
 
         it('should return an Observable', function() {
@@ -538,9 +484,15 @@ describe("Task Runner", function() {
             });
         });
 
+        it('should publish a task started progress', function(done) {
+            streamOnCompletedWrapper(runner.runTask(data), done, function() {
+                expect(graphProgressService.publishTaskStarted).to.have.been.calledOnce;
+            });
+        });
+
         it('should publish a task finished event', function(done) {
             streamOnCompletedWrapper(runner.runTask(data), done, function() {
-                expect(runner.publishTaskFinished).to.have.been.calledOnce;
+                expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
             });
         });
 
@@ -564,10 +516,9 @@ describe("Task Runner", function() {
                         taskAndGraphId
                     ]));
 
-
             streamOnCompletedWrapper(taskStream, done, function() {
                 expect(runner.handleStreamError).to.be.called.once;
-                expect(runner.publishTaskFinished).to.have.been.calledOnce;
+                expect(taskMessenger.publishTaskFinished).to.have.been.calledOnce;
             });
         });
     });

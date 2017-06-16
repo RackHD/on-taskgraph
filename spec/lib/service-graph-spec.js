@@ -75,9 +75,12 @@ describe('Service Graph', function () {
         return serviceGraph.stop()
         .then(function() {
             expect(taskGraphProtocol.cancelTaskGraph).to.have.been.calledThrice;
-            expect(taskGraphProtocol.cancelTaskGraph).to.have.been.calledWith('testid1');
-            expect(taskGraphProtocol.cancelTaskGraph).to.have.been.calledWith('testid2');
-            expect(taskGraphProtocol.cancelTaskGraph).to.have.been.calledWith('testid3');
+            expect(taskGraphProtocol.cancelTaskGraph)
+                .to.have.been.calledWith('testid1', serviceGraph.timeout);
+            expect(taskGraphProtocol.cancelTaskGraph)
+                .to.have.been.calledWith('testid2', serviceGraph.timeout);
+            expect(taskGraphProtocol.cancelTaskGraph)
+                .to.have.been.calledWith('testid3', serviceGraph.timeout);
         });
     });
 
@@ -140,7 +143,8 @@ describe('Service Graph', function () {
             expect(store.deleteGraph).to.have.been.calledOnce;
             expect(store.deleteGraph).to.have.been.calledWith('testid1');
             expect(taskGraphProtocol.cancelTaskGraph).to.have.been.calledOnce;
-            expect(taskGraphProtocol.cancelTaskGraph).to.have.been.calledWith('testid1');
+            expect(taskGraphProtocol.cancelTaskGraph)
+                .to.have.been.calledWith('testid1', serviceGraph.timeout);
         });
     });
 
@@ -154,7 +158,8 @@ describe('Service Graph', function () {
             expect(store.deleteGraph).to.have.been.calledOnce;
             expect(store.deleteGraph).to.have.been.calledWith('testid1');
             expect(taskGraphProtocol.cancelTaskGraph).to.have.been.calledOnce;
-            expect(taskGraphProtocol.cancelTaskGraph).to.have.been.calledWith('testid1');
+            expect(taskGraphProtocol.cancelTaskGraph)
+                .to.have.been.calledWith('testid1', serviceGraph.timeout);
         });
     });
 

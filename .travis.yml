@@ -23,17 +23,6 @@ services:
 after_success:
  - ./extra/make-testcoveralls.sh
 
-before_deploy:
- - ./extra/make-deb.sh
-
-deploy: 
-  provider: bintray
-  file: .bintray.json
-  user: $BINTRAY_USER
-  key: $BINTRAY_KEY
-  on:
-    branch: master
-    node: "4"
 
 notifications:
   slack:

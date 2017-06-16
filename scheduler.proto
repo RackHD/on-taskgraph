@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package scheduler;
+
+service Scheduler {
+  rpc getBootstrap (getBootstrapRequest) returns (HttpReply) {}
+  rpc getTasksById (getTasksByIdRequest) returns (HttpReply) {}
+  rpc postTaskById (postTaskByIdRequest) returns (HttpReply) {}
+  rpc workflowsGetGraphs (workflowsGetGraphsRequest) returns (HttpReply) {}
+  rpc workflowsGetGraphsByName (workflowsGetGraphsByNameRequest) returns (HttpReply) {}
+  rpc workflowsPutGraphs (workflowsPutGraphsRequest) returns (HttpReply) {}
+  rpc workflowsDeleteGraphsByName (workflowsDeleteGraphsByNameRequest) returns (HttpReply) {}
+  rpc workflowsGet (workflowsGetRequest) returns (HttpReply) {}
+  rpc workflowsPost (workflowsPostRequest) returns (HttpReply) {}
+  rpc workflowsGetByInstanceId (workflowsGetByInstanceIdRequest) returns (HttpReply) {}
+  rpc workflowsAction (workflowsActionRequest) returns (HttpReply) {}
+  rpc workflowsDeleteByInstanceId (workflowsDeleteByInstanceIdRequest) returns (HttpReply) {}
+  rpc workflowsPutTask (workflowsPutTaskRequest) returns (HttpReply) {}
+  rpc workflowsGetAllTasks (workflowsGetAllTasksRequest) returns (HttpReply) {}
+  rpc workflowsGetTasksByName (workflowsGetTasksByNameRequest) returns (HttpReply) {}
+  rpc workflowsDeleteTasksByName (workflowsDeleteTasksByNameRequest) returns (HttpReply) {}
+
+}
+
+message getBootstrapRequest {
+  repeated string scope = 1;
+  string ipAddress = 2;
+  string macAddress = 3;
+}
+
+message getTasksByIdRequest {
+  string identifier = 1;
+}
+
+message postTaskByIdRequest {
+  string identifier = 1;
+  string config = 2;
+}
+
+message workflowsGetGraphsRequest {
+}
+
+message workflowsGetGraphsByNameRequest {
+  string injectableName = 1;
+  repeated string scope = 2;
+}
+
+message workflowsPutGraphsRequest {
+  string body = 1;
+}
+
+message workflowsDeleteGraphsByNameRequest {
+  string injectableName = 1;
+}
+
+message workflowsGetRequest {
+  string query = 1;
+}
+
+message workflowsPostRequest {
+  string nodeId = 1;
+  string configuration = 2;
+}
+
+message workflowsGetByInstanceIdRequest {
+  string identifier = 1;
+}
+
+message workflowsActionRequest {
+  string command = 1;
+  string identifier = 2;
+}
+
+message workflowsDeleteByInstanceIdRequest {
+  string identifier = 1;
+}
+
+message workflowsPutTaskRequest {
+  string body = 1;
+}
+
+message workflowsGetAllTasksRequest {
+}
+
+message workflowsGetTasksByNameRequest {
+  string injectableName = 1;
+}
+
+message workflowsDeleteTasksByNameRequest {
+  string injectableName = 1;
+}
+
+message HttpReply {
+  string response = 1;
+}

@@ -1,0 +1,34 @@
+{
+
+    "friendlyName": "<%=friendlyName%>",
+    "injectableName": "<%=injectableName%>",
+    <% if (hasOwnProperty("options")) { %>
+    "options": <%- JSON.stringify(options) %>,
+    <% }%>
+    "tasks":[
+    <% tasks.forEach(function (value, i, arr){ %>
+    {
+    "label": "<%=value.label%>",
+    <% if ( value.waitOn) { %>
+    "waitOn": <%- JSON.stringify(value.waitOn) %>,
+    <% } %>
+
+    <% if ( value.taskDefinition ) { %> 
+    "taskDefinition": 
+     
+    <% var friendlyName = value.taskDefinition.friendlyName  
+     var injectableName = value.taskDefinition.injectableName  
+     var implementsTask = value.taskDefinition.implementsTask  
+     var options = value.taskDefinition.options  
+     var properties = value.taskDefinition.properties %> 
+    <% include views/workflowTasks.2.0.json %>
+    <% } %>
+    <% if ( value.taskName ) { %>
+    "taskName": "<%=basepath%>/workflows/tasks/<%=value.taskName%>"
+    <% } %>
+    }
+    <%= ( arr.length > 0 && i < arr.length-1 ) ? ',': '' %>
+    <% }); %>
+    ]
+
+}
