@@ -7,7 +7,7 @@ describe(require('path').basename(__filename), function () {
     var base = require('./base-graph-spec');
 
     base.before(function (context) {
-        context.taskdefinition = helper.require('/lib/graphs/set-idrac-ipaddress.js');
+        context.taskdefinition = helper.require('/lib/graphs/set-idrac-ipaddress-graph.js');
     });
 
     describe('graph', function () {
