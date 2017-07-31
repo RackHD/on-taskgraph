@@ -1,4 +1,4 @@
-// Copyright 2016, EMC, Inc.
+// Copyright 2017, EMC, Inc.
 
 'use strict';
 
@@ -12,6 +12,7 @@ var di = require('di'),
             core.injectables,
             core.workflowInjectables,
             require('on-tasks').injectables,
+            require('./app.js'),
             require('./lib/task-graph-runner.js'),
             require('./lib/task-runner.js'),
             require('./lib/loader.js'),
@@ -28,22 +29,17 @@ var di = require('di'),
     ),
     taskGraphRunner = injector.get('TaskGraph.Runner'),
     logger = injector.get('Logger').initialize('TaskGraph');
-var app = require('express')();
-var http = require('http');
-var swaggerTools = require('swagger-tools');
+
+var restApp = injector.get('rest');
+
 var parseArgs = require('minimist');
-
-var httpPort = 9005;
-var server;
-
 var argv = parseArgs(process.argv.slice(2));
-
 var options = {
     runner: true,
     scheduler: true,
-    domain: argv.domain || argv.d,
-    httpPort: argv['http-port'] || argv.p || httpPort
+    domain: argv.domain || argv.d
 };
+
 
 if (argv.scheduler || argv.s) {
     options.runner = false;
@@ -57,46 +53,9 @@ taskGraphRunner.start(options)
      })
      .then(function () {
         logger.info('Task Graph Runner Started.');
-        if (options.scheduler && options.httpPort) {
+        if (options.scheduler) {
              // swaggerRouter configuration
-             var swaggerOptions = {
-                 swaggerUi: '/swagger.json',
-                 controllers: './api/rest',
-                 // Conditionally turn on stubs (mock mode)
-                 useStubs: process.env.NODE_ENV === 'development' ? true : false
-
-             };
-             // The Swagger document (require it, build it programmatically,
-             // fetch it from a URL, ...)
-             var swaggerDoc = require('./api/swagger.json');
-
-             // Initialize the Swagger middleware
-             swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
-                 // Interpret Swagger resources and attach metadata to request -
-                 // must be first in swagger-tools middleware chain
-                 app.use(middleware.swaggerMetadata());
-
-                 // Validate Swagger requests
-                 app.use(middleware.swaggerValidator());
-
-                 // Route validated requests to appropriate controller
-                 app.use(middleware.swaggerRouter(swaggerOptions));
-
-                 // Serve the Swagger documents and Swagger UI
-                 app.use(middleware.swaggerUi());
-
-                 // Start the server
-                 var config = {
-                     hostname: '0.0.0.0',
-                     httpPort: options.httpPort
-                 };
-                 server = http.createServer(app);
-                 server.listen(config.httpPort, config.hostname, function () {
-                     logger.info('Your server is listening on port %d'.format(config.httpPort));
-                     logger.info('Swagger-ui is available on http://%s:%d/docs'
-                                 .format(config.hostname, config.httpPort));
-                 });
-             });
+            restApp.start();
         }
      })
     .catch(function (error) {
@@ -118,9 +77,7 @@ process.on('SIGINT', function () {
             logger.critical('Task Graph Runner Shutdown Error.', { error: error });
         })
         .finally(function () {
-            if (server) {
-                server.close();
-            }
+            restApp.stop()
             process.nextTick(function () {
                 process.exit(1);
             });

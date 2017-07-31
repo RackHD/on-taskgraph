@@ -14,13 +14,13 @@ describe('Http.Api.Workflows.2.0', function () {
         var injectables = [
             helper.di.simpleWrapper({
                 controller: function(opts, cb) {
-                        if (typeof(opts) === 'function') {
-                            cb = opts;
-                        }
-                        return cb;
+                    if (typeof(opts) === 'function') {
+                        cb = opts;
+                    }
+                    return cb;
                 },
                 addLinksHeader: function() {
-                        return "data";
+                    return "data";
                 }
             }, 'Http.Services.Swagger'),
             helper.di.simpleWrapper({
@@ -85,7 +85,7 @@ describe('Http.Api.Workflows.2.0', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.createAndRunGraph.resolves('a posted workflows');
             return workflowsApi.workflowsPost({ swagger: { params:
-                { identifier: { value: '123' } } }, body: { foo: 'bar' } })
+                { identifier: { value: '123' } }, query: {options:{defaults:{graphOptions:{target:"123"}}}} }, body: { foo: 'bar' }})
                 .should.eventually.equal('a posted workflows');
         });
 
@@ -93,7 +93,7 @@ describe('Http.Api.Workflows.2.0', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.createAndRunGraph.rejects('post error');
             return workflowsApi.workflowsPost({ swagger: { params:
-                { identifier: { value: '123' } } }, body: { foo: 'bar' } })
+                { identifier: { value: '123' } },query: {options:{defaults:{graphOptions:{target:"123"}}}} }, body: { foo: 'bar' } })
                 .should.be.rejectedWith('post error');
         });
     });
@@ -129,7 +129,7 @@ describe('Http.Api.Workflows.2.0', function () {
         });
     });
 
-   describe('workflowsDeleteById', function () {
+    describe('workflowsDeleteById', function () {
         it('should delete the Task with DELETE /workflows/id', function () {
             var workflowApiService = helper.injector.get('Http.Services.Api.Workflows');
             workflowApiService.deleteTaskGraph.resolves("deleted workflow instance");

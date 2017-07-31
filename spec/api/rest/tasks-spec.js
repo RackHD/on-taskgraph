@@ -22,7 +22,7 @@ describe('Http.Api.Tasks', function () {
             }, 'Http.Services.Swagger'),
             helper.di.simpleWrapper({
                 getBootstrap: sinon.stub(),
-                getTasks: sinon.stub(),
+                getTasksById: sinon.stub(),
                 postTasksById: sinon.stub()
             }, 'Http.Services.Api.Tasks')
         ];
@@ -46,7 +46,7 @@ describe('Http.Api.Tasks', function () {
     describe('GET /tasks/:id', function () {
         it("should get a task by id", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
-            tasksApiService.getTasks.resolves('a task');
+            tasksApiService.getTasksById.resolves('a task');
             return tasksApi.getTasksById({ swagger: { params: { identifier: { value: '123' } } } })
                 .should.eventually.equal('a task');
         });
@@ -54,14 +54,14 @@ describe('Http.Api.Tasks', function () {
         it("should reject with not found if getTasks rejects", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
 
-            tasksApiService.getTasks.rejects('Not Found');
+            tasksApiService.getTasksById.rejects('Not Found');
             return tasksApi.getTasksById({ swagger: { params: { identifier: { value: '123' } } } })
                 .should.be.rejectedWith('Not Found');
         });
 
         it("should reject with not found if req is invalid", function() {
             var tasksApiService = helper.injector.get('Http.Services.Api.Tasks');
-            tasksApiService.getTasks.resolves();
+            tasksApiService.getTasksById.resolves();
             return tasksApi.getTasksById(undefined)
                 .should.be.rejectedWith('Not Found');
         });
