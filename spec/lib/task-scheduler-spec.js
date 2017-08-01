@@ -282,12 +282,15 @@ describe('Task Scheduler', function() {
 
         it('publishScheduleTaskEvent should publish a run task event', function() {
             this.sandbox.stub(taskMessenger, 'publishRunTask').resolves({});
-            var data = { taskId: 'testtaskid', graphId: 'testgraphid' };
+            var uuid = helper.injector.get('uuid');
+	     var taskId = uuid.v4();
+	     var graphId = uuid.v4();
+            var data = { domain: 'default', taskId: taskId, graphId: graphId};
             return taskScheduler.publishScheduleTaskEvent(data)
             .then(function() {
                 expect(taskMessenger.publishRunTask).to.have.been.calledOnce;
                 expect(taskMessenger.publishRunTask)
-                    .to.have.been.calledWith(taskScheduler.domain, 'testtaskid', 'testgraphid');
+                  .to.have.been.calledWith(taskScheduler.domain, taskId, graphId);
             });
         });
 
@@ -421,13 +424,38 @@ describe('Task Scheduler', function() {
                     expect(taskScheduler.handleScheduleTaskEvent).to.have.been.calledWith(task);
                 });
             });
-
+            
+            it('should validate the return result of getGraphNameAndTaskNameFromDB', function(){
+                var task_data = {
+                    "domain":"default", 
+                    "task":{
+                        "instanceId":"task.instanceId",
+                        "injectableName":"task.injectableName"
+                    },
+                    "graphId":"testGraphId",
+                    "context":{
+                        "graphName":"context.graphName"
+                    }
+                };
+		this.sandbox.stub(store, 'getTaskById').resolves(task_data);
+		return taskScheduler.getGraphNameAndTaskNameFromDB().then(function(res) {
+	            expect(res.domain).to.equal(task_data.domain);
+		    expect(res.taskId).to.equal(task_data.task.instanceId);
+		    expect(res.taskName).to.equal(task_data.task.injectableName);
+                   expect(res.graphId).to.equal(task_data.graphId);
+                   expect(res.graphName).to.equal(task_data.context.graphName);
+		});
+                
+            });
+           
             it('should handle handleScheduleTaskEvent errors', function(done) {
                 var testError = new Error('test handleScheduleTaskEvent error');
+            
                 taskScheduler.findReadyTasks.resolves({ tasks: [{}] });
                 taskScheduler.handleScheduleTaskEvent.restore();
-                taskScheduler.publishScheduleTaskEvent.onFirstCall().rejects(testError);
-                taskScheduler.publishScheduleTaskEvent.resolves();
+                taskScheduler.publishScheduleTaskEvent.rejects(testError);
+                this.sandbox.stub(taskScheduler, 'getGraphNameAndTaskNameFromDB');
+
                 observable = taskScheduler.createTasksToScheduleSubscription(
                                 Rx.Observable.from([null, null]))
                                 .take(2);
