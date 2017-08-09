@@ -173,7 +173,11 @@ describe('Taskgraph.Services.Api.Workflows', function () {
             );
             expect(eventsProtocol.publishGraphStarted).to.have.been.calledOnce;
             expect(eventsProtocol.publishGraphStarted)
-                .to.have.been.calledWith(graph.instanceId, 'running', nodeId);
+                .to.have.been.calledWith(graph.instanceId, {
+                  graphId: graph.instanceId,
+                  graphName: graph.name,
+                  status: "running"
+                }, nodeId);
             expect(eventsProtocol.publishProgressEvent).to.have.been.calledOnce;
             expect(eventsProtocol.publishProgressEvent)
                 .to.have.been.calledWith(graph.instanceId, data);
