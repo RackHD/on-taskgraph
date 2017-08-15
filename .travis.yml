@@ -22,6 +22,7 @@ services:
 
 after_success:
  - ./extra/make-testcoveralls.sh
+ - ./extra/make-deb.sh
 
 
 notifications:
