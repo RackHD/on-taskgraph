@@ -300,6 +300,7 @@ describe("Completed Task Poller", function() {
             });
             store.setGraphDone.resolves({
                 instanceId: 'testgraphid',
+                name: 'testgraphname',
                 _status: Constants.Task.States.Succeeded
             });
 
@@ -324,14 +325,15 @@ describe("Completed Task Poller", function() {
                 );
                 expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
                 expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
-                    'testgraphid',
-                    Constants.Task.States.Succeeded
+                    "testgraphid",
+                    { graphId: "testgraphid", graphName: "testgraphname", status: "succeeded" }
                 );
                 expect(graphProgressService.publishGraphFinished).to.have.been.calledOnce;
                 expect(graphProgressService.publishGraphFinished).to.have.been.calledWith({
                     instanceId: 'testgraphid',
+                    name: 'testgraphname',
                     _status: Constants.Task.States.Succeeded
-                });
+                }, Constants.Task.States.Succeeded, { swallowError: true });
             }), done);
         });
 

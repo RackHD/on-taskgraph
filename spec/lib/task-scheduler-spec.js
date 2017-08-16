@@ -718,6 +718,7 @@ describe('Task Scheduler', function() {
             var data = { graphId: 'testgraphid' };
             var graphData = {
                 instanceId: 'testid',
+                name: 'testgraphname',
                 _status: Constants.Task.States.Succeeded,
                 definition: {
                     friendlyName: "test"
@@ -741,7 +742,7 @@ describe('Task Scheduler', function() {
                 expect(eventsProtocol.publishGraphFinished).to.have.been.calledOnce;
                 expect(eventsProtocol.publishGraphFinished).to.have.been.calledWith(
                     'testid',
-                    Constants.Task.States.Succeeded,
+                    { graphId: "testid", graphName: 'testgraphname', status: Constants.Task.States.Succeeded },
                     'nodeId'
                 );
                 expect(graphProgressService.publishGraphFinished).to.have.been.calledOnce;
