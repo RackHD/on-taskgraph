@@ -14,6 +14,7 @@ describe('Services.Http.Swagger', function() {
     var mockWaterlineService = {
         test: {}
     };
+    var taskProtocol = {activeTaskExists: sinon.stub().resolves({taskId: 'taskid'})};
 
     before('inject swagger service', function() {
         helper.setupInjector(_.flattenDeep([
@@ -23,7 +24,9 @@ describe('Services.Http.Swagger', function() {
                 core.injectables,
                 helper.di.simpleWrapper(MockSerializable, 'Mock.Serializable'),
                 helper.di.simpleWrapper(new MockSchemaService(), 'Http.Api.Services.Schema'),
-                helper.di.simpleWrapper(mockWaterlineService, 'Services.Waterline')
+                helper.di.simpleWrapper(mockWaterlineService, 'Services.Waterline'),
+                helper.di.simpleWrapper(taskProtocol, 'Protocol.Task')
+
             ])
         );
 
@@ -636,6 +639,85 @@ describe('Services.Http.Swagger', function() {
             function(err) {
                 expect(err).to.be.undefined;
             });
+        });
+    });
+
+    describe('makeRenderableOptions()', function() {
+        var makeRenderableOptions;
+        var config;
+        var env;
+        var configGetStub;
+        var envGetStub;
+        var res;
+        var req;
+
+        before(function() {
+            makeRenderableOptions = swaggerService.makeRenderableOptions;
+            config = helper.injector.get('Services.Configuration');
+            env = helper.injector.get('Services.Environment');
+            envGetStub = sinon.stub(env, 'get');
+            res = {
+                locals: {
+                    scope: ['global']
+                }
+            };
+            req = {
+                swagger: {
+                    options: {},
+                    swaggerObject:{
+                        api:{
+                            basePath: 'nothing'
+                        }
+                    }
+                }
+            };
+        });
+
+        afterEach(function() {
+            configGetStub.restore();
+            taskProtocol.activeTaskExists.reset();
+        });
+
+        it('should return file.server when configuring fileServerAddress', function() {
+            configGetStub = sinon.stub(config, 'get', function(key, defaults) {
+                var obj = {
+                    apiServerAddress: '10.1.1.1',
+                    apiServerPort: 80,
+                    fileServerAddress: '10.1.1.2',
+                    fileServerPort: 8080,
+                    fileServerPath: '/static'
+                };
+                if (obj.hasOwnProperty(key)) {
+                    return obj[key];
+                } else {
+                    return defaults;
+                }
+            });
+            return makeRenderableOptions(req, res, {target: 'nodeId'}, true)
+                .then(function(options) {
+                    expect(options.file.server).to.equal('http://10.1.1.2:8080/static');
+                    expect(options.taskId).to.equal('taskid');
+                    expect(taskProtocol.activeTaskExists).to.be.calledOnce;
+                    expect(taskProtocol.activeTaskExists).to.be.calledWith('nodeId');
+                });
+        });
+
+        it('should return file.server when not configuring fileServerAddress', function() {
+            configGetStub = sinon.stub(config, 'get', function(key, defaults) {
+                var obj = {
+                    apiServerAddress: '10.1.1.1',
+                    apiServerPort: 80
+                };
+                if (obj.hasOwnProperty(key)) {
+                    return obj[key];
+                } else {
+                    return defaults;
+                }
+            });
+            return makeRenderableOptions(req, res, {}, true)
+                .then(function(options) {
+                    expect(options.file.server).to.equal('http://10.1.1.1:80');
+                });
         });
     });
 

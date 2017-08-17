@@ -154,6 +154,13 @@
         }
       },
       "type": "object"
+    },
+    "notification_obj": {
+      "properties": {
+        "nodeId": {
+          "type": "string"
+        }
+      }
     }
   },
   "info": {
@@ -165,15 +172,13 @@
       "get": {
         "description": "Used internally by the system - get tasks bootstrap.js\n",
         "operationId": "getBootstrap",
-        "parameters": [
-          {
-            "description": "Query string containing the mac address",
-            "in": "query",
-            "name": "macAddress",
-            "required": false,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "description": "Query string containing the mac address",
+          "in": "query",
+          "name": "macAddress",
+          "required": false,
+          "type": "string"
+        }],
         "responses": {
           "200": {
             "description": "Successfully retrieved bootstrap.js",
@@ -199,15 +204,13 @@
       "get": {
         "description": "Get the specified task.\n",
         "operationId": "getTasksById",
-        "parameters": [
-          {
-            "description": "The task identifier\n",
-            "in": "path",
-            "name": "identifier",
-            "required": true,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "description": "The task identifier\n",
+          "in": "path",
+          "name": "identifier",
+          "required": true,
+          "type": "string"
+        }],
         "responses": {
           "200": {
             "description": "Successfully retrieved a single task\n",
@@ -242,14 +245,13 @@
       "post": {
         "description": "Start the specified task\n",
         "operationId": "postTaskById",
-        "parameters": [
-          {
-            "description": "The task identifier\n",
-            "in": "path",
-            "name": "identifier",
-            "required": true,
-            "type": "string"
-          },
+        "parameters": [{
+          "description": "The task identifier\n",
+          "in": "path",
+          "name": "identifier",
+          "required": true,
+          "type": "string"
+        },
           {
             "description": "The obm settings to apply\n",
             "in": "body",
@@ -298,14 +300,13 @@
       "get": {
         "description": "Get list workflow that have been run, or are currently running.\n",
         "operationId": "workflowsGet",
-        "parameters": [
-          {
-            "description": "Query string to search for specific workflow properties\n",
-            "in": "query",
-            "name": "active",
-            "required": false,
-            "type": "boolean"
-          },
+        "parameters": [{
+          "description": "Query string to search for specific workflow properties\n",
+          "in": "query",
+          "name": "active",
+          "required": false,
+          "type": "boolean"
+        },
           {
             "description": "Query string specifying properties to search for",
             "in": "query",
@@ -351,16 +352,15 @@
       "post": {
         "description": "Run a workflow by specifying a workflow graph injectable name.\nThe workflow is not associated with a node.\n",
         "operationId": "workflowsPost",
-        "parameters": [
-          {
-            "description": "The body must contain the name property with the\nvalue set to the injectable name of the workflow\ngraph to run\n",
-            "in": "body",
-            "name": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/PostWorkflow"
-            }
-          },
+        "parameters": [{
+          "description": "The body must contain the name property with the\nvalue set to the injectable name of the workflow\ngraph to run\n",
+          "in": "body",
+          "name": "body",
+          "required": false,
+          "schema": {
+            "$ref": "#/definitions/PostWorkflow"
+          }
+        },
           {
             "description": "pass node id",
             "in": "query",
@@ -445,17 +445,15 @@
       "put": {
         "description": "Create or modify a workflow graph in the graph library.\n",
         "operationId": "workflowsPutGraphs",
-        "parameters": [
-          {
-            "description": "The workflow graph properties",
-            "in": "body",
-            "name": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/WorkflowGraph"
-            }
+        "parameters": [{
+          "description": "The workflow graph properties",
+          "in": "body",
+          "name": "body",
+          "required": false,
+          "schema": {
+            "$ref": "#/definitions/WorkflowGraph"
           }
-        ],
+        }],
         "responses": {
           "201": {
             "description": "Successfully updated workflow graph\n",
@@ -495,15 +493,13 @@
       "delete": {
         "description": "Delete the workflow graph with the specified value of the injectableName property.\n",
         "operationId": "workflowsDeleteGraphsByName",
-        "parameters": [
-          {
-            "description": "The workflow graph injectable name\n",
-            "in": "path",
-            "name": "injectableName",
-            "required": true,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "description": "The workflow graph injectable name\n",
+          "in": "path",
+          "name": "injectableName",
+          "required": true,
+          "type": "string"
+        }],
         "responses": {
           "204": {
             "description": "Successfully deleted the specified workflow graph\n",
@@ -539,15 +535,13 @@
       "get": {
         "description": "Get the workflow graph with the specified value of the injectableName property.\n",
         "operationId": "workflowsGetGraphsByName",
-        "parameters": [
-          {
-            "description": "The workflow graph injectable name\n",
-            "in": "path",
-            "name": "injectableName",
-            "required": true,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "description": "The workflow graph injectable name\n",
+          "in": "path",
+          "name": "injectableName",
+          "required": true,
+          "type": "string"
+        }],
         "responses": {
           "200": {
             "description": "Successfully retrieved the workflow graph with the specified injectable name\n",
@@ -611,17 +605,15 @@
       "put": {
         "description": "Create or update a workflow task in the library of tasks.\n",
         "operationId": "workflowsPutTask",
-        "parameters": [
-          {
-            "description": "The workflow task properties",
-            "in": "body",
-            "name": "body",
-            "required": false,
-            "schema": {
-              "$ref": "#/definitions/WorkflowTask"
-            }
+        "parameters": [{
+          "description": "The workflow task properties",
+          "in": "body",
+          "name": "body",
+          "required": false,
+          "schema": {
+            "$ref": "#/definitions/WorkflowTask"
           }
-        ],
+        }],
         "responses": {
           "201": {
             "description": "Successfully updated workflow task\n",
@@ -660,15 +652,13 @@
       "delete": {
         "description": "Delete the workflow task with the specified value of the injectableName property.\n",
         "operationId": "workflowsDeleteTasksByName",
-        "parameters": [
-          {
-            "description": "The task injectable name\n",
-            "in": "path",
-            "name": "injectableName",
-            "required": true,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "description": "The task injectable name\n",
+          "in": "path",
+          "name": "injectableName",
+          "required": true,
+          "type": "string"
+        }],
         "responses": {
           "204": {
             "description": "Successfully deleted the specified task\n",
@@ -704,15 +694,13 @@
       "get": {
         "description": "Get the task with the specified value of the injectableName property.\n",
         "operationId": "workflowsGetTasksByName",
-        "parameters": [
-          {
-            "description": "The task injectable name\n",
-            "in": "path",
-            "name": "injectableName",
-            "required": true,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "description": "The task injectable name\n",
+          "in": "path",
+          "name": "injectableName",
+          "required": true,
+          "type": "string"
+        }],
         "responses": {
           "200": {
             "description": "Successfully retrieved the task with the specified injectable name\n",
@@ -746,15 +734,13 @@
       "delete": {
         "description": "Delete the workflow with the specified instance identifier.\n",
         "operationId": "workflowsDeleteByInstanceId",
-        "parameters": [
-          {
-            "description": "The workflow instance identifier\n",
-            "in": "path",
-            "name": "identifier",
-            "required": true,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "description": "The workflow instance identifier\n",
+          "in": "path",
+          "name": "identifier",
+          "required": true,
+          "type": "string"
+        }],
         "responses": {
           "204": {
             "description": "Successfully deleted the specified workflow\n",
@@ -790,15 +776,13 @@
       "get": {
         "description": "Get the workflow with the specified instance identifier.\n",
         "operationId": "workflowsGetByInstanceId",
-        "parameters": [
-          {
-            "description": "The workflow instance identifier\n",
-            "in": "path",
-            "name": "identifier",
-            "required": true,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "description": "The workflow instance identifier\n",
+          "in": "path",
+          "name": "identifier",
+          "required": true,
+          "type": "string"
+        }],
         "responses": {
           "200": {
             "description": "Successfully retrieved the specified workflow\n",
@@ -832,14 +816,13 @@
       "put": {
         "description": "Perform the specified action on the workflow with the specified\ninstance identifier. Currently, the cancel action is supported.\n",
         "operationId": "workflowsAction",
-        "parameters": [
-          {
-            "description": "The workflow instance identifier\n",
-            "in": "path",
-            "name": "identifier",
-            "required": true,
-            "type": "string"
-          },
+        "parameters": [{
+          "description": "The workflow instance identifier\n",
+          "in": "path",
+          "name": "identifier",
+          "required": true,
+          "type": "string"
+        },
           {
             "description": "The action property with the value of the desired action",
             "in": "body",
@@ -883,6 +866,350 @@
         ]
       },
       "x-swagger-router-controller": "workflows"
+    },
+    "/profiles": {
+      "get": {
+        "description": "Get the list of currently defined profiles. Profiles are scripts used by RackHD to control how a node PXE boots.\n",
+        "operationId": "profilesGet",
+        "parameters": [{
+          "collectionFormat": "multi",
+          "description": "List of valid MAC addresses to lookup",
+          "in": "query",
+          "items": {
+            "type": "string"
+          },
+          "name": "macs",
+          "required": false,
+          "type": "array"
+        },
+          {
+            "collectionFormat": "multi",
+            "description": "List of IP addresses to lookup",
+            "in": "query",
+            "items": {
+              "type": "string"
+            },
+            "name": "ips",
+            "required": false,
+            "type": "array"
+          },
+          {
+            "description": "When macs parameter is not passed, passed with IP adds MAC address to lookup",
+            "in": "query",
+            "name": "mac",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "description": "When macs parameters is not passed, passed with MAC adds IP address to lookup",
+            "in": "query",
+            "name": "ip",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved a list of profiles for specified mac / ip",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get list of profiles",
+        "tags": [
+          "southBound"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "profilesRead"
+        ]
+      },
+      "x-swagger-router-controller": "profiles"
+    },
+    "/templates/{name}": {
+      "get": {
+        "description": "Get the template with the specified name.",
+        "operationId": "templatesGetByName",
+        "parameters": [{
+          "description": "The name of the template",
+          "in": "path",
+          "name": "name",
+          "required": true,
+          "type": "string"
+        },
+          {
+            "description": "The node identifier",
+            "in": "query",
+            "name": "nodeId",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "collectionFormat": "multi",
+            "description": "List of valid MAC addresses to lookup",
+            "in": "query",
+            "items": {
+              "type": "string"
+            },
+            "name": "macs",
+            "required": false,
+            "type": "array"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly retrieved the specified template",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The template with specified identifier was not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get the specified template",
+        "tags": [
+          "southBound"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "templatesRead"
+        ]
+      },
+      "head": {
+        "description": "Get the template headers with the specified name. Only gets headers and returns no body.",
+        "operationId": "templatesHeadByName",
+        "parameters": [{
+          "description": "The name of the template",
+          "in": "path",
+          "name": "name",
+          "required": true,
+          "type": "string"
+        },
+          {
+            "description": "The node identifier",
+            "in": "query",
+            "name": "nodeId",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "collectionFormat": "multi",
+            "description": "List of valid MAC addresses to lookup",
+            "in": "query",
+            "items": {
+              "type": "string"
+            },
+            "name": "macs",
+            "required": false,
+            "type": "array"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfuly retrieved the specified template headers",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The template with specified identifier was not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get headers of the specified template",
+        "tags": [
+          "southBound"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read"
+        ]
+      },
+      "x-swagger-router-controller": "templates"
+    },
+    "/notification": {
+      "x-swagger-router-controller": "notification",
+      "post": {
+        "operationId": "notificationPost",
+        "summary": "post a notification\n",
+        "description": "post a notification\n",
+        "parameters": [{
+          "name": "nodeId",
+          "in": "query",
+          "description": "Node instance identifier\n",
+          "required": false,
+          "type": "string"
+        },
+          {
+            "name": "data",
+            "in": "body",
+            "description": "notification data\n",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/notification_obj"
+            }
+          }
+        ],
+        "tags": [
+          "southBound"
+        ],
+        "responses": {
+          "201": {
+            "description": "Specifics of the notification\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "bad request parameter passed or no active task or taskgraph.\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/notification/progress": {
+      "x-swagger-router-controller": "notification",
+      "get": {
+        "operationId": "notificationProgressPost",
+        "summary": "Send progress notification to task\n",
+        "description": "This API is used to update the progress information for a task instance\n",
+        "parameters": [{
+          "name": "taskId",
+          "in": "query",
+          "description": "The identifier of task instance which the progress applies to\n",
+          "required": false,
+          "type": "string"
+        },
+          {
+            "name": "maximum",
+            "in": "query",
+            "description": "The maximum progress value\n",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "description": "The current progress value\n",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "southBound"
+        ],
+        "responses": {
+          "201": {
+            "description": "Specifics of the notification\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "bad request parameter passed or no active task or taskgraph.\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "notificationProgressPost",
+        "summary": "Send progress notification to task\n",
+        "description": "This API is used to update the progress information for a task instance\n",
+        "parameters": [{
+          "name": "taskId",
+          "in": "query",
+          "description": "The identifier of task instance which the progress applies to\n",
+          "required": false,
+          "type": "string"
+        },
+          {
+            "name": "maximum",
+            "in": "query",
+            "description": "The maximum progress value\n",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "in": "query",
+            "description": "The current progress value\n",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "southBound"
+        ],
+        "responses": {
+          "201": {
+            "description": "Specifics of the notification\n",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "400": {
+            "description": "bad request parameter passed or no active task or taskgraph.\n",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
   },
   "produces": [
@@ -893,10 +1220,7 @@
     "https"
   ],
   "swagger": "2.0",
-  "tags": [
-    {
-      "description": "RackHD 2.0 API",
-      "name": "/api/2.0"
-    }
-  ]
+  "tags": [{
+    "name": "southBound"
+  }]
 }

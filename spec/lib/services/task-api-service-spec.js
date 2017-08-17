@@ -146,14 +146,19 @@ describe('Taskgraph.Services.Api.Tasks', function () {
     });
 
     it('should get bootstrap', function() {
+        var res = {
+            locals:{
+                scope: ["global"],
+                ipAddress: '1.2.3.4'
+            }
+        };
         waterline.nodes.findByIdentifier.resolves({id: 'testnodeid'});
         templates.get.resolves({ contents: "testContents" } );
         lookupService.ipAddressToMacAddress.resolves('1.2.3.4');
 
-        return taskApiService.getBootstrap(['test'], '1.2.3.4', 'testMacAddress')
+        return taskApiService.getBootstrap(['test'], res, 'testMacAddress')
             .then(function() {
                 expect(templates.get).to.have.been.calledOnce;
-                expect(templates.get).to.have.been.calledWith('bootstrap.js', ['test']);
                 expect(env.get).to.have.been.calledTwice;
             });
     });

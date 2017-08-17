@@ -49,7 +49,8 @@ var workflowsGet = controller(function(req, res) {
 
 var workflowsPost = controller({success: 201}, function(req) {
     var configuration = _.defaults(req.swagger.query || {}, req.body || {});
-    return workflowApiService.createAndRunGraph(configuration);
+    var id = req.swagger.query.options.defaults.graphOptions.target;
+    return workflowApiService.createAndRunGraph(configuration, id);
 });
 
 /**
