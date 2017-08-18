@@ -6,3 +6,4 @@ scheduler.proto /var/renasar/on-taskgraph
 static /var/renasar/on-taskgraph
 index.js /var/renasar/on-taskgraph
 commitstring.txt /var/renasar/on-taskgraph
+app.js /var/renasar/on-taskgraph
