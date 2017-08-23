@@ -1,6 +1,9 @@
 # Copyright 2016, EMC, Inc.
 
-FROM rackhd/on-tasks:devel
+ARG repo=rackhd
+ARG tag=devel
+
+FROM ${repo}/on-tasks:${tag}
 
 COPY . /RackHD/on-taskgraph/
 WORKDIR /RackHD/on-taskgraph

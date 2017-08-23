@@ -15,11 +15,10 @@ set -e
 set -x
 
 rm -rf packagebuild
-git clone . packagebuild
+rsync -L -r . packagebuild
 pushd packagebuild
 cp ../package.json .
 
-rm -rf node_modules
 npm install --production --cache=`pwd`
 git log -n 1 --pretty=format:%h.%ai.%s > commitstring.txt
 
