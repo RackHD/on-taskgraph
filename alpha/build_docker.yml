@@ -1,0 +1,13 @@
+---
+platform: linux
+
+inputs:
+- name:  on-taskgraph
+- name:  manifest-artifactory
+- name:  on-tasks-docker
+outputs:
+- name:  build 
+
+run:
+  path: "alpha/build_docker.sh"
+  dir: "on-taskgraph"

@@ -1,0 +1,11 @@
+---
+platform: linux
+
+inputs:
+- name:  on-taskgraph
+outputs:
+- name:  build 
+
+run:
+  path: "alpha/build_deb.sh"
+  dir: "on-taskgraph"
