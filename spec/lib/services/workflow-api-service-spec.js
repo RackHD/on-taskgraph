@@ -145,6 +145,7 @@ describe('Taskgraph.Services.Api.Workflows', function () {
             graphId: graph.instanceId,
             graphName: graph.name,
             nodeId: nodeId,
+            status: "running",
             progress: {
                 maximum: 2,
                 value: 0,
