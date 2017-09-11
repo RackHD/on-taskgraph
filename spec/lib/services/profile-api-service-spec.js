@@ -78,77 +78,77 @@ describe("Http.Services.Api.Profiles", function () {
             });
     });
 
+    describe("getMacAddressInRequest", function() {
+        var query;
+        var requestIp;
+        beforeEach(function() {
+            query = {
+                macs : ['mac1', 'mac2'],
+                ips : ['ip1', 'ip2']
+            };
+            requestIp = 'ip1';
+        });
+
+        it("should get undefined when no macs is provided", function() {
+            query.macs = undefined;
+            return profileApiService.getMacAddressInRequest(query, requestIp)
+            .then(function(macAddress) {
+                expect(macAddress).to.be.equal(undefined);
+            });
+        });
+
+        it("should get undefined when no ips is provided", function() {
+            query.ips = undefined;
+            return profileApiService.getMacAddressInRequest(query, requestIp)
+            .then(function(macAddress) {
+                expect(macAddress).to.be.equal(undefined);
+            });
+        });
+
+        it("should get undefined when requestIp isn't in query ", function() {
+            requestIp = "noExistIP";
+            return profileApiService.getMacAddressInRequest(query, requestIp)
+            .then(function(macAddress) {
+                expect(macAddress).to.be.equal(undefined);
+            });
+        });
+
+        it("should get undefined when found macAddress is empty", function() {
+            query.macs = ['', 'ip2'];
+            return profileApiService.getMacAddressInRequest(query, requestIp)
+            .then(function(macAddress) {
+                expect(macAddress).to.be.equal(undefined);
+            });
+        });
+
+        it("should get undefined when found index in ips is out of range in macs", function() {
+            query.macs = ['mac1'];
+            requestIp = "ip2";
+            return profileApiService.getMacAddressInRequest(query, requestIp)
+            .then(function(macAddress) {
+                expect(macAddress).to.be.equal(undefined);
+            });
+        });
+
+        it("should get correct macAddress in request", function() {
+            return profileApiService.getMacAddressInRequest(query, requestIp)
+            .then(function(macAddress) {
+                expect(macAddress).to.be.equal('mac1');
+            });
+        });
+    });
+
     describe("setLookup", function () {
-        var proxy = '12.1.1.1';
-
-        var res = {
-            locals: {
-                ipAddress: 'ip1'
-            }
-        };
-
-        var profileReq = {
-            query: {
-                'ips': ['ip1', 'ip2'],
-                'macs': ['mac1', 'mac2']
-            },
-            get: function (header) {
-                if (header === Constants.HttpHeaders.ApiProxyIp) {
-                    return proxy;
-                }
-            }
-        };
-
-        var profileReq1 = {
-            query: {
-                'ips': ['', ''],
-                'macs': ['mac1', 'mac2']
-            },
-            get: function (header) {
-                if (header === Constants.HttpHeaders.ApiProxyIp) {
-                    return proxy;
-                }
-            }
-        };
-
-        it("setLookup should add IP lookup entry and proxy", function () {
+        it("should add IP lookup entry and proxy", function() {
             this.sandbox.stub(lookupService, 'setIpAddress').resolves();
             this.sandbox.stub(waterline.lookups, 'upsertProxyToMacAddress').resolves();
-            return profileApiService.setLookup(profileReq, res)
-                .then(function () {
-                    expect(lookupService.setIpAddress).to.be.calledWithExactly('ip1', 'mac1');
-                    expect(waterline.lookups.upsertProxyToMacAddress).to.be.calledOnce;
-                });
+            return profileApiService.setLookup('ip', 'mac', 'proxyIp', 'proxyPort')
+            .then(function() {
+                expect(lookupService.setIpAddress).to.be.calledWithExactly('ip', 'mac');
+                expect(waterline.lookups.upsertProxyToMacAddress)
+                    .to.be.calledWithExactly('http://proxyIp:proxyPort', 'mac');
+            });
         });
-
-        it("setLookup does not lookup node on missing required query string", function () {
-            this.sandbox.stub(lookupService, 'setIpAddress').resolves();
-            this.sandbox.stub(waterline.lookups, 'upsertProxyToMacAddress').resolves();
-            return profileApiService.setLookup({query: {macs: 'macs'}}, res)
-                .then(function () {
-                    expect(lookupService.setIpAddress).to.not.be.called;
-                    expect(waterline.lookups.upsertProxyToMacAddress).to.not.be.called;
-                });
-        });
-
-        it("setLookup should set request IP and MAC lookup for query macs and ips", function () {
-            this.sandbox.stub(lookupService, 'setIpAddress').resolves();
-
-            return profileApiService.setLookup(profileReq, res)
-                .then(function () {
-                    expect(lookupService.setIpAddress).to.be.calledWithExactly('ip1', 'mac1');
-                });
-        });
-
-        it("setLookup should not set lookup if IP is null in query", function () {
-            this.sandbox.stub(lookupService, 'setIpAddress').resolves();
-
-            return profileApiService.setLookup(profileReq1, res)
-                .then(function () {
-                    expect(lookupService.setIpAddress).to.not.be.called;
-                });
-        });
-
     });
 
     describe("getNode", function () {
@@ -456,15 +456,30 @@ describe("Http.Services.Api.Profiles", function () {
     describe("getProfiles", function () {
 
         it("getProfiles passes", function () {
-            var query = {};
-            var res = {};
-            var req = {query: {mac: ["XX:XX:XX:XX"]}};
+            var query = {mac: ["XX:XX:XX:XX"]};
+            var res = {
+                locals: {
+                    ipAddress: 'ip1'
+                }
+            };
+            var req = {
+                get: function(header) {
+                    switch(header) {
+                        case Constants.HttpHeaders.ApiProxyIp:
+                            return '1.2.3.4';
+                        case Constants.HttpHeaders.ApiProxyPort:
+                            return '80';
+                    }
+                }
+            };
             var node = {
                 id: "1234",
                 discovered: sinon.stub().resolves(false),
                 type: 'compute'
             };
 
+            this.sandbox.stub(profileApiService, 'getMacAddressInRequest').resolves('mac1');
+            this.sandbox.stub(profileApiService, 'setLookup').resolves();
             this.sandbox.stub(waterline.nodes, 'findByIdentifier').resolves(node);
             this.sandbox.stub(taskProtocol, 'activeTaskExists').resolves();
             this.sandbox.stub(workflowApiService, 'findActiveGraphForTarget').resolves(undefined);
