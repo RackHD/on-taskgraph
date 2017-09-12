@@ -1,0 +1,23 @@
+echo Starting CentOS/RHEL <%=version%> installer for ${hostidentifier}
+
+# The progress notification is just something nice-to-have, so progress notification failure should
+# never impact the normal installation process
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
+    # since there is no curl like http client in ipxe, so use imgfetch instead
+    # note: the progress milestones uri must be wrapped in unescaped format, otherwise imgfetch will fail
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.enterProfileUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+set base-url <%=repo%>/images/pxeboot
+set params initrd=initrd.img ks=<%=installScriptUri%> hostname=<%=hostname%> ksdevice=bootif BOOTIF=01-${netX/mac} console=<%=comport%>,115200n8 console=tty0
+kernel ${base-url}/vmlinuz repo=<%=repo%> ${params}
+initrd ${base-url}/initrd.img
+
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.startInstallerUri ) { %>
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.startInstallerUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell
+

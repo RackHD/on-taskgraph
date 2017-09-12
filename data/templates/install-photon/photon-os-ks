@@ -1,0 +1,88 @@
+{
+    <%_ if (typeof hostname !== 'undefined') { _%>
+    "hostname": "<%=hostname%>",
+    <%_ } _%>
+    "password":
+        {
+            "crypted": false,
+            "text": "<%=rootPassword%>"
+        },
+    "disk": "<%=installDisk%>",
+    "type": "<%=installType%>",
+    <%_ if (typeof rootSshKey !== 'undefined') { _%>
+    "public_key": "<%=rootSshKey%>",
+    <%_ } _%>
+    <%_ if (typeof installPartitions !== 'undefined') { _%>
+        <%_ valid = true; _%>
+        <%_ installPartitions.forEach(function(par) { _%>
+            <%_ if (typeof par.fsType === 'undefined') { _%>
+                <%_ valid = false; _%>
+            <%_ } _%>
+        <%_ }) _%>
+        <%_ if (valid === true) { _%>
+    "partitions": [
+            <%_ length = installPartitions.length; _%>
+            <%_ i = 1; _%>
+            <%_ installPartitions.forEach(function(par) { _%>
+                <%_ numSize = parseInt(par.size, 10); _%>
+                    <%_ if (isNaN(numSize) === true) { _%>
+                        <%_ numSize = 0; _%>
+                    <%_ } _%>
+                    <%_ if (par.fsType === "swap") { _%>
+                        <%# Through experiments, swap partition should always be the last one in %>
+                        <%# "partition" field of ks file, otherwise GUI will display inproperly %>
+                        <%_ swapPar = par; _%>
+                        <%_ swapParSize = numSize; _%>
+                        <%_ if (i === length) { _%>
+                            {"size": <%=swapParSize%>, "filesystem": "<%=swapPar.fsType%>"}
+                        <%_ } _%>
+                    <%_ } else { _%>
+                        <%_ if (i === length && typeof swapPar === 'undefined') { _%>
+        {"mountpoint": "<%=par.mountPoint%>", "size": <%=numSize%>, "filesystem": "<%=par.fsType%>"}
+                        <%_ } else if (i === length && typeof swapPar !== 'undefined') { _%>
+        {"mountpoint": "<%=par.mountPoint%>", "size": <%=numSize%>, "filesystem": "<%=par.fsType%>"},
+        {"size": <%=swapParSize%>, "filesystem": "<%=swapPar.fsType%>"}
+                        <%_ } else { _%>
+        {"mountpoint": "<%=par.mountPoint%>", "size": <%=numSize%>, "filesystem": "<%=par.fsType%>"},
+                        <%_ } _%>
+                    <%_ } _%>
+                <%_ i = i + 1; _%>
+            <%_ }) _%>
+    ],
+        <%_ } _%>
+    <%_ } _%>
+    "postinstall": [
+                    "#!/bin/sh",
+
+                    "# notify the current progress",
+                    <%_ if( typeof progressMilestones !== 'undefined' && progressMilestones.postConfigUri ) { _%>
+                        "curl -X POST -H 'Content-Type:application/json' 'http://<%=server%>:<%=port%><%-progressMilestones.postConfigUri%>' || true",
+                    <%_ } _%>
+
+                    "# Set the configuration",
+                    "/bin/curl http://<%=server%>:<%=port%>/api/current/templates/post-install-photon.sh?nodeId=<%=nodeId%> > /tmp/post-install-photon.sh",
+                    "chmod +x /tmp/post-install-photon.sh",
+                    "./tmp/post-install-photon.sh 2>&1 > /root/post-install-photon.log",
+
+                    "# Download the service to callback to RackHD after OS installation/reboot completion",
+                    "/bin/curl http://<%=server%>:<%=port%>/api/current/templates/<%=rackhdCallbackScript%>?nodeId=<%=nodeId%> > /etc/<%=rackhdCallbackScript%>",
+                    "chmod +x /etc/<%=rackhdCallbackScript%>",
+
+                    "# Generate the service file",
+                    "filename=/etc/systemd/system/<%=rackhdCallbackScript%>.service",
+                    "echo -e '[Unit]\nDescription=rackhdCallbackScript' > $filename",
+                    "echo -e '[Service]\nType=oneshot\nExecStart=/etc/<%=rackhdCallbackScript%>' >> $filename",
+                    "echo -e '[Install]\nWantedBy=multi-user.target' >> $filename",
+
+                    "chmod 0644 $filename",
+
+                    "# Install the service",
+                    "systemctl enable <%=rackhdCallbackScript%>.service",
+
+                    "# Enable SSH root login",
+                    "sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config",
+
+                    "# Signify ORA the installation completed",
+                    "curl -X POST -H 'Content-Type:application/json' 'http://<%=server%>:<%=port%>/api/current/notification?nodeId=<%=nodeId%>'"
+                   ]
+}

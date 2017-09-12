@@ -1,0 +1,4 @@
+#!/usr/bin/Cli -p2
+enable
+echo "RENASAR ZEROTOUCH DEFAULT"
+exit

@@ -1,0 +1,22 @@
+echo Starting CoreOS Stable installer
+
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.enterProfileUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+set base-url <%=repo%>
+# coreos.autologin <-- enable as kernel param to autologin for easier debugging
+# reference: https://coreos.com/os/docs/latest/booting-with-ipxe.html
+# JUST BOOT AND RUN COREOS
+# kernel ${base-url}/<%=version%>/coreos_production_pxe.vmlinuz coreos.autologin cloud-config-url=http://<%=server%>:<%=port%>/api/current/templates/pxe-cloud-config.yml?nodeId=<%=nodeId%>
+#
+kernel ${base-url}/<%=version%>/coreos_production_pxe.vmlinuz console=tty0 console=<%=comport%>,115200n8 coreos.autologin cloud-config-url=<%=installScriptUri%>
+initrd ${base-url}/<%=version%>/coreos_production_pxe_image.cpio.gz
+
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.startInstallerUri ) { %>
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.startInstallerUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell

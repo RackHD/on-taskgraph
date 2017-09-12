@@ -1,0 +1,31 @@
+#cloud-config
+write_files:
+  - path: /etc/rc.local
+    permissions: "0755"
+    owner: root
+    content: |
+      #!/bin/bash
+      modprobe ipmi_devintf
+      wget -O /tmp/micro.tar.xz <%= file.server %>/common/discovery.docker.tar.xz
+      while [ $(docker images | grep -c micro) == "0" ]; do
+         xz -cd /tmp/micro.tar.xz | docker load
+      done
+      docker run  \
+          -e SERVER='<%= server %>' \
+          -e PORT='<%= port %>' \
+          -e MAC='<%= macaddress %>' \
+          --privileged --net=host -v=/dev:/dev rackhd/micro
+      case $? in
+        1 )
+            echo 1 | sudo tee /proc/sys/kernel/sysrq
+            echo b | sudo tee /proc/sysrq-trigger
+            ;;
+        2 )
+            ipmitool -I open chassis power cycle ;;
+        127 )
+            exit 0 ;;
+        * )
+            echo 1 | sudo tee /proc/sys/kernel/sysrq
+            echo b | sudo tee /proc/sysrq-trigger
+            ;;
+      esac

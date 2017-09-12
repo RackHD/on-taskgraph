@@ -1,0 +1,5 @@
+kernel <%=kernelUri%>
+initrd <%=initrdUri%>
+imgargs <%=kernelFile%> initrd=<%=initrdFile%> console=tty0 rancher.password=monorail rancher.cloud_init.datasources=['url:http://<%=server%>:<%=port%>/api/current/templates/cloud-config.yaml?nodeId=<%=nodeId%>']
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell
+

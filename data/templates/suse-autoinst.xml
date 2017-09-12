@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<!DOCTYPE profile>
+<profile xmlns="http://www.suse.com/1.0/yast2ns" xmlns:config="http://www.suse.com/1.0/configns">
+
+  <partitioning config:type="list">
+    <drive>
+      <device><%=installDisk%></device>
+      <use>all</use>
+    </drive>
+  </partitioning>
+
+  <general>
+    <mode>
+      <!-- automation setting -->
+      <confirm config:type="boolean">false</confirm>
+    </mode>
+  </general>
+
+
+  <!-- users settings -->
+  <users config:type="list">
+    <user>
+      <encrypted config:type="boolean">true</encrypted>
+      <fullname>root</fullname>
+      <gid>0</gid>
+      <uid>0</uid>
+      <user_password><%=rootEncryptedPassword%></user_password>
+      <username>root</username>
+    </user>
+
+<% if( typeof users !== 'undefined' ) { %>
+<% users.forEach(function(user) { %>
+    <user>
+      <encrypted config:type="boolean">true</encrypted>
+      <fullname><%=user.name%></fullname>
+  <% if( undefined !== user.uid ) { %>
+      <uid><%=user.uid%></uid>
+  <% } %>
+      <user_password><%=user.encryptedPassword%></user_password>
+      <username><%=user.name%></username>
+    </user>
+<% }) %>
+<% } %>
+  </users>
+
+  <networking>
+    <keep_install_network config:type="boolean">true</keep_install_network>
+    <dns>
+      <dhcp_hostname config:type="boolean">true</dhcp_hostname>
+      <dhcp_resolv config:type="boolean">true</dhcp_resolv>
+      <% if( typeof domain !== 'undefined') { %>
+      <domain><%=domain%></domain>
+      <% } %>
+      <% if( typeof hostname !== 'undefined') { %>
+      <hostname><%=hostname%></hostname>
+      <% } %>
+      <write_hostname config:type="boolean">true</write_hostname>
+<% if( typeof dnsServers !== 'undefined' ) { %>
+      <nameservers config:type="list">
+  <% dnsServers.forEach(function(dns) { %>
+        <nameserver><%=dns%></nameserver>
+  <% }) %>
+      </nameservers>
+<% } %>
+    </dns>
+
+  <interfaces config:type="list">
+  <% ipv6 = 0 %>
+<% if( typeof networkDevices !== 'undefined') { %>
+  <% networkDevices.forEach(function(n) { %>
+    <% if( undefined != n.ipv4 ) { %>
+      <% if( undefined != n.ipv4.vlanIds ) { %>
+        <% n.ipv4.vlanIds.forEach(function(vid) { %>
+        <interface>
+          <startmode>auto</startmode>
+          <device><%=n.device%>.<%=vid%></device>
+          <ipaddr><%=n.ipv4.ipAddr%></ipaddr>
+          <netmask><%=n.ipv4.netmask%></netmask>
+          <gateway><%=n.ipv4.gateway%></gateway>
+          <vlan>yes</vlan>
+        </interface>
+        <% }); %>
+      <% } else { %>
+        <interface>
+          <startmode>auto</startmode>
+          <device><%=n.device%></device>
+          <ipaddr><%=n.ipv4.ipAddr%></ipaddr>
+          <netmask><%=n.ipv4.netmask%></netmask>
+          <gateway><%=n.ipv4.gateway%></gateway>
+        </interface>
+      <% } %>
+    <% } %>
+    <% if( undefined != n.ipv6 ) { %>
+      <% if( undefined != n.ipv6.vlanIds ) { %>
+        <% n.ipv6.vlanIds.forEach(function(vid) { %>
+        <interface>
+          <startmode>auto</startmode>
+          <device><%=n.device%>.<%=vid%></device>
+          <ipaddr><%=n.ipv6.ipAddr%></ipaddr>
+          <netmask><%=n.ipv6.netmask%></netmask>
+          <gateway><%=n.ipv6.gateway%></gateway>
+          <vlan>yes</vlan>
+        </interface>
+          <% ipv6 = 1 %>
+        <% }); %>
+      <% } else { %>
+        <interface>
+          <startmode>auto</startmode>
+          <device><%=n.device%></device>
+          <ipaddr><%=n.ipv6.ipAddr%></ipaddr>
+          <netmask><%=n.ipv6.netmask%></netmask>
+          <gateway><%=n.ipv6.gateway%></gateway>
+        </interface>
+        <% ipv6 = 1 %>
+      <% } %>
+    <% } %>
+  <% }); %>
+<% } %>
+  </interfaces>
+
+  <!-- enable or disable ipv6 -->
+<% if( ipv6 ) { %>
+  <ipv6 config:type="boolean">true</ipv6>
+<% } %>
+
+  </networking>
+
+  <software>
+    <packages config:type="list">
+      <package>openssh</package>
+<% if( typeof kvm !== 'undefined' && kvm ) { %>
+  <% if (version === "11") { %>
+      <package>kvm</package>
+  <% } else { %>
+      <package>qemu-kvm</package>
+  <% } %>
+      <package>virt-manager</package>
+      <package>libvirt</package>
+      <package>libvirt-python</package>
+      <package>bridge-utils</package>
+<% } %>
+    </packages>
+  </software>
+  <services-manager>
+    <default_target>multi-user</default_target>
+    <services>
+      <enable config:type="list">
+        <service>sshd</service>
+      </enable>
+    </services>
+  </services-manager>
+
+  <scripts>
+    <pre-scripts config:type="list">
+      <script>
+        <interpreter>shell</interpreter>
+        <source> <![CDATA[
+          #!/bin/sh
+
+          <% if( typeof progressMilestones !== 'undefined' && progressMilestones.preConfigUri ) { %>
+            curl -X POST -H 'Content-Type:application/json' "http://<%=server%>:<%=port%><%-progressMilestones.preConfigUri%>" || true
+          <% } %>
+          ]]>
+        </source>
+      </script>
+    </pre-scripts>
+
+    <postpartitioning-scripts config:type="list">
+      <script>
+        <interpreter>shell</interpreter>
+        <source> <![CDATA[
+          #!/bin/sh
+
+          <% if( typeof progressMilestones !== 'undefined' && progressMilestones.postPartitioningUri ) { %>
+            curl -X POST -H 'Content-Type:application/json' "http://<%=server%>:<%=port%><%-progressMilestones.postPartitioningUri%>" || true
+          <% } %>
+          ]]>
+        </source>
+      </script>
+    </postpartitioning-scripts>
+
+    <chroot-scripts config:type="list">
+      <script>
+        <chrooted config:type="boolean">true</chrooted>
+        <interpreter>shell</interpreter>
+        <!-- scripts for workflow completion -->
+        <source> <![CDATA[
+          #!/bin/sh
+
+          <% if( typeof progressMilestones !== 'undefined' && progressMilestones.chrootUri ) { %>
+            curl -X POST -H 'Content-Type:application/json' "http://<%=server%>:<%=port%><%-progressMilestones.chrootUri%>" || true
+          <% } %>
+          for retry in $(seq 1 5);
+          do
+              curl -X POST -H 'Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification?nodeId=<%=nodeId%>
+              if [ $? -eq 0 ]; then
+                  echo "Post Notification succeeded" >> /root/rackhd-post.log
+                  break
+              else
+                  echo "Post Notification failed" >> /root/rackhd-post.log
+                  sleep 1
+              fi
+          done;
+          ]]>
+        </source>
+      </script>
+    </chroot-scripts>
+
+    <post-scripts config:type="list">
+      <script>
+        <interpreter>shell</interpreter>
+        <chrooted config:type="boolean">true</chrooted>
+        <source> <![CDATA[
+          #!/bin/sh
+
+          # Make .ssh directory for root and users
+          # Set root ssh key
+          <% if (typeof rootSshKey !== 'undefined') { %>
+                mkdir /root/.ssh
+                echo <%=rootSshKey%> > /root/.ssh/authorized_keys
+                chown -R root:root /root/.ssh
+          <% } %>
+
+          # Set users ssh key
+          <% if (typeof users !== 'undefined') { %>
+          <% users.forEach(function(user) { %>
+            <% if (typeof user.sshKey !== 'undefined') { %>
+                mkdir /home/<%=user.name%>/.ssh
+                echo <%=user.sshKey%> > /home/<%=user.name%>/.ssh/authorized_keys
+                chown -R <%=user.name%>:users /home/<%=user.name%>/.ssh
+            <% } %>
+          <% }) %>
+          <% } %>
+
+          for retry in $(seq 1 5);
+          do
+              curl -X POST -H 'Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification?nodeId=<%=nodeId%>
+              if [ $? -eq 0 ]; then
+                  echo "Post Notification succeeded" >> /root/rackhd-post.log
+                  break
+              else
+                  echo "Post Notification failed" >> /root/rackhd-post.log
+                  sleep 1
+              fi
+          done;
+          ]]>
+        </source>
+      </script>
+    </post-scripts>
+
+  </scripts>
+
+</profile>

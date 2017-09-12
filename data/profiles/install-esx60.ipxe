@@ -1,0 +1,2 @@
+set 209:string http://<%=server%>:<%=port%>/api/current/templates/esx60-pxelinux-cfg?nodeId=<%=nodeId%>
+chain tftp://<%=server%>/undionly.kkpxe

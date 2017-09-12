@@ -1,0 +1,28 @@
+# The progress notification is just something nice-to-have, so progress notification failure should
+# never impact the normal installation process
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
+    # since there is no curl like http client in ipxe, so use imgfetch instead
+    # note: the progress milestones uri must be wrapped in unescaped format, otherwise imgfetch will fail
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.enterProfileUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+cpuid --ext 29 && set arch amd64 || set arch x86
+set base-url <%=repo%>
+kernel ${base-url}/wimboot
+initrd ${base-url}/bootmgr                      bootmgr
+initrd ${base-url}/Boot/BCD                     BCD
+initrd ${base-url}/Boot/Fonts/segmono_boot.ttf  segmono_boot.ttf
+initrd ${base-url}/Boot/Fonts/segoe_slboot.ttf  segoe_slboot.ttf
+initrd ${base-url}/Boot/Fonts/segoen_slboot.ttf segoen_slboot.ttf
+initrd ${base-url}/Boot/Fonts/wgl4_boot.ttf     wgl4_boot.ttf
+initrd ${base-url}/Boot/boot.sdi                boot.sdi
+initrd ${base-url}/${arch}/media/sources/boot.wim          boot.wim
+
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.startInstallerUri ) { %>
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.startInstallerUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+boot
+

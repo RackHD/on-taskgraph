@@ -1,0 +1,31 @@
+#! /bin/bash
+#
+# centos.rackhdcallback       callback to rackhd post installation API hook
+#
+# description: calls back to rackhd post installation API hook
+#
+### BEGIN INIT INFO
+# Provides: centos.rackhdcallback
+# Required-Start:    $network
+# Default-Start:     3 4 5
+# Short-Description: Callback to rackhd post installation API hook
+# Description: Callback to rackhd post installation API hook
+### END INIT INFO
+
+
+# We can't really know when networking is actually up and running from
+# a simple "Required-Start: $network", so instead just use curl with
+# a bunch of retries and hope it works. We could use more sophisticated
+# dependency mechanisms provided by systemd, but ideally we can just use
+# a single script to service both CentOS 6.5 and CentOS 7 installs, hence
+# reasoning for using `wget --retry-connrefused` below. Using `curl --retry`
+# fails immediately because it only handles connection timeouts, not connection
+# refused cases.
+# See https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
+
+# Nothing wrong with set -e here since we're not doing anything complex
+set -e
+echo "Attempting to call back to RackHD CentOS installer"
+wget --retry-connrefused --waitretry=1 -t 300 --post-data '{"nodeId":"<%=nodeId%>"}' --header='Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification
+# Only run this once to verify the OS was installed, then disable it forever
+chkconfig centos.rackhdcallback off

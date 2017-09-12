@@ -1,0 +1,4 @@
+kernel <%=repo%>/vmlinuz0 
+initrd <%=repo%>/initrd.img
+imgargs vmlinuz0 rootflags=loop initrd=initrd.img root=live:/<%=version%>.iso rootfstype=iso9660 !text !lang !ksdevice
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell

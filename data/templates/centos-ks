@@ -1,0 +1,257 @@
+install
+#text
+graphical
+unsupported_hardware
+url --url=<%=repo%>
+# eula --agreed
+lang en_US.UTF-8
+keyboard 'us'
+timezone America/Los_Angeles --isUtc
+firewall --enabled --http --ssh
+selinux --permissive
+<% if (version === "6.5") { %>
+  bootloader --location=mbr --driveorder=<%=installDisk%> --append="crashkernel=auth rhgb"
+<% } else { %>
+  bootloader --location=mbr --driveorder=<%=installDisk%> --boot-drive=<%=installDisk%> --append="crashkernel=auth rhgb"
+<% } %>
+services --enabled=NetworkManager,sshd
+#network --device=<%=macaddress%> --noipv6 --activate
+
+# enable syslog
+<% if (typeof remoteLogging !== 'undefined' && remoteLogging) { %>
+  logging --host=<%=server%> --level=info
+<% } %>
+
+authconfig --enableshadow --passalgo=sha512 --enablefingerprint
+
+#Set the root account
+rootpw --iscrypted <%=rootEncryptedPassword%>
+
+#create all users
+<% if (typeof users !== 'undefined') { %>
+<% users.forEach(function(user) { %>
+<%_  if( typeof user.uid !== 'undefined' ) { _%>
+        user --name=<%=user.name%> --uid=<%=user.uid%> --iscrypted --password <%=user.encryptedPassword%>
+<%_  } else { _%>
+        user --name=<%=user.name%>  --iscrypted --password <%=user.encryptedPassword%>
+<%_ }}) _%>
+<% } %>
+
+# Disk Partitioning
+zerombr
+clearpart --all --drives=<%=installDisk%>
+
+<% if (typeof installPartitions !== 'undefined' && installPartitions.length > 0) { %>
+    <% installPartitions.forEach(function(partition) { %>
+        # mountPoint and size is required
+        <% if(partition.mountPoint !== undefined && partition.size !== undefined) { %>
+            <% if(partition.fsType !== undefined) { %>
+                <% if(partition.size === 'auto') { %>
+                    partition <%=partition.mountPoint%> --size=250 --grow --fstype=<%=partition.fsType%>
+                <% } else { %>
+                    partition <%=partition.mountPoint%> --size=<%=partition.size%> --fstype=<%=partition.fsType%>
+                <% } %>
+            <% } else { %>
+                # fsType is optional
+                <% if(partition.size === 'auto') { %>
+                    partition <%=partition.mountPoint%> --size=250 --grow
+                <% } else { %>
+                    partition <%=partition.mountPoint%> --size=<%=partition.size%>
+                <% } %>
+            <% } %>
+        <% } %>
+    <% }) %>
+<% } else { %>
+    # auto partitioning if no partitions are specified
+    autopart
+<% } %>
+
+# END of Disk Partitioning
+
+# Make sure we reboot into the new system when we are finished
+reboot
+
+# Package Selection
+%packages --nobase --excludedocs
+@core
+-*firmware
+-iscsi*
+-fcoe*
+-b43-openfwwf
+kernel-firmware
+wget
+sudo
+perl
+libselinux-python
+net-tools
+<% if( typeof kvm !== 'undefined' && kvm ) { %>
+    <% if (version === "6.5") { %>
+        kvm
+        virt-manager
+        libvirt
+        libvirt-python
+        python-virtinst
+    <% } else { %>
+        @virtualization-hypervisor
+        @virtualization-client
+        @virtualization-platform
+        @virtualization-tools
+    <% } %>
+<% } %>
+%end
+
+%pre
+# The progress notification is just something nice-to-have, so progress notification failure should
+# never impact the normal installation process
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.preConfigUri ) { %>
+    # the url may contain query, the symbol '&' will mess the command line logic, so the whole url need be wrapped in quotation marks
+    /usr/bin/curl -X POST -H 'Content-Type:application/json' "http://<%=server%>:<%=port%><%-progressMilestones.preConfigUri%>" || true
+<% } %>
+%end
+
+%post --log=/root/install-post.log
+(
+#notify the current progress
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.postConfigUri ) { %>
+    echo "RackHD POST script started - curl notify post progress"
+    # the url may contain query, the symbol '&' will mess the command line logic, so the whole url need be wrapped in quotation marks
+    /usr/bin/curl -X POST -H 'Content-Type:application/json' "http://<%=server%>:<%=port%><%-progressMilestones.postConfigUri%>" || true
+    echo "RackHD POST script started - curl notify post progress after"
+<% } %>
+
+# PLACE YOUR POST DIRECTIVES HERE
+PATH=/bin:/sbin:/usr/bin:/usr/sbin
+export PATH
+
+# copying of SSH key
+<% if (typeof rootSshKey !== 'undefined') { %>
+    mkdir /root/.ssh
+    echo <%=rootSshKey%> > /root/.ssh/authorized_keys
+    chown -R root:root /root/.ssh
+<% } %>
+<% if (typeof users !== 'undefined') { %>
+<% users.forEach(function(user) { %>
+    <% if (typeof user.sshKey !== 'undefined') { %>
+        mkdir /home/<%=user.name%>/.ssh
+        echo <%=user.sshKey%> > /home/<%=user.name%>/.ssh/authorized_keys
+        chown -R <%=user.name%>:<%=user.name%> /home/<%=user.name%>/.ssh
+    <% } %>
+<% }) %>
+<% } %>
+
+#set hostname
+<% if (typeof hostname !== 'undefined') { %>
+    echo <%=hostname%> > /etc/hostname
+    <% if (typeof domain !== 'undefined') { %>
+        echo -e "NETWORKING=yes\nHOSTNAME=<%=hostname%>.<%=domain%>" > /etc/sysconfig/network
+    <% } %>
+<% } %>
+
+# Setup static network configuration
+<%_ var macRegex = /(..:*){6}/i; _%>
+<% if (typeof networkDevices !== 'undefined') { %>
+  <% ipv6 = 0 %>
+  <% networkDevices.forEach(function(n) { %>
+    interface=<%=n.device%>
+    <%_ if (n.device.search(macRegex) === 0){ _%>
+      interface=`grep -i /sys/class/net/*/address -e  $interface | cut -d "/" -f 5`
+    <%_ } _%>
+    <% if( undefined != n.ipv4 ) { %>
+      <% if( undefined != n.ipv4.vlanIds ) { %>
+        <% n.ipv4.vlanIds.forEach(function(vid) { %>
+          echo "Configuring vlan <%=vid%> on $interface"
+          sed -i '/^BOOTPROTO=/d' /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          sed -i '/^ONBOOT=/d' /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "DEVICE=$interface.<%=vid%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "IPADDR=<%=n.ipv4.ipAddr%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "NETMASK=<%=n.ipv4.netmask%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "GATEWAY=<%=n.ipv4.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "VLAN=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+        <% }); %>
+      <% } else { %>
+        echo "Configuring device $interface"
+        sed -i '/^BOOTPROTO=/d' /etc/sysconfig/network-scripts/ifcfg-$interface
+        sed -i '/^ONBOOT=/d' /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "DEVICE=$interface" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        <%_ if (n.device.search(macRegex) === 0){ _%>
+            echo "HWADDR=<%=n.device%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        <%_ } _%>
+        echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "IPADDR=<%=n.ipv4.ipAddr%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "NETMASK=<%=n.ipv4.netmask%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "GATEWAY=<%=n.ipv4.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+      <% } %>
+    <% } %>
+    <% if( undefined != n.ipv6 ) { %>
+      <% if( undefined != n.ipv6.vlanIds ) { %>
+        <% n.ipv6.vlanIds.forEach(function(vid) { %>
+          echo "Configuring vlan <%=vid%> on $interface"
+          sed -i '/^BOOTPROTO=/d' /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          sed -i '/^ONBOOT=/d' /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "DEVICE=$interface.<%=vid%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "IPV6INIT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "IPV6ADDR=<%=n.ipv6.ipAddr%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "IPV6_DEFAULTGW=<%=n.ipv6.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "VLAN=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          <% ipv6 = 1 %>
+        <% }); %>
+      <% } else { %>
+        echo "Configuring device $interface"
+        sed -i '/^BOOTPROTO=/d' /etc/sysconfig/network-scripts/ifcfg-$interface
+        sed -i '/^ONBOOT=/d' /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "DEVICE=$interface" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "IPV6INIT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "IPV6ADDR=<%=n.ipv6.ipAddr%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "IPV6_DEFAULTGW=<%=n.ipv6.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        <% ipv6 = 1 %>
+      <% } %>
+    <% } %>
+  <% }); %>
+  <% if( ipv6 ) { %>
+    grep -q -F 'NETWORKING_IPV6=yes' /etc/sysconfig/network || echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
+  <% } %>
+<% } %>
+
+# Setup DNS servers
+<% if (typeof dnsServers !== 'undefined') { %>
+  <% if (typeof domain !== 'undefined') { %>
+    echo "search <%=domain%>" > /etc/resolv.conf
+  <% } %>
+  <% dnsServers.forEach(function(dns) { %>
+    echo "nameserver <%=dns%>" >> /etc/resolv.conf
+  <% }) %>
+  chattr +i /etc/resolv.conf
+<% } %>
+
+# Download the service to callback to RackHD after OS installation/reboot completion
+echo "RackHD POST script wget started"
+/usr/bin/wget http://<%=server%>:<%=port%>/api/current/templates/<%=rackhdCallbackScript%>?nodeId=<%=nodeId%> -O /etc/rc.d/init.d/<%=rackhdCallbackScript%>
+echo "RackHD POST script chmod callback script"
+chmod +x /etc/rc.d/init.d/<%=rackhdCallbackScript%>
+# Enable the above service, it should auto-disable after running once
+chkconfig <%=rackhdCallbackScript%> on
+echo "RackHD POST script chkconfig callback script complete"
+
+#signify ORA the installation completed
+for retry in $(seq 1 5);
+do
+    /usr/bin/curl -X POST -H 'Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification?nodeId=<%=nodeId%>
+    if [ $? -eq 0 ]; then
+        echo "Post Notification succeeded"
+        break
+    else
+        echo "Post Notification failed"
+        sleep 1
+    fi
+done;
+
+) 2>&1 >>/root/install-post-sh.log
+EOF
+%end
