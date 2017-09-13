@@ -8,7 +8,7 @@ describe(require('path').basename(__filename), function () {
 
     base.before(function (context) {
             context.taskdefinition =
-                helper.require('/lib/graphs/ucs-discovery-graph.js');
+                helper.require('/lib/graphs/ucs-poller-graph.js');
         });
 
     describe('graph', function () {
