@@ -1,0 +1,18 @@
+echo Starting Ubuntu x64 installer for ${hostidentifier}
+
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.enterProfileUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+set base-url <%=repo%>/<%=baseUrl%>
+kernel ${base-url}/linux
+initrd ${base-url}/initrd.gz
+imgargs linux auto=true url=<%=installScriptUri%> hostname=<%=hostname%> log_host=<%=server%> BOOTIF=01-<%=macaddress%> interface=<%=interface%> console=<%=comport%>,115200n8 console=tty0 <%=kargs%>
+
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.startInstallerUri ) { %>
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.startInstallerUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell

@@ -35,6 +35,7 @@
     "on-core": "git+https://github.com/RackHD/on-core.git",
     "on-finished": "^2.3.0",
     "on-tasks": "git+https://github.com/RackHD/on-tasks.git",
+    "rewire": "^2.5.2",
     "rx": "^2.3.22",
     "swagger-tools": "0.8.*",
     "tv4": "~1.2.7"

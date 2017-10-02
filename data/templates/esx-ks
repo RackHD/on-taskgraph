@@ -1,0 +1,282 @@
+accepteula
+<% if (installDisk === "firstdisk") { %>
+  clearpart --firstdisk --overwritevmfs
+  install --firstdisk --overwritevmfs
+<% } else { %>
+  clearpart --drives=<%=installDisk%> --overwritevmfs
+  install --disk=<%=installDisk%> --overwritevmfs
+<% } %>
+rootpw <%=rootPlainPassword%>
+
+# Search the networkDevices and set the first device (if defined) up.
+# Use kargs if set to override the default kickstart network device
+# If no device is specified in the networkDevices, then we fallback
+# to setting 'vmnic0' up as DHCP. The device can be specified with a
+# MAC address or device name ('vmnic0' for example)
+<% if(Object.keys(kargs).length === 0) { %>
+<% if( typeof networkDevices !== 'undefined' ) { %>
+  <% need_default = networkDevices.every(function(n) { %>
+    <% if(typeof n.ipv4 !== 'undefined') { %>
+      <% ipopts = '--ip=' + n.ipv4.ipAddr + ' --gateway=' + n.ipv4.gateway + ' --netmask=' + n.ipv4.netmask %>
+      <% if (typeof n.ipv4.vlanIds !== 'undefined' ) { %>
+        <% ipopts += ' --vlandid=' + n.ipv4.vlanIds[0] %>
+      <% } %>
+      network --bootproto=static --device=<%=n.device%> <%=ipopts%>
+    <% } else { %>
+      network --bootproto=dhcp --device=<%=n.device%>
+    <% } %>
+    <% return false; %>
+  <% }); %>
+  <% if (need_default) { %>
+    network --bootproto=dhcp --device=vmnic0
+  <% } %>
+<% } %>
+<% } %>
+
+reboot
+
+%firstboot --interpreter=busybox
+
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.firstBootUri ) { %>
+    wget "http://<%=server%>:<%=port%><%-progressMilestones.firstBootUri%>" || true
+<% } %>
+
+# enable VHV (Virtual Hardware Virtualization to run nested 64bit Guests + Hyper-V VM)
+grep -i "vhv.enable" /etc/vmware/config || echo "vhv.enable = \"TRUE\"" >> /etc/vmware/config
+
+vim-cmd hostsvc/enable_ssh
+vim-cmd hostsvc/start_ssh
+vim-cmd hostsvc/enable_esx_shell
+vim-cmd hostsvc/start_esx_shell
+
+#suppress shell warnings
+esxcli system settings advanced set -o /UserVars/SuppressShellWarning -i 1
+
+#Set the ESXi Shell Interactive idle time logout
+esxcli system settings advanced set -o /UserVars/ESXiShellInteractiveTimeout -i 3600
+
+#Set Console port redirect
+esxcli system settings kernel set -s="gdbPort" -v=<%=gdbPort%>
+esxcli system settings kernel set -s="logPort" -v=<%=logPort%>
+esxcli system settings kernel set -s="tty2Port" -v=<%=comport%>
+esxcli system settings kernel set -s="debugLogToSerial" -v=<%=debugLogToSerial%>
+
+# disable firewall
+esxcli network firewall set --default-action false --enabled no
+
+# set hostname and domain
+<% var hostnameCmdStr=''; %>
+<% if (typeof domain === 'string') hostnameCmdStr += (' --domain ' + domain) %>
+<% if (typeof hostname === 'string') hostnameCmdStr += (' --host ' + hostname) %>
+<% if (typeof fqdn === 'string') hostnameCmdStr += (' --fqdn ' + fqdn) %>
+<% if (hostnameCmdStr.length > 0) { %>
+    esxcli system hostname set <%=hostnameCmdStr%>
+<% } %>
+
+#config root account
+<% if (typeof rootSshKey !== 'undefined') { %>
+    echo <%=rootSshKey%> > /etc/ssh/keys-root/authorized_keys
+<%} %>
+
+#create users
+rm /vmfs/volumes/datastore1/rackhd_create_sshkeys
+<% if( typeof users !== 'undefined' ) { %>
+<% users.forEach(function(user) { %>
+    /usr/lib/vmware/auth/bin/adduser -s /bin/sh -G root -h / -D <%=user.name%>
+    echo <%=user.plainPassword%> | passwd <%=user.name%> --stdin
+    <% if (typeof user.sshKey !== 'undefined') { %>
+        echo "mkdir /etc/ssh/keys-<%=user.name%>" >> /vmfs/volumes/datastore1/rackhd_create_sshkeys
+        echo "echo <%=user.sshKey%> > /etc/ssh/keys-<%=user.name%>/authorized_keys" >> /vmfs/volumes/datastore1/rackhd_create_sshkeys
+    <%} %>
+<%}) %>
+<%} %>
+chmod +x /vmfs/volumes/datastore1/rackhd_create_sshkeys
+
+#setup ntp
+cat > /etc/ntp.conf << __NTP_CONFIG__
+restrict default kod nomodify notrap noquerynopeer
+restrict 127.0.0.1 kkl,lkl
+<% if( typeof ntpServers !== 'undefined' ) { %>
+   <% ntpServers.forEach(function(ntp) { %>
+      server <%= ntp %>
+   <% }); %>
+<% } %>
+__NTP_CONFIG__
+/sbin/chkconfig ntpd on
+
+#enter maintenance mode
+esxcli system maintenanceMode set -e true
+
+#copy the first boot logs
+cp /var/log/hostd.log "/vmfs/volumes/datastore1/firstboot-hostd.log"
+cp /var/log/esxi_install.log "/vmfs/volumes/datastore1/firstboot-esxi_install.log"
+
+#setup DNS
+<% if( typeof dnsServers !== 'undefined' ) { %>
+  <% if ( typeof domain !== 'undefined' ) { %>
+  esxcli network ip dns search add --domain=<%=domain%>
+  <% } %>
+  <% dnsServers.forEach(function(dns) { %>
+    esxcli network ip dns server add --server=<%= dns %>
+  <% }); %>
+<% } %>
+
+#create vSwitches with uplinks. An uplink can be specifed with its MAC
+#address or device name
+<% if ( typeof switchDevices !== 'undefined' ) { %>
+  <% switchDevices.forEach(function(n) { %>
+    esxcli network vswitch standard add -v "<%=n.switchName%>"
+    <% if( typeof n.failoverPolicy !== 'undefined' ) { %>
+        esxcli network vswitch standard policy failover set -l "<%=n.failoverPolicy%>" -v "<%=n.switchName%>"
+    <% } %>
+    <% if( undefined !== n.uplinks ) { %>
+      <% n.uplinks.forEach(function(s) { %>
+        currdev=<%=s%>
+        <% if (s.substring(0,5) !== 'vmnic') { %>
+          currdev=`esxcli network nic list | grep <%=s%> | cut -d ' ' -f 1`
+        <% } %>
+        currsw=`esxcli --debug --formatter=csv network vswitch standard list | grep $currdev | awk -F, '{print $9}'`
+        if [ "$currsw" != "" ]; then
+          esxcli network vswitch standard uplink remove -v $currsw -u $currdev
+        fi
+        esxcli network vswitch standard uplink add -v <%=n.switchName%> -u $currdev
+      <% }); %>
+    <% } %>
+  <% }); %>
+<% } %>
+
+#parameters:vmkName, portgroup, switchName
+createVmk () {
+    vmkMac=`esxcli network ip interface list | sed -ne '/^.*\Name: $1.*$/{N;s/.*MAC Address: //;p}'`
+    esxcli network vswitch standard portgroup add -p $2 -v $3
+    esxcli network ip interface remove -i $1
+    if [ -z $vmkMac ]
+    then
+      esxcli network ip interface add -i $1 -p $2
+    else
+      esxcli network ip interface add -i $1 -p $2 -M $vmkMac
+    fi
+}
+
+<% vmkid = 0 %>
+<% if( typeof networkDevices !== 'undefined' ) { %>
+  <% networkDevices.forEach(function(n) { %>
+    currdev=<%=n.device%>
+    esxSwitchName=<%= typeof n.esxSwitchName!='undefined' ? n.esxSwitchName : 'vSwitch0' %>
+    <% if (n.device.substring(0,5) != 'vmnic') { %>
+       currdev=`esxcli network nic list | grep <%=n.device%> | cut -d ' ' -f 1`
+    <% } %>
+    <% if( undefined !== n.ipv4 ) { %>
+      <% if( undefined !== n.ipv4.vlanIds ) { %>
+        <% n.ipv4.vlanIds.forEach(function(vid) { %>
+          <% vmkname = 'vmk' + vmkid++ %>
+          createVmk <%=vmkname%> $currdev.<%=vid%> $esxSwitchName
+          esxcli network ip interface ipv4 set -i <%=vmkname%> -I <%=n.ipv4.ipAddr%> -N <%=n.ipv4.netmask%> -t static
+          esxcli network ip route ipv4 add -n default -g <%=n.ipv4.gateway%>
+          esxcli network vswitch standard portgroup set -p $currdev.<%=vid%> -v <%=vid %>
+        <% }); %>
+      <% } else { %>
+        <% vmkname = 'vmk' + vmkid++ %>
+        createVmk <%=vmkname%> $currdev $esxSwitchName
+        esxcli network ip interface ipv4 set -i <%=vmkname%> -I <%=n.ipv4.ipAddr%> -N <%=n.ipv4.netmask%> -t static
+        esxcli network ip route ipv4 add -n default -g <%=n.ipv4.gateway%>
+      <% } %>
+    <% } %>
+    <% if( undefined !== n.ipv6 ) { %>
+      <% if( undefined !== n.ipv6.vlanIds ) { %>
+        <% n.ipv6.vlanIds.forEach(function(vid) { %>
+          <% vmkname = 'vmk' + vmkid++ %>
+          createVmk <%=vmkname%> $currdev.<%=vid%> $esxSwitchName
+          esxcli network ip interface ipv6 address add -i <%=vmkname%> -I <%=n.ipv6.ipAddr%>
+          esxcli network vswitch standard portgroup set -p $currdev.<%=vid%> -v <%=vid %>
+        <% }); %>
+      <% } else { %>
+        <% vmkname = 'vmk' + vmkid++ %>
+        createVmk <%=vmkname%> $currdev $esxSwitchName
+        esxcli network ip interface ipv6 address add -i <%=vmkname%> -I <%=n.ipv6.ipAddr%>
+      <% } %>
+    <% } %>
+    <% if( (undefined === n.ipv6) && (undefined === n.ipv4) ) { %>
+      <% vmkname = 'vmk' + vmkid++ %>
+      createVmk <%=vmkname%> $currdev $esxSwitchName
+      esxcli network ip interface ipv4 set -i <%=vmkname%> -t dhcp
+    <% } %>
+  <% }); %>
+<% } %>
+
+<% if( typeof postInstallCommands !== 'undefined' ) { %>
+  <% postInstallCommands.forEach(function(n) { %>
+    <%-n%>
+  <% }); %>
+<% } %>
+
+# Download the service to callback to RackHD after OS installation/reboot completion
+# %firstboot ends with a reboot, this script will run afterwards to signify completion
+# of the installer and all reboot steps.
+#
+# The approved method for adding startup commands is to write to /etc/rc.local.d/local.sh,
+# which is a pre-existing file with a sticky bit set by VisorFS. You can't just create new
+# files and expect them to stick around, even if you set a sticky bit yourself.
+# The /sbin/auto-backup.sh script will ensure the changes are persisted across reboots and
+# MUST be executed after making any changes.
+#
+# See these links for more information:
+# http://www.virtuallyghetto.com/2011/08/how-to-persist-configuration-changes-in.html
+# http://blogs.vmware.com/vsphere/2011/09/how-often-does-esxi-write-to-the-boot-disk.html
+# https://communities.vmware.com/message/1273849#1273849
+#
+# NOTE: this method only works for ESXi 5.1 or greater. For older versions, the changes
+# must be written to /etc/rc.local instead.
+#
+# NOTE: this script will execute right away as a result of writing it to local.sh
+# along with executing on every subsequent boot
+#
+# Try to download call back script 60 times 1 second
+# sleep in between to allow link to be up after DHCP
+for retry in $(seq 1 60);
+do
+    wget http://<%=server%>:<%=port%>/api/current/templates/<%=rackhdCallbackScript%>?nodeId=<%=nodeId%> -O /etc/rc.local.d/local.sh
+    if [ $? -eq 0 ]; then
+        logger -p user.info "RackHD's call back script was downloaded successfully after $retry attempt(s)."
+        break
+    else
+        logger -p user.info "Failed to download RackHD's call back script after $retry attempt(s)."
+        sleep 1
+    fi
+done;
+
+if [ $retry -eq 60 ]; then
+   logger -p user.err "RackHD's call back script was not downloaded successfully."
+fi
+
+#backup ESXi configuration to persist it
+/sbin/auto-backup.sh
+
+#reboot the system after host configuration
+esxcli system shutdown reboot -d 10 -r "Rebooting after first boot host configuration"
+
+%pre --interpreter=busybox
+
+#notify the current progress
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.preConfigUri ) { %>
+    # the url may contain query, the symbol '&' will mess the command line logic, so the whole url need be wrapped in quotation marks
+    wget "http://<%=server%>:<%=port%><%-progressMilestones.preConfigUri%>" || true
+<% } %>
+
+
+%post --interpreter=busybox
+
+#notify the current progress
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.postConfigUri ) { %>
+    # the url may contain query, the symbol '&' will mess the command line logic, so the whole url need be wrapped in quotation marks
+    wget "http://<%=server%>:<%=port%><%-progressMilestones.postConfigUri%>" || true
+<% } %>
+
+#disable firewall
+localcli network firewall set --enabled no
+#signify ORA the installation completed
+BODY="{"
+BODY=$BODY"\"nodeId\": \"<%=nodeId%>\""
+BODY=$BODY"}"
+BODYLEN=$(echo -n ${BODY} | wc -c)
+echo -ne "POST /api/current/notification HTTP/1.0\r\nHost: <%=server%>\r\nContent-Type: application/json\r\nContent-Length: ${BODYLEN}\r\n\r\n${BODY}" | nc -i 3 <%=server%> <%=port%>

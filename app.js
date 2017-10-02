@@ -21,7 +21,6 @@ function Runner(configureFile, Logger, uuid, constants,
                 eventsProtocol, lookupService, Errors, events) {
     var logger = Logger.initialize('TaskGraph');
     var server;
-    console.log('ya hala', configureFile);
     function start() {
         var app = require('express')();
         var http = require('http');
