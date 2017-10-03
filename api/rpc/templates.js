@@ -4,6 +4,7 @@
 var injector = require('../../index.js').injector;
 var templatesApiService = injector.get('Http.Services.Api.Templates');
 var Promise = injector.get('Promise');
+var templates = injector.get('Templates');
 
 var templatesLibGet = function (call) {
     return Promise.try(function() {
@@ -30,9 +31,14 @@ var templatesMetaGetByName  = function (call) {
     });
 };
 
+var templatesLibDelete  = function (call) {
+    return templates.unlink(call.request.name, call.request.scope);
+};
+
 module.exports = {
     templatesLibGet:templatesLibGet,
     templatesLibPut:templatesLibPut,
     templatesMetaGet: templatesMetaGet,
-    templatesMetaGetByName: templatesMetaGetByName
+    templatesMetaGetByName: templatesMetaGetByName,
+    templatesLibDelete: templatesLibDelete
 };

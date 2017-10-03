@@ -21,6 +21,7 @@ service Scheduler {
   rpc workflowsDeleteTasksByName (workflowsDeleteTasksByNameRequest) returns (HttpReply) {}
   rpc templatesLibGet (templatesLibGetRequest) returns (HttpReply) {}
   rpc templatesLibPut (templatesLibPutRequest) returns (HttpReply) {}
+  rpc templatesLibDelete (templatesLibDeleteRequest) returns (HttpReply) {}
   rpc templatesMetaGet (templatesMetaGetRequest) returns (HttpReply) {}
   rpc templatesMetaGetByName (templatesMetaGetByNameRequest) returns (HttpReply) {}
   rpc profilesGetLibByName (profilesGetLibByNameRequest) returns (HttpReply) {}
@@ -139,6 +140,11 @@ message profilesPutLibByNameRequest{
   string name = 1;
       string req = 2;
       string scope = 3;
+}
+
+message templatesLibDeleteRequest {
+  string name = 1;
+  string scope = 2;
 }
 
 

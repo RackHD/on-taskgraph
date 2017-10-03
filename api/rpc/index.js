@@ -70,6 +70,7 @@ function schedulerServerFactory(
                 templatesLibPut: grpcWrapper(templates.templatesLibPut),
                 templatesMetaGet: grpcWrapper(templates.templatesMetaGet),
                 templatesMetaGetByName: grpcWrapper(templates.templatesMetaGetByName),
+                templatesLibDelete: grpcWrapper(templates.templatesLibDelete),
                 profilesGetLibByName: grpcWrapper(profiles.profilesGetLibByName),
                 profilesGetMetadata: grpcWrapper(profiles.profilesGetMetadata),
                 profilesGetMetadataByName: grpcWrapper(profiles.profilesGetMetadataByName),
