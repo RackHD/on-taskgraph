@@ -4,18 +4,21 @@ count = 0
 string= ""
 interfaces=[]
 for dirname, dirnames, filenames in os.walk('/sys/class/net/'):
-    for subdirname in dirnames:
-        if subdirname != "lo":
-            #Here we are assigning an arbitrary IP which could be a different one. This is just to get the interface up
-            interfaces.append(subdirname)
-            ip= 100+count
-            string += "auto " + subdirname
-            string += "\niface " +  subdirname +" inet static"
-            string += "\naddress 10.0.0." + str(ip)
-            if count == 0:
-                string += "\ngateway 10.0.0.1"
-            string += "\nnetmask 255.255.255.0\n\n"
-            count=count+1
+    iflist =  [(d,os.path.realpath(dirname+d)) for d in os.listdir(dirname) ]
+    for (ifname, ifpath) in iflist:
+        #avoid checking virtual interfaces
+        if ifname != "lo" and 'virtual' not in ifpath:
+	    #Here we are assigning an arbitrary IP which could be a different one. This is just to get the interface up
+	    interfaces.append(ifname)
+	    ip= 100+count
+	    string += "auto " + ifname
+	    string += "\niface " +  ifname +" inet static"
+	    string += "\naddress 10.0.0." + str(ip)
+	    if count == 0:
+		string += "\ngateway 10.0.0.1"
+	    string += "\nnetmask 255.255.255.0\n\n"
+	    count=count+1
+
 
 with open("/etc/network/interfaces", "w") as text_file:
     text_file.write(string)
