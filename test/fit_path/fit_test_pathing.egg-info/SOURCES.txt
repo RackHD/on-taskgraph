@@ -1,0 +1,4 @@
+fit_test_pathing.egg-info/PKG-INFO
+fit_test_pathing.egg-info/SOURCES.txt
+fit_test_pathing.egg-info/dependency_links.txt
+fit_test_pathing.egg-info/top_level.txt
