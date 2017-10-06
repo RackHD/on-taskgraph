@@ -1,3 +1,4 @@
+#!/bin/env python
 # Copyright 2016, EMC, Inc.
 
 """
@@ -113,15 +114,31 @@ def poc_log_open():
 def poc_log_close():
     if log_filename:
         poc_log_file.close()
+if ("<%=switchVendor%>" == "arista"  ):
+    log_filename = "/mnt/flash/ztp.log"
+    try:
+        import subprocess
+
+        #Setting up the switch to have RackHD as its remote syslog
+        f= open("cliCommands.txt","w+")
+        f.write("config \nlogging host <%=server%> \nend")
+        f.close()
+        cmd = "Cli cliCommands.txt"
+        subprocess.check_output(cmd, shell=True)
+
+    except:
+        pass
+elif ("<%=switchVendor%>" == "brocade"):
+    log_filename = ""
+elif ("<%=switchVendor%>" == "cisco"):
+    log_filename = "/bootflash/poap.log"
 
 try:
     import requests
     switch_class = _Requests()
-    log_filename = ""
 except:
     import urllib2
     switch_class = _Urllib2()
-    log_filename = "/bootflash/poap.log"
 
 
 TASK_REQUEST_PERIOD = 5

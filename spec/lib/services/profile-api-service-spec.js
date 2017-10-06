@@ -151,7 +151,7 @@ describe("Http.Services.Api.Profiles", function () {
         });
     });
 
-    describe("getNode", function () {
+   describe("getNode", function () {
         var node;
 
         before("getNode before", function () {
@@ -376,6 +376,80 @@ describe("Http.Services.Api.Profiles", function () {
                 });
         });
 
+        it("render profile pass when having active graph and render succeed with Arista", function () {
+            var node = {id: 'test', type: 'switch'};
+            var graph = {context: {}, injectableName: "Graph.Switch.Discovery.Arista.Ztp"};
+
+            this.sandbox.stub(workflowApiService, 'findActiveGraphForTarget').resolves(graph);
+            this.sandbox.stub(taskProtocol, 'requestProfile').resolves('profile');
+            this.sandbox.stub(taskProtocol, 'requestProperties').resolves({});
+
+            return profileApiService.getProfileFromTaskOrNode(node)
+                .then(function (result) {
+                    expect(workflowApiService.findActiveGraphForTarget).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProfile).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProperties).to.have.been.calledOnce;
+                    expect(result).to.deep.equal({
+                        context: {},
+                        options: {
+                            identifier: "test",
+                            switchVendor: "arista"
+                        },
+                        profile: "profile"
+                    });
+                });
+        });
+
+        it("render profile pass when having active graph and render succeed with Cisco", function () {
+            var node = {id: 'test', type: 'switch'};
+            var graph = {context: {}, injectableName: "Graph.Switch.Discovery.Cisco.Poap"};
+
+            this.sandbox.stub(workflowApiService, 'findActiveGraphForTarget').resolves(graph);
+            this.sandbox.stub(taskProtocol, 'requestProfile').resolves('profile');
+            this.sandbox.stub(taskProtocol, 'requestProperties').resolves({});
+
+            return profileApiService.getProfileFromTaskOrNode(node)
+                .then(function (result) {
+                    expect(workflowApiService.findActiveGraphForTarget).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProfile).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProperties).to.have.been.calledOnce;
+                    expect(result).to.deep.equal({
+                        context: {},
+                        options: {
+                            identifier: "test",
+                            switchVendor: "cisco"
+                        },
+                        profile: "profile"
+                    });
+                });
+        });
+
+
+        it("render profile pass when having active graph and render succeed with Brocade", function () {
+            var node = {id: 'test', type: 'switch'};
+            var graph = {context: {}, injectableName: "Graph.Switch.Discovery.Brocade.Ztp"};
+
+            this.sandbox.stub(workflowApiService, 'findActiveGraphForTarget').resolves(graph);
+            this.sandbox.stub(taskProtocol, 'requestProfile').resolves('profile');
+            this.sandbox.stub(taskProtocol, 'requestProperties').resolves({});
+
+            return profileApiService.getProfileFromTaskOrNode(node)
+                .then(function (result) {
+                    expect(workflowApiService.findActiveGraphForTarget).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProfile).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProperties).to.have.been.calledOnce;
+                    expect(result).to.deep.equal({
+                        context: {},
+                        options: {
+                            identifier: "test",
+                            switchVendor: "brocade"
+                        },
+                        profile: "profile"
+                    });
+                });
+        });
+
+
         it("render profile pass when having active graph and render succeed", function () {
             var node = {id: 'test', type: 'switch'};
             var graph = {context: {}};
@@ -392,7 +466,10 @@ describe("Http.Services.Api.Profiles", function () {
                     expect(result).to.deep.equal({
                         context: graph.context,
                         profile: 'taskrunner.py',
-                        options: {'identifier': 'test'}
+                        options: {
+                            'identifier': 'test',
+                            switchVendor: undefined
+                        }
                     });
                 });
         });
