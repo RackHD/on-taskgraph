@@ -42,6 +42,7 @@ function Runner(configureFile, Logger, uuid, constants,
         swaggerTools.initializeMiddleware(swaggerDoc, function (middleware) {
             //re-route common and current
             //var versionPath = configuration.get('versionBase', '2.0');
+            app.use(require('body-parser').json({limit: '10mb'}));
             app.use(rewriter('/api/current/*', '/api/2.0/$1'));
             app.use(rewriter('/api/common/*', '/api/2.0/$1'));
             // Imaging Event Middleware
