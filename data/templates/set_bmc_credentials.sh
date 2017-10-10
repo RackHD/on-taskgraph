@@ -26,7 +26,7 @@ userNumber=${#userlist[@]}
 if [ "$userNumber" -gt  "1" ]; then
    userNumber=$(expr $userNumber - 1)
 fi
-user=$(<%=user%>)
+
 #The check variable is a flag to determine if the user already exists
 #(1:already exist and 0:user does not exist)
 check=0
