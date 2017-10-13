@@ -1,0 +1,24 @@
+echo Starting SUSE <%=version%> installer >
+
+# The progress notification is just something nice-to-have, so progress notification failure should
+# never impact the normal installation process
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
+    # since there is no curl like http client in ipxe, so use imgfetch instead
+    # note: the progress milestones uri must be wrapped in unescaped format, otherwise imgfetch will fail
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.enterProfileUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+set base-url <%=repo%>
+set params linux install=${base-url} autoyast=<%=installScriptUri%> <%=kargs%>
+kernel ${base-url}/boot/x86_64/loader/linux
+initrd ${base-url}/boot/x86_64/loader/initrd
+imgargs linux ${params}
+
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.startInstallerUri ) { %>
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.startInstallerUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell
+

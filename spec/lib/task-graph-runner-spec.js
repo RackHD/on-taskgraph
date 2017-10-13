@@ -17,6 +17,7 @@ describe('TaskGraph.Runner', function () {
     var store;
     var taskGraphRunner;
     var sandbox;
+    var waterline;
 
     function mockConsul() {
         return {
@@ -50,6 +51,13 @@ describe('TaskGraph.Runner', function () {
         serviceGraph = helper.injector.get('TaskGraph.ServiceGraph');
         store = helper.injector.get('TaskGraph.Store');
         taskGraphRunner = helper.injector.get('TaskGraph.Runner');
+        waterline = helper.injector.get('Services.Waterline');
+        waterline.profiles = {
+            destroy: function() {}
+        };
+        waterline.templates = {
+            destroy: function() {}
+        };
     });
 
     beforeEach('setup mocks', function() {
@@ -62,6 +70,8 @@ describe('TaskGraph.Runner', function () {
         sandbox.stub(TaskScheduler, 'create').resolves();
         sandbox.stub(CompletedTaskPoller, 'create').resolves();
         sandbox.stub(serviceGraph, 'start').resolves();
+        sandbox.stub(waterline.profiles, 'destroy').resolves();
+        sandbox.stub(waterline.templates, 'destroy').resolves();
     });
 
     afterEach('teardown mocks', function() {

@@ -1,0 +1,6 @@
+#! /bin/bash
+
+echo "Attempting to call back to RackHD Ubuntu installer"
+wget --retry-connrefused --waitretry=1 -t 300 --post-data '{"nodeId":"<%=nodeId%>"}' --header='Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification
+# Delete file
+rm $0

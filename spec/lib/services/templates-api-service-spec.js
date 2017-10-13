@@ -22,7 +22,11 @@ describe('Http.Api.Templates', function () {
             helper.di.simpleWrapper({makeRenderableOptions: function(){}}, 'Http.Services.Swagger'),
             helper.di.simpleWrapper({findActiveGraphForTarget: function(){}},
                 'Http.Services.Api.Workflows'),
-            helper.di.simpleWrapper({render: function(){}}, 'Templates'),
+            helper.di.simpleWrapper({render: function(){},
+                get: function(){},
+                put: function(){},
+                getName: function(){},
+            getAll: function(){}}, 'Templates'),
         ]);
         this.sandbox = sinon.sandbox.create();
         waterline = helper.injector.get('Services.Waterline');
@@ -149,6 +153,94 @@ describe('Http.Api.Templates', function () {
                     done();
                 });
         });
+
+
+        it('Should GET a template', function () {
+            var template = {
+                contents: "Template Content"
+            };
+            var name = "arista-config";
+            var scope = "global";
+            this.sandbox.stub(templates, 'get').resolves(template);
+            return templatesApiService.templatesLibGet(name, scope)
+                .then(function (data) {
+                    expect(templates.get).to.have.been.calledWith(
+                        name,
+                        scope
+                    );
+                    expect(data).to.deep.equal(template.contents);
+                });
+        });
+
+
+        it('Should PUT a template', function () {
+
+            var req = {
+                query: {macs: "ee"},
+                swagger: {
+                    params: {name: {value: 'any'}}
+                }
+            };
+            var returnedPutValue ={
+                "createdAt": "2017-09-14T18:18:38.489Z",
+                "hash": "w9F3Ve/dOcnhcJBgkGUDZg==",
+                "name": "ansible-external-inventory.js",
+                "path": "/home/rackhd/git/2rackhd/rackhd/on-taskgraph/data/templates/ansible-external-inventory.js",
+                "scope": "global",
+                "updatedAt": "2017-09-18T13:19:10.990Z",
+                "id": "2d138ac3-0e70-4dee-ae30-b242658bd2a4"
+            };
+            var name = "arista-config";
+            var scope = "global";
+            this.sandbox.stub(templates, 'put').resolves(returnedPutValue);
+            return templatesApiService.templatesLibPut(name, req, scope)
+                .then(function (data) {
+                    expect(templates.put).to.have.been.calledOnce;
+                    expect(data).to.deep.equal(returnedPutValue);
+                });
+        });
+
+        it('Should GET templates metadata', function () {
+            var metadata =[{
+                "id": "e33202fc-f77c-40cc-8bab-037115c1de9a",
+                "hash": "2Hmi/YDYFG9CezRfd4xVOA==",
+                "name": "renasar-ansible.pub",
+                "scope": "global"
+            }, {
+                "id": "e33202fc-f77c-40cc-8bab-037115c1de9a",
+                "hash": "2Hmi/YDYFG9CezRfd4xVOA==",
+                "name": "renasar-ansible.pub",
+                "scope": "global"
+            }];
+            this.sandbox.stub(templates, 'getAll').resolves(metadata);
+            return templatesApiService.templatesMetaGet()
+                .then(function (data) {
+                    expect(templates.getAll).to.have.been.calledOnce;
+                    expect(data).to.deep.equal(metadata);
+                });
+        });
+
+        it('Should GET a template metadata by name', function () {
+            var metadata =[{
+                "id": "e33202fc-f77c-40cc-8bab-037115c1de9a",
+                "hash": "2Hmi/YDYFG9CezRfd4xVOA==",
+                "name": "renasar-ansible.pub",
+                "scope": "global"
+            }];
+            var req = {
+                request: {
+                    name: "templateName",
+                    scope: "global"
+                }
+            };
+            this.sandbox.stub(templates, 'getName').resolves(metadata);
+            return templatesApiService.templatesMetaGetByName(req)
+                .then(function (data) {
+                    expect(templates.getName).to.have.been.calledOnce;
+                    expect(data).to.deep.equal(metadata);
+                });
+        });
+
 
     });
 

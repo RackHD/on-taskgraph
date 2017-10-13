@@ -1,0 +1,7 @@
+DEFAULT install
+NOHALT 1
+PROMPT 0
+TIMEOUT 80
+LABEL install
+  KERNEL <%=repo%>/<%=mbootFile%>
+  APPEND -c http://<%=server%>:<%=port%>/api/current/templates/<%=esxBootConfigTemplate%>?nodeId=<%=nodeId%>

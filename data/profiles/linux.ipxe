@@ -1,0 +1,4 @@
+kernel <%=kernelUri%>
+initrd <%=initrdUri%>
+imgargs <%=kernelFile%> initrd=<%=initrdFile%> auto=true SYSLOGSERVER=<%=server%> API_CB=<%=server%>:<%=port%> BASEFS=<%=basefsUri%> OVERLAYFS=<%=overlayfsUri%> BOOTIF=01-<%=macaddress%> console=tty0 console=<%=comport%>,115200n8 <%=kargs%>
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell
