@@ -1,0 +1,57 @@
+#!ipxe
+set user-class MonoRail
+
+echo
+echo MonoRail Boilerplate iPXE...
+set syslog <%=server%>
+
+# Interface that requested an IP originally.
+set interface <%=macaddress%>
+
+# If macaddress is null, don't need to find boot interface
+isset ${interface} || goto ifConfigured
+
+# Reboot Interval
+set rebootInterval:int8 5
+
+# Interface Search Index.
+set ifIndex:int8 0
+set ifIndexMax:int8 10
+
+# Interface Boot Retries
+set ifBootAttempt:int8 0
+set ifBootAttemptMax:int8 5
+
+# Close all the interfaces to begin with.
+ifclose
+
+# Iterate the interfaces to find a match by MAC Address.
+:ifFind
+iseq ${ifIndex} ${ifIndexMax} && goto ifFindFailure || goto ifFindContinue
+:ifFindContinue
+iseq ${interface} ${net${ifIndex}/mac} && goto ifBoot || inc ifIndex && goto ifFind
+
+# Boot the found interface.
+:ifBoot
+iseq ${ifBootAttempt} ${ifBootAttemptMax} && goto ifBootFailure || goto ifBootContinue
+:ifBootContinue
+ifopen net${ifIndex}
+ifconf net${ifIndex} && goto ifConfigured || inc ifBootAttempt && goto ifBoot
+
+# Find Interface Failure
+:ifFindFailure
+echo Unable to locate interface ${interface}, restarting in ${rebootInterval} seconds.
+sleep ${rebootInterval}
+reboot
+
+# Boot Interface Failure
+:ifBootFailure
+echo Unable to boot interface ${interface}, restarting in ${rebootInterval} seconds.
+sleep ${rebootInterval}
+reboot
+
+# Configure the booted interface
+:ifConfigured
+route
+echo MonoRail Boilerplate iPXE Completed.
+echo

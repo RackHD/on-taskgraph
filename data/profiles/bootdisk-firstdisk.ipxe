@@ -1,0 +1,2 @@
+echo Forcing boot to first disk
+sanboot --no-describe --drive 0x80

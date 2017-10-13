@@ -1,0 +1,39 @@
+#!/bin/sh
+# esx       callback to rackhd post installation API hook
+# description: calls back to rackhd post installation API hook
+
+echo "Attempting to call back to RackHD ESX installer"
+LOCALSH=/etc/rc.local.d/local.sh
+# *sigh*, busybox shell does not support {1..30}. Retry 30 times with 1 second
+# sleep in between.
+for retry in $(awk 'BEGIN { for ( i=0; i<30; i++ ) { print i; } }');
+do
+    BODY="{"
+    BODY=$BODY"\"nodeId\": \"<%=nodeId%>\""
+    BODY=$BODY"}"
+    BODYLEN=$(echo -n ${BODY} | wc -c)
+    echo -ne "POST /api/current/notification HTTP/1.0\r\nHost: <%=server%>\r\nContent-Type: application/json\r\nContent-Length: ${BODYLEN}\r\n\r\n${BODY}" | nc -i 3 <%=server%> <%=port%>
+    if [ "$?" -ne 0 ];
+    then
+        echo "Failed to connect to RackHD API callback, retrying"
+        sleep 1
+    else
+        if [ -e /vmfs/volumes/datastore1/rackhd_callback ]
+        then
+            echo "Remove RackHD callback script"
+            rm /vmfs/volumes/datastore1/rackhd_callback
+            echo "Create RackHD SSH keys for non-root users after second reboot and on startup"
+            /vmfs/volumes/datastore1/rackhd_create_sshkeys
+            echo '#!/bin/sh' > $LOCALSH
+            cat /vmfs/volumes/datastore1/rackhd_create_sshkeys >> $LOCALSH
+            echo 'exit 0' >> $LOCALSH
+            /sbin/auto-backup.sh
+        else
+            touch /vmfs/volumes/datastore1/rackhd_callback
+        fi
+        exit 0
+    fi
+done;
+
+echo "Exceeded retries connecting to RackHD API callback. Exiting with failure code 1"
+exit 1

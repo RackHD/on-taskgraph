@@ -77,7 +77,7 @@ process.on('SIGINT', function () {
             logger.critical('Task Graph Runner Shutdown Error.', { error: error });
         })
         .finally(function () {
-            restApp.stop()
+            restApp.stop();
             process.nextTick(function () {
                 process.exit(1);
             });

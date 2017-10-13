@@ -1,0 +1,2 @@
+initrd http://<%=server%>:<%=port%>/<%=image%>
+chain http://<%=server%>:<%=port%>/common/memdisk floppy <%=kargs%>

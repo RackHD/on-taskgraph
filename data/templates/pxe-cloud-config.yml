@@ -1,0 +1,73 @@
+#cloud-config
+coreos:
+  update:
+    reboot-strategy: best-effort
+  etcd:
+    name: <%=hostname%>
+  units:
+    - name: etcd.service
+      command: start
+    - name: fleet.service
+      command: start
+<% if (typeof networkDevices !== 'undefined' ) { %>
+  <% networkDevices.forEach(function(networkDevice) { %>
+    - name: systemd-networkd.service
+      command: stop
+    - name: 00-<%=networkDevice.device%>.network
+      runtime: true
+      content: |
+        [Match]
+        Name=<%=networkDevice.device%>
+
+        [Network]
+<% if (typeof dnsServers !== 'undefined') { %>
+  <% dnsServers.forEach(function(dnsServer) { %>
+        DNS=<%=dnsServer%>
+  <% }) %>
+<% } %>
+
+<% cidr_bits = 0 %>
+<% if( undefined !== networkDevice.ipv4.netmask ) { %>
+    <% networkDevice.ipv4.netmask.split('.').forEach(function(octet) {%>
+    <%cidr_bits+=((octet >>> 0).toString(2).match(/1/g)||[]).length;%>
+  <% }) %>
+<% } %>
+        Address=<%=networkDevice.ipv4.ipAddr%>/<%=cidr_bits%>
+        Gateway=<%=networkDevice.ipv4.gateway%>
+    - name: down-interfaces.service
+      command: start
+      content: |
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/ip link set <%=networkDevice.device%> down
+        ExecStart=/usr/bin/ip addr flush dev <%=networkDevice.device%>
+    - name: systemd-networkd.service
+      command: restart
+  <% }) %>
+<% } %>
+hostname: <%=hostname%>
+<% if( typeof users !== 'undefined' ) { %>
+  <% users.forEach(function(user) { %>
+users:
+  - name: "<%=user.name%>"
+    passwd: "<%=user.encryptedPassword%>"
+<% if ( user.sshKey) { %>
+    ssh-authorized-keys:
+      - "<%=user.sshKey%>"
+<% } %>
+    <% if (typeof user.groups !== 'undefined') { %>
+    groups:
+      <% user.groups.forEach(function(group) { %>
+      - "<%=group%>"
+      <% }) %>
+    <% } %>
+  <% }) %>
+<% } %>
+<% if (typeof coreSshKeys !== 'undefined') { %>
+ssh_authorized_keys:
+  <% coreSshKeys.forEach(function(coreSshKey) { %>
+  - "<%=coreSshKey%>"
+  <% }) %>
+<% } %>
+
+

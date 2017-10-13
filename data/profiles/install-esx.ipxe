@@ -1,0 +1,26 @@
+# The progress notification is just something nice-to-have, so progress notification failure should
+# never impact the normal installation process
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
+    # since there is no curl like http client in ipxe, so use imgfetch instead
+    # note: the progress milestones uri must be wrapped in unescaped format, otherwise imgfetch will fail
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.enterProfileUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+iseq ${platform} efi && goto is_efi || goto not_efi
+
+:not_efi
+kernel <%=repo%>/<%=mbootFile%> -c <%=esxBootConfigTemplateUri%> BOOTIF=01-${netX/mac}
+goto boot_img
+
+:is_efi
+kernel <%=repo%>/efi/boot/bootx64.efi -c <%=esxBootConfigTemplateUri%>
+goto boot_img
+
+:boot_img
+<% if( typeof progressMilestones !== 'undefined' && progressMilestones.startInstallerUri ) { %>
+    imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.startInstallerUri%> ||
+    imgfree fakedimage ||
+<% } %>
+
+boot

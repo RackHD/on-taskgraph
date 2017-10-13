@@ -1,0 +1,14 @@
+{
+  "ignition": { "version": "2.0.0" },
+  "storage": {
+    "files": [{
+      "filesystem": "root",
+      "path": "/root/ignition-RackHD.txt",
+      "mode":400,
+      "contents": {
+        <%#  The source is encoded with base64. To encode/decode, you can use the CLI tool base64(1). The current decoded text reads as follows: %>
+        <%#  You may customize your CoreOS installation using Ignition by configuring the ignitionScriptUri variable to point to a custom Ignition file prior to executing the RackHD Task.Os.Install.CoreOS task. %>
+        "source": "data:text/plain;charset=utf-8;base64,WW91IG1heSBjdXN0b21pemUgeW91ciBDb3JlT1MgaW5zdGFsbGF0aW9uIHVzaW5nIElnbml0aW9uIGJ5IGNvbmZpZ3VyaW5nIHRoZSBpZ25pdGlvblNjcmlwdFVyaSB2YXJpYWJsZSB0byBwb2ludCB0byBhIGN1c3RvbSBJZ25pdGlvbiBmaWxlIHByaW9yIHRvIGV4ZWN1dGluZyB0aGUgUmFja0hEIFRhc2suT3MuSW5zdGFsbC5Db3JlT1MgdGFzay4=" }
+    }]
+  }
+}

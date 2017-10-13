@@ -1,6 +1,6 @@
 {
   "name": "on-taskgraph",
-  "version": "2.23.0",
+  "version": "2.26.0",
   "description": "",
   "main": "lib",
   "scripts": {
@@ -20,6 +20,7 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "consul": "^0.26.0",
     "di": "git+https://github.com/RackHD/di.js.git",
     "dot-object": "^0.6.0",
@@ -35,6 +36,7 @@
     "on-core": "git+https://github.com/RackHD/on-core.git",
     "on-finished": "^2.3.0",
     "on-tasks": "git+https://github.com/RackHD/on-tasks.git",
+    "rewire": "^2.5.2",
     "rx": "^2.3.22",
     "swagger-tools": "0.8.*",
     "tv4": "~1.2.7"

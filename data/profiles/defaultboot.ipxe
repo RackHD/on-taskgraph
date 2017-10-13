@@ -1,0 +1,4 @@
+kernel <%=url%>/<%=kernel%>
+initrd <%=url%>/<%=initrd%>
+imgargs <%=kernel%> <%=bootargs%>
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell
