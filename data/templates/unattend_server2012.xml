@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    <settings pass="windowsPE">
+        <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <DiskConfiguration>
+                <WillShowUI>OnError</WillShowUI>
+                <Disk wcm:action="add">
+                    <CreatePartitions>
+                        <CreatePartition wcm:action="add">
+                            <Order>1</Order>
+                            <Size>100</Size>
+                            <Type>Primary</Type>
+                        </CreatePartition>
+                        <CreatePartition wcm:action="add">
+                            <Order>2</Order>
+                            <Extend>true</Extend>
+                            <Type>Primary</Type>
+                        </CreatePartition>
+                    </CreatePartitions>
+                    <ModifyPartitions>
+                        <ModifyPartition wcm:action="add">
+                            <Active>true</Active>
+                            <Label>Boot</Label>
+                            <Format>NTFS</Format>
+                            <Order>1</Order>
+                            <PartitionID>1</PartitionID>
+                        </ModifyPartition>
+                        <ModifyPartition wcm:action="add">
+                            <Format>NTFS</Format>
+                            <Order>2</Order>
+                            <PartitionID>2</PartitionID>
+                            <Label>System</Label>
+                        </ModifyPartition>
+                    </ModifyPartitions>
+                    <DiskID>0</DiskID>
+                    <WillWipeDisk>true</WillWipeDisk>
+                </Disk>
+            </DiskConfiguration>
+            <ImageInstall>
+                <OSImage>
+                    <InstallTo>
+                        <PartitionID>2</PartitionID>
+                        <DiskID>0</DiskID>
+                    </InstallTo>
+                    <InstallToAvailablePartition>false</InstallToAvailablePartition>
+                    <WillShowUI>OnError</WillShowUI>
+                    <InstallFrom>
+                        <MetaData wcm:action="add">
+                            <Key>/IMAGE/NAME</Key>
+                            <Value>Windows Server 2012 R2 SERVERSTANDARD</Value>
+                        </MetaData>
+                    </InstallFrom>
+                </OSImage>
+            </ImageInstall>
+            <UserData>
+                <ProductKey>
+                    <Key><%=productkey%></Key>
+                    <WillShowUI>OnError</WillShowUI>
+                </ProductKey>
+                <AcceptEula>true</AcceptEula>
+                <FullName>--</FullName>
+                <Organization>--</Organization>
+            </UserData>
+        </component>
+        <component name="Microsoft-Windows-International-Core-WinPE" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <SetupUILanguage>
+                <UILanguage>en-US</UILanguage>
+            </SetupUILanguage>
+            <InputLocale>en-US</InputLocale>
+            <UILanguage>en-US</UILanguage>
+            <SystemLocale>en-US</SystemLocale>
+            <UserLocale>en-US</UserLocale>
+        </component>
+    </settings>
+    <settings pass="oobeSystem">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="NonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <VisualEffects>
+                <FontSmoothing>ClearType</FontSmoothing>
+            </VisualEffects>
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <ProtectYourPC>3</ProtectYourPC>
+                <NetworkLocation>Work</NetworkLocation>
+            </OOBE>
+            <UserAccounts>
+                <AdministratorPassword>
+                    <Value><%=password%></Value>
+                    <PlainText>true</PlainText>
+                </AdministratorPassword>
+                <LocalAccounts>
+                    <LocalAccount wcm:action="add">
+                        <Password>
+                            <Value><%=password%></Value>
+                            <PlainText>true</PlainText>
+                        </Password>
+                        <Description>Local Administrator</Description>
+                        <DisplayName>Administrator</DisplayName>
+                        <Group>Administrators;users</Group>
+                        <Name><%=username%></Name>
+                    </LocalAccount>
+                </LocalAccounts>
+            </UserAccounts>
+            <FirstLogonCommands>
+                <SynchronousCommand wcm:action="add">
+                    <Order>1</Order>
+                    <CommandLine>powershell -Command "powershell -Command "Start-Sleep -s 60"</CommandLine>
+                    <Description>flag the end of the setup</Description>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>2</Order>
+                    <% if( firewallDisable ) { %>
+                    <CommandLine>powershell -Command "Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False" </CommandLine>
+                    <Description>disable firewall on node to be able to ping the new IP when max payload is used</Description>
+                    <% } %>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>3</Order>
+                    <CommandLine>powershell -Command "curl http://<%=server%>:<%=port%>/api/current/templates/post-windows-install.ps1?nodeId=<%=nodeId%>" -Outfile post-windows-install.ps1 </CommandLine>
+                    <Description>setup any the VLAN IDs and trigger the end of the install workflow</Description>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+                <SynchronousCommand wcm:action="add">
+                    <Order>4</Order>
+                    <CommandLine>powershell -ExecutionPolicy ByPass -File post-windows-install.ps1</CommandLine>
+                    <Description>run the script</Description>
+                    <RequiresUserInput>false</RequiresUserInput>
+                </SynchronousCommand>
+            </FirstLogonCommands>
+            <AutoLogon>
+                <Password>
+                    <Value><%=password%></Value>
+                    <PlainText>true</PlainText>
+                </Password>
+                <Enabled>true</Enabled>
+                <LogonCount>2</LogonCount>
+                <Username><%=username%></Username>
+            </AutoLogon>
+            <RegisteredOrganization>--</RegisteredOrganization>
+            <RegisteredOwner>--</RegisteredOwner>
+        </component>
+    </settings>
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <TimeZone>Pacific Standard Time</TimeZone>
+            <ComputerName><%=hostname%></ComputerName>
+        </component>
+        <component name="Microsoft-Windows-TCPIP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <% if( typeof networkDevices !== 'undefined' ) { %>
+            <% networkDevices.forEach(function(n) { %>
+            <% cidr_bits = 0 %>
+            <% dhcp_ipv4 = false %>
+            <% dhcp_ipv6 = false %>
+            <% ipAddress = 0 %>
+            <% gateWay = 0 %>
+
+            <% if( undefined != n.ipv4 ) { %>
+            <% if( undefined != n.ipv4.netmask ) { %>
+            <% n.ipv4.netmask.split('.').forEach(function(octet) {%>
+            <%cidr_bits+=((octet >>> 0).toString(2).match(/1/g)||[]).length;%>
+            <%});%>
+            <% } %>
+
+            <% if( undefined != n.ipv4.ipAddr ) { %>
+            <% ipAddress =n.ipv4.ipAddr %>
+            <% } else {  %>
+            <% dhcp_ipv4 = true %>
+            <% } %>
+
+            <% if( undefined != n.ipv4.gateway ) { %>
+            <% gateWay  =n.ipv4.gateway %>
+            <% } %>
+
+           <% } %>
+
+
+            <% if( undefined != n.ipv6 ) { %>
+            <% if( undefined != n.ipv6.netmask ) { %>
+            <% n.ipv6.netmask.split('.').forEach(function(octet) {%>
+            <%cidr_bits+=((octet >>> 0).toString(2).match(/1/g)||[]).length;%>
+            <%});%>
+            <% } %>
+
+            <% if( undefined != n.ipv6.ipAddr ) { %>
+            <% ipAddress =n.ipv6.ipAddr %>
+            <% } else { %>
+            <% dhcp_ipv6 = true %>
+            <% } %>
+
+            <% if( undefined != n.ipv6.gateway ) { %>
+            <% gateWay  =n.ipv6.gateway %>
+            <% } %>
+
+            <% } %>
+
+
+            <Interfaces>
+                <Interface wcm:action="add">
+                    <Identifier><%= n.device%></Identifier>
+                    <Ipv4Settings>
+                        <DhcpEnabled><%= dhcp_ipv4 %></DhcpEnabled>
+                        <Metric>20</Metric>
+                        <RouterDiscoveryEnabled>false</RouterDiscoveryEnabled>
+                    </Ipv4Settings>
+                    <Ipv6Settings>
+                        <DhcpEnabled><%= dhcp_ipv6 %></DhcpEnabled>
+                        <Metric>10</Metric>
+                        <RouterDiscoveryEnabled>false</RouterDiscoveryEnabled>
+                    </Ipv6Settings>
+                    <% if (ipAddress !== 0 ) { %>
+                    <UnicastIpAddresses>
+                        <IpAddress wcm:action="add"wcm:keyValue="1"><%=ipAddress%>/<%= cidr_bits%></IpAddress>
+                    </UnicastIpAddresses>
+                    <% } %>
+                    <% if (gateWay !== 0 ) { %>
+                    <Routes>
+                        <Route wcm:action="add">
+                            <Identifier>0</Identifier>
+                            <NextHopAddress><%=gateWay%></NextHopAddress>
+                            <Prefix>0.0.0.0/0</Prefix>
+                        </Route>
+                    </Routes>
+                    <% } %>
+                </Interface>
+            </Interfaces>
+            <% }); %>
+            <% } %>
+        </component>
+
+    </settings>
+    <cpi:offlineImage cpi:source="wim:e:/ws2012install.wim#Windows Server 2012 SERVERSTANDARD" xmlns:cpi="urn:schemas-microsoft-com:cpi" />
+</unattend>

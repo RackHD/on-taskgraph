@@ -1,0 +1,49 @@
+#! /bin/bash
+#
+# photon-os.rackhdcallback       callback to rackhd post installation API hook
+#
+# description: calls back to rackhd post installation API hook
+#
+### BEGIN INIT INFO
+# Provides: photon-os.rackhdcallback
+# Required-Start:    $network
+# Default-Start:     3 4 5
+# Short-Description: Callback to rackhd post installation API hook
+# Description: Callback to rackhd post installation API hook
+### END INIT INFO
+
+
+echo "Attempting to call back to RackHD Photon OS installer"
+
+max_count=30
+interval=5
+host=<%=server%>
+
+count=0
+
+while [ $count -lt $max_count ]
+do
+
+    # ping to make sure the host is reachable before really curl the completionURL
+    # Curl will fail and cause systemd service fail if network is not ready, that'
+    # why we need to ping before curl.
+
+	ping -c 1 $host 1>/dev/null
+	
+	if [ $? -eq 0 ]
+    	then
+        # Retry 100 times, delay between retry set to 1 second, total operation limits
+        # to 1000 seconds, each connection fail at 9 seconds
+        /bin/curl -X POST -H 'Content-Type:application/json' --max-time 1000 --connect-timeout 9 --retry-delay 1 --retry 100 http://<%=server%>:<%=port%>/api/current/notification?nodeId=<%=nodeId%>
+
+        # Only run this once to verify the OS was installed, then stop the service and remove itself forever
+        systemctl disable photon-os.rackhdcallback.service
+        rm /etc/photon-os.rackhdcallback
+        rm /etc/systemd/system/photon-os.rackhdcallback.service
+        exit
+	fi
+	
+    sleep $interval
+	count=$((count + 1))
+	echo try connecting $host, count = $count, max = $max_count
+done

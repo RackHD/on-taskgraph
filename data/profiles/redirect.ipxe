@@ -1,0 +1,59 @@
+set i:int8 0
+
+:loop
+set CurrentIp ${net${i}/ip}
+isset ${CurrentIp} || goto noipqueryset
+set CurrentIpQuery ips=${CurrentIp}
+goto ipquerysetdone
+:noipqueryset
+set CurrentIpQuery ips=
+:ipquerysetdone
+
+set CurrentMac ${net${i}/mac:hex}
+isset ${CurrentMac} || goto done
+set CurrentMacQuery macs=${CurrentMac}
+
+iseq ${i} 0 || goto notnic0queryset
+set IpsQuery ${CurrentIpQuery}
+set MacsQuery ${CurrentMacQuery}
+goto querysetdone
+
+:notnic0queryset
+set IpsQuery ${IpsQuery}&${CurrentIpQuery}
+set MacsQuery ${MacsQuery}&${CurrentMacQuery}
+:querysetdone
+
+echo RackHD: NIC${i} MAC: ${CurrentMac}
+echo RackHD: NIC${i} IP: ${CurrentIp}
+
+inc i
+iseq ${i} 100 || goto loop
+:done
+
+# Profile request retries
+set getProfileAttempt:int8 0
+set getProfileAttemptMax:int8 5
+set getProfileRetryDelay:int8 3
+
+goto getProfile
+
+:getProfileRetry
+inc getProfileAttempt
+iseq ${getProfileAttempt} ${getProfileAttemptMax} || goto getProfileRetryContinue
+
+echo Exceeded max retries chainloading boot profile
+echo Exiting in ${rebootInterval} seconds...
+# rebootInterval defined in boilerplate.ipxe
+sleep ${rebootInterval}
+goto complete
+
+:getProfileRetryContinue
+echo Failed to download profile, retrying in ${getProfileRetryDelay} seconds
+sleep ${getProfileRetryDelay}
+
+:getProfile
+echo RackHD: Chainloading next profile
+chain http://<%=server%>:<%=port%>/api/current/profiles?${MacsQuery}&${IpsQuery} || goto getProfileRetry
+
+:complete
+exit

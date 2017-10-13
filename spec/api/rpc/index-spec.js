@@ -20,7 +20,7 @@ describe('TaskGraph.TaskScheduler.Server', function () {
 
     before('setup mockery', function () {
         this.timeout(10000);
-        
+
         // setup injector with mock override injecatbles
         var workflowsGraphMethods = [
             'workflowsGetGraphs',
@@ -39,12 +39,24 @@ describe('TaskGraph.TaskScheduler.Server', function () {
             'workflowsGetByInstanceId',
             'workflowsAction'
         ];
+        var templateMethods = [
+            'templatesLibGet'
+        ];
         var workflowsTasksMethods = [
             'workflowsPutTask',
             'workflowsGetAllTasks',
             'workflowsGetTasksByName',
             'workflowDeleteTaskByName'
         ];
+
+        var profilesMethods = [
+            'profilesGetLibByName',
+            'profilesGetMetadata',
+            'profilesGetMetadataByName',
+            'profilesPostSwitchError',
+            'profilesPutLibByName'
+        ];
+
         var gprcMethods = [
             'Server',
             'addProtoService',
@@ -60,6 +72,8 @@ describe('TaskGraph.TaskScheduler.Server', function () {
         mockery.registerMock('./workflowTasks.js', _buildMock(workflowsTasksMethods));
         mockery.registerMock('./tasks.js', _buildMock(tasksMethods));
         mockery.registerMock('./workflows.js', _buildMock(workflowsMethods));
+        mockery.registerMock('./templates.js', _buildMock(templateMethods));
+        mockery.registerMock('./profiles.js', _buildMock(profilesMethods));
         mockery.registerMock('grpc', _buildMock(gprcMethods));
         mockery.enable({ useCleanCache: true, warnOnUnregistered: false });
 
@@ -84,16 +98,17 @@ describe('TaskGraph.TaskScheduler.Server', function () {
             addProtoServiceSpy = sinon.spy(sinon.stub());
             grpc.load.returns({scheduler: { Scheduler: { service: 'foo' } }});
             grpc.Server.returns({ addProtoService: addProtoServiceSpy,
-                                  bind: sinon.stub(),
-                                  start: sinon.stub(),
-                                  forceShutdown: sinon.stub() });
+                bind: sinon.stub(),
+                start: sinon.stub(),
+                forceShutdown: sinon.stub() });
             grpc.ServerCredentials = { createInsecure: sinon.stub() };
         });
-        
+
         it('should start server successfully', function() {
+            this.timeout(10000);
             return schedServer.start().should.eventually.equal(undefined);
         });
-        
+
         it('should not start server if gRPC invalid', function() {
             this.timeout(10000);
             grpc.Server.returns({});
@@ -105,7 +120,7 @@ describe('TaskGraph.TaskScheduler.Server', function () {
                 return schedServer.stop().should.eventually.equal(undefined);
             });
         });
-        
+
         it('should not stop server if gRPC invalid', function() {
             return schedServer.start().then(function() {
                 delete schedServer.gRPC.forceShutdown;
@@ -120,12 +135,12 @@ describe('TaskGraph.TaskScheduler.Server', function () {
                 var callback = sinon.stub();
                 graphs.workflowsGetGraphs.resolves({foo: 'bar'});
                 return wrappedStub({ }, callback).then(function() {
-                    expect(callback).to.have.been.calledWith(null, 
-                    		{ response: JSON.stringify({foo: 'bar'}) });
+                    expect(callback).to.have.been.calledWith(null,
+                        { response: JSON.stringify({foo: 'bar'}) });
                 });
             });
         });
-        
+
         it('should call wrapper callback with no response', function() {
             return schedServer.start().then(function() {
                 var graphs = require('./workflowGraphs.js');

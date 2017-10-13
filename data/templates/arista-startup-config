@@ -1,0 +1,13 @@
+hostname rackhd-arista
+
+enable
+config
+username rackhd secret 0 rackhd
+
+management api http-commands
+no shut
+
+snmp-server community rackhd
+snmp-server group network-admin v2c
+
+end

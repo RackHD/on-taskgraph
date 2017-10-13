@@ -1,0 +1,4 @@
+echo RackHD: <%=message%>
+echo RackHD: Booting to disk in ${rebootInterval} seconds...        
+sleep ${rebootInterval}        
+exit

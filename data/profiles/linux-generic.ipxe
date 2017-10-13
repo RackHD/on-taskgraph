@@ -1,0 +1,4 @@
+kernel <%=kernelUri%>
+initrd <%=initrdUri%>
+imgargs <%=kernelFile%> initrd=<%=initrdFile%> ip=<%=ipaddress%>:<%=server%>:<%=gateway%>:<%=netmask%> rsyslog=<%=server%> cb_url=http://<%=server%>:<%=port%>/api/current/notification?nodeId=<%=nodeId%> BOOTIF=01-<%=macaddress%> console=tty0 console=<%=comport%>,115200n8 <%=bootargs%>
+boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell

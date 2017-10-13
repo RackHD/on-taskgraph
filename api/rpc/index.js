@@ -40,10 +40,13 @@ function schedulerServerFactory(
             var grpc = require('grpc');
             var schedulerProto = grpc.load(self.options.protoFile).scheduler;
 
+            var templates = require('./templates.js');
             var tasks = require('./tasks.js');
             var workflowGraphs = require('./workflowGraphs.js');
             var workflows = require('./workflows.js');
             var workflowTasks = require('./workflowTasks.js');
+            var profiles = require('./profiles.js');
+
 
             self.gRPC = new grpc.Server();
             self.gRPC.addProtoService(schedulerProto.Scheduler.service, {
@@ -62,7 +65,19 @@ function schedulerServerFactory(
                 workflowsPutTask: grpcWrapper(workflowTasks.workflowsPutTask),
                 workflowsGetAllTasks: grpcWrapper(workflowTasks.workflowsGetAllTasks),
                 workflowsGetTasksByName: grpcWrapper(workflowTasks.workflowsGetTasksByName),
-                workflowsDeleteTasksByName: grpcWrapper(workflowTasks.workflowsDeleteTasksByName)
+                workflowsDeleteTasksByName: grpcWrapper(workflowTasks.workflowsDeleteTasksByName),
+                templatesLibGet: grpcWrapper(templates.templatesLibGet),
+                templatesLibPut: grpcWrapper(templates.templatesLibPut),
+                templatesMetaGet: grpcWrapper(templates.templatesMetaGet),
+                templatesMetaGetByName: grpcWrapper(templates.templatesMetaGetByName),
+                templatesLibDelete: grpcWrapper(templates.templatesLibDelete),
+                profilesGetLibByName: grpcWrapper(profiles.profilesGetLibByName),
+                profilesGetMetadata: grpcWrapper(profiles.profilesGetMetadata),
+                profilesGetMetadataByName: grpcWrapper(profiles.profilesGetMetadataByName),
+                profilesPostSwitchError: grpcWrapper(profiles.profilesPostSwitchError),
+                profilesPutLibByName: grpcWrapper(profiles.profilesPutLibByName)
+
+
             });
 
             self.options.port = self.gRPC.bind(

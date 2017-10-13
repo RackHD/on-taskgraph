@@ -118,6 +118,29 @@
       },
       "type": "object"
     },
+    "generic_obj": {
+      "type": "object"
+    },
+    "get_user_obj": {
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "patch_user_obj": {
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
     "WorkflowGraphTask": {
       "properties": {
         "ignoreFailure": {
@@ -936,6 +959,299 @@
       },
       "x-swagger-router-controller": "profiles"
     },
+    "/profiles/library/{name}": {
+      "get": {
+        "description": "Get the contents of a profile specified by its name.",
+        "operationId": "profilesGetLibByName",
+        "parameters": [
+          {
+            "description": "The profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The profile scope",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned profile",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The profile with the specified name was not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get contents of a profile",
+        "tags": [
+          "profiles"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "profilesRead"
+        ]
+      },
+      "put": {
+        "consumes": [
+          "application/octet-stream",
+          "application/x-www-form-urlencoded"
+        ],
+        "description": "Create or modify the specified profile metadata and contents.",
+        "operationId": "profilesPutLibByName",
+        "parameters": [
+          {
+            "description": "The profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The profile scope",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created or modified the specified profile",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Profile creation failed",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Put a profile",
+        "tags": [
+          "profiles"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "profilesWrite"
+        ]
+      },
+      "x-swagger-router-controller": "profiles"
+    },
+    "/profiles/metadata": {
+      "get": {
+        "description": "Get the list of metadata associated with all known profiles.",
+        "operationId": "profilesGetMetadata",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the list of profile metadata",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get list of profile metadata",
+        "tags": [
+          "profiles"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "profilesRead"
+        ],
+        "x-view": "renderable.2.0.json"
+      },
+      "x-swagger-router-controller": "profiles"
+    },
+    "/profiles/metadata/{name}": {
+      "get": {
+        "description": "Get the metadata associated with the specified profile.",
+        "operationId": "profilesGetMetadataByName",
+        "parameters": [
+          {
+            "description": "The profile name",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The profile scope",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned the profile",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The profile with the specified identifier was not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get the specified profiles metadata from database",
+        "tags": [
+          "profiles"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "profilesRead"
+        ],
+        "x-view": "renderable.2.0.json"
+      },
+      "x-swagger-router-controller": "profiles"
+    },
+    "/profiles/switch/error": {
+      "post": {
+        "description": "Manually send a switch error to the log, since most switches do not generate errors.",
+        "operationId": "profilesPostSwitchError",
+        "parameters": [
+          {
+            "description": "The switch error to send",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/generic_obj"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully posted the switch error",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Upload failed",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Post a switch error",
+        "tags": [
+          "profiles"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "profilesWrite"
+        ]
+      },
+      "x-swagger-router-controller": "profiles"
+    },
+    "/profiles/switch/{vendor}": {
+      "get": {
+        "description": "Get a profile rendered with the switch vendor name.",
+        "operationId": "profilesGetSwitchVendor",
+        "parameters": [
+          {
+            "description": "The switch vendor name",
+            "in": "path",
+            "name": "vendor",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned the profile with switch vendor name.",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "Profile not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get a profile",
+        "tags": [
+          "southBound"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "profilesRead"
+        ]
+      },
+      "x-swagger-router-controller": "profiles"
+    },
     "/templates/{name}": {
       "get": {
         "description": "Get the template with the specified name.",
@@ -1057,6 +1373,264 @@
         "x-privileges": [
           "Read"
         ]
+      },
+      "x-swagger-router-controller": "templates"
+    },
+    "/templates/library/{name}": {
+      "delete": {
+        "description": "Delete the template with the specified name.",
+        "operationId": "templatesLibDelete",
+        "parameters": [
+          {
+            "description": "The name of the template",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "global",
+            "description": "The template scope",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the specified template"
+          },
+          "404": {
+            "description": "The template with specified identifier was not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Delete the specified template",
+        "tags": [
+          "templates"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "templatesRemove"
+        ]
+      },
+      "get": {
+        "description": "Get the contents of the specified template file.",
+        "operationId": "templatesLibGet",
+        "parameters": [
+          {
+            "description": "The file name of the template",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "global",
+            "description": "The template scope",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the contents of the specified template",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The template with specified identifier was not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get the specified template",
+        "tags": [
+          "templates"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "templatesRead"
+        ]
+    },
+      "put": {
+        "consumes": [
+          "text/plain",
+          "application/x-www-form-urlencoded"
+        ],
+        "description": "Create or update the metadata and the content of the specified template.",
+        "operationId": "templatesLibPut",
+        "parameters": [
+          {
+            "description": "The name of the template",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "global",
+            "description": "The template scope",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created or updated the specified template.",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "The specified template was not found.",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Create or update the specified template",
+        "tags": [
+          "templates"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Write",
+          "templatesWrite"
+        ]
+      },
+    "x-swagger-router-controller": "templates"
+  },
+    "/templates/metadata": {
+      "get": {
+        "description": "Retrieves metadata for each defined template. The metadata includes the template name, and scope, not the actual contents of the template.\n",
+        "operationId": "templatesMetaGet",
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Query string specifying properties to sort with",
+            "required": false,
+            "type": "string",
+            "pattern": "[- +]{0,1}(name|id)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved all template metadata",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get a list of metadata for all templates",
+        "tags": [
+          "templates"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "templatesRead"
+        ],
+        "x-view": "renderable.2.0.json"
+      },
+      "x-swagger-router-controller": "templates"
+    },
+    "/templates/metadata/{name}": {
+      "get": {
+        "description": "Get metadata for the template with the specified name.",
+        "operationId": "templatesMetaGetByName",
+        "parameters": [
+          {
+            "description": "The file name of the template",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "The template scope",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the metadata of the specified template.",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "404": {
+            "description": "Template with specified identifier was not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "default": {
+            "description": "Unexpected error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        },
+        "summary": "Get the metadata for the specified template",
+        "tags": [
+          "templates"
+        ],
+        "x-authentication-type": [
+          "jwt"
+        ],
+        "x-privileges": [
+          "Read",
+          "templatesRead"
+        ],
+        "x-view": "renderable.2.0.json"
       },
       "x-swagger-router-controller": "templates"
     },
