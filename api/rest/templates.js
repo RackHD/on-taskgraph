@@ -15,7 +15,7 @@ var templatesLibGet  = controller( function (req) {
     return templatesApiService.templatesLibGet(req.swagger.params.name.value, req.swagger.params.scope.value);
 });
 
-var templatesLibPut  = controller( function (req) {
+var templatesLibPut  = controller( {success: 201}, function (req) {
     return templatesApiService.templatesLibPut(req.swagger.params.name.value,
         req,
         req.swagger.params.scope.value);
