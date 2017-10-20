@@ -1,4 +1,5 @@
 
+Write-Host Started to execute starup.ps1 script
 $LocalEndPoint = New-Object System.Net.IPEndPoint([ipaddress]::Any,65433)
 
 $MulticastEndPoint = New-Object System.Net.IPEndPoint([ipaddress]::Parse("239.255.255.250"),1900)
@@ -49,7 +50,7 @@ if( $Response_RAW -match "LOCATION:(.*)" ) {
     # Unable to find RackHD host, hopefully it is the DHCP server...
     $objWin32NAC = Get-WmiObject -Class Win32_NetworkAdapterConfiguration -namespace "root\CIMV2" -computername "." -Filter "IPEnabled = 'True' AND DHCPEnabled ='True'"
     $server = $objWin32NAC | select -Unique -First 1 -ExpandProperty DhcpServer
-    $server = "http://${server}:9080/api/2.0/"
+    $server = "http://${server}:<%=port%>/api/2.0/"
 }
 
 Write-Host Using RackHD instance: $server
