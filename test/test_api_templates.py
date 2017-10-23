@@ -37,7 +37,7 @@ class rackhd20_api_templates(test_common.unittest.TestCase):
     def test_api_20_templates_library_ID_put_get_delete(self):
         # this test creates a dummy template called 'testid', checks it, then deletes it
         api_data = test_common.taskgraphapi("/api/2.0/templates/library/testid?scope=global", action="text-put", payload="null")
-        self.assertEqual(api_data['status'], 200, "Was expecting code 201. Got " + str(api_data['status']))
+        self.assertEqual(api_data['status'], 201, "Was expecting code 201. Got " + str(api_data['status']))
         api_data = test_common.taskgraphapi("/api/2.0/templates/library/testid")
         self.assertEqual(api_data['text'], "null", "Data 'null' was not returned.")
         self.assertEqual(api_data['status'], 200, "Was expecting code 200. Got " + str(api_data['status']))
