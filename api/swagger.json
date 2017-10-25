@@ -314,8 +314,7 @@
         ],
         "x-privileges": [
           "Write"
-        ],
-        "x-view": "tasks.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "tasks"
     },
@@ -369,8 +368,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflows.2.0.json"
+        ]
       },
       "post": {
         "description": "Run a workflow by specifying a workflow graph injectable name.\nThe workflow is not associated with a node.\n",
@@ -462,8 +460,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflowGraphs.2.0.json"
+        ]
       },
       "put": {
         "description": "Create or modify a workflow graph in the graph library.\n",
@@ -589,8 +586,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflowGraphs.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "workflowGraphs"
     },
@@ -622,8 +618,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflowTasks.2.0.json"
+        ]
       },
       "put": {
         "description": "Create or update a workflow task in the library of tasks.\n",
@@ -748,8 +743,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflowTasks.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "workflowTasks"
     },
@@ -830,8 +824,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflows.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "workflows"
     },
@@ -1096,8 +1089,7 @@
         "x-privileges": [
           "Read",
           "profilesRead"
-        ],
-        "x-view": "renderable.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "profiles"
     },
@@ -1151,8 +1143,7 @@
         "x-privileges": [
           "Read",
           "profilesRead"
-        ],
-        "x-view": "renderable.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "profiles"
     },
@@ -1574,8 +1565,7 @@
         "x-privileges": [
           "Read",
           "templatesRead"
-        ],
-        "x-view": "renderable.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "templates"
     },
@@ -1629,8 +1619,7 @@
         "x-privileges": [
           "Read",
           "templatesRead"
-        ],
-        "x-view": "renderable.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "templates"
     },
