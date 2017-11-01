@@ -1007,7 +1007,9 @@
       "put": {
         "consumes": [
           "application/octet-stream",
-          "application/x-www-form-urlencoded"
+          "application/x-www-form-urlencoded",
+          "application/json",
+          "text/plain"
         ],
         "description": "Create or modify the specified profile metadata and contents.",
         "operationId": "profilesPutLibByName",
