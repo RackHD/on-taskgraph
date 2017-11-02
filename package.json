@@ -1,6 +1,7 @@
 {
+  "//": "Copyright 2017, Dell EMC, Inc.",
   "name": "on-taskgraph",
-  "version": "2.27.0",
+  "version": "2.29.0",
   "description": "",
   "main": "lib",
   "scripts": {
@@ -60,7 +61,7 @@
     "sinon": "^1.12.2",
     "sinon-as-promised": "^2.0.3",
     "sinon-chai": "^2.7.0",
-    "supertest": "^0.15.0",
+    "supertest": "^1.2.0",
     "xunit-file": "0.0.6"
   }
 }

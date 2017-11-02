@@ -314,8 +314,7 @@
         ],
         "x-privileges": [
           "Write"
-        ],
-        "x-view": "tasks.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "tasks"
     },
@@ -369,8 +368,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflows.2.0.json"
+        ]
       },
       "post": {
         "description": "Run a workflow by specifying a workflow graph injectable name.\nThe workflow is not associated with a node.\n",
@@ -462,8 +460,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflowGraphs.2.0.json"
+        ]
       },
       "put": {
         "description": "Create or modify a workflow graph in the graph library.\n",
@@ -589,8 +586,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflowGraphs.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "workflowGraphs"
     },
@@ -622,8 +618,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflowTasks.2.0.json"
+        ]
       },
       "put": {
         "description": "Create or update a workflow task in the library of tasks.\n",
@@ -748,8 +743,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflowTasks.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "workflowTasks"
     },
@@ -830,8 +824,7 @@
         "x-privileges": [
           "Read",
           "workflowsRead"
-        ],
-        "x-view": "workflows.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "workflows"
     },
@@ -1014,7 +1007,9 @@
       "put": {
         "consumes": [
           "application/octet-stream",
-          "application/x-www-form-urlencoded"
+          "application/x-www-form-urlencoded",
+          "application/json",
+          "text/plain"
         ],
         "description": "Create or modify the specified profile metadata and contents.",
         "operationId": "profilesPutLibByName",
@@ -1096,8 +1091,7 @@
         "x-privileges": [
           "Read",
           "profilesRead"
-        ],
-        "x-view": "renderable.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "profiles"
     },
@@ -1151,8 +1145,7 @@
         "x-privileges": [
           "Read",
           "profilesRead"
-        ],
-        "x-view": "renderable.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "profiles"
     },
@@ -1574,8 +1567,7 @@
         "x-privileges": [
           "Read",
           "templatesRead"
-        ],
-        "x-view": "renderable.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "templates"
     },
@@ -1629,8 +1621,7 @@
         "x-privileges": [
           "Read",
           "templatesRead"
-        ],
-        "x-view": "renderable.2.0.json"
+        ]
       },
       "x-swagger-router-controller": "templates"
     },
@@ -1692,21 +1683,28 @@
           "name": "taskId",
           "in": "query",
           "description": "The identifier of task instance which the progress applies to\n",
-          "required": false,
+          "required": true,
           "type": "string"
         },
           {
             "name": "maximum",
             "in": "query",
             "description": "The maximum progress value\n",
-            "required": false,
+            "required": true,
             "type": "string"
           },
           {
             "name": "value",
             "in": "query",
             "description": "The current progress value\n",
-            "required": false,
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "in": "query",
+            "description": "The current progress value\n",
+            "required": true,
             "type": "string"
           }
         ],
@@ -1714,7 +1712,7 @@
           "southBound"
         ],
         "responses": {
-          "201": {
+          "200": {
             "description": "Specifics of the notification\n",
             "schema": {
               "type": "object"
@@ -1750,14 +1748,14 @@
             "in": "query",
             "description": "The maximum progress value\n",
             "required": false,
-            "type": "string"
+            "type": "integer"
           },
           {
             "name": "value",
             "in": "query",
             "description": "The current progress value\n",
             "required": false,
-            "type": "string"
+            "type": "integer"
           }
         ],
         "tags": [
