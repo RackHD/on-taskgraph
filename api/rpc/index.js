@@ -48,7 +48,9 @@ function schedulerServerFactory(
             var profiles = require('./profiles.js');
 
 
-            self.gRPC = new grpc.Server();
+            self.gRPC = new grpc.Server({'grpc.max_send_message_length': -1,
+                                         'grpc.max_receive_message_length': -1,
+                                         'grpc.max_concurrent_streams': -1});
             self.gRPC.addProtoService(schedulerProto.Scheduler.service, {
                 getBootstrap: grpcWrapper(tasks.getBootstrap),
                 getTasksById: grpcWrapper(tasks.getTasksById),
