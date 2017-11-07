@@ -381,7 +381,7 @@ describe('Task Scheduler', function() {
                 var evaluateGraphStream = new Rx.Subject();
                 observable = taskScheduler.createTasksToScheduleSubscription(evaluateGraphStream);
 
-                return taskScheduler.stop()
+                taskScheduler.stop()
                 .then(function() {
                     streamCompletedWrapper(observable, done, function() {
                         expect(store.findReadyTasks).to.not.have.been.called;
@@ -424,10 +424,10 @@ describe('Task Scheduler', function() {
                     expect(taskScheduler.handleScheduleTaskEvent).to.have.been.calledWith(task);
                 });
             });
-            
+
             it('should validate the return result of getGraphNameAndTaskNameFromDB', function(){
                 var task_data = {
-                    "domain":"default", 
+                    "domain":"default",
                     "task":{
                         "instanceId":"task.instanceId",
                         "injectableName":"task.injectableName"
@@ -445,12 +445,12 @@ describe('Task Scheduler', function() {
                    expect(res.graphId).to.equal(task_data.graphId);
                    expect(res.graphName).to.equal(task_data.context.graphName);
 		});
-                
+
             });
-           
+
             it('should handle handleScheduleTaskEvent errors', function(done) {
                 var testError = new Error('test handleScheduleTaskEvent error');
-            
+
                 taskScheduler.findReadyTasks.resolves({ tasks: [{}] });
                 taskScheduler.handleScheduleTaskEvent.restore();
                 taskScheduler.publishScheduleTaskEvent.rejects(testError);
@@ -529,7 +529,7 @@ describe('Task Scheduler', function() {
             this.sandbox.stub(taskScheduler, 'updateTaskDependencies');
             taskScheduler.subscriptions = [];
 
-            return taskScheduler.stop()
+            taskScheduler.stop()
             .then(function() {
                 streamCompletedWrapper(observable, done, function() {
                     expect(taskScheduler.updateTaskDependencies).to.not.have.been.called;
@@ -622,7 +622,7 @@ describe('Task Scheduler', function() {
             observable = taskScheduler.createCheckGraphFinishedSubscription(
                 checkGraphFinishedStream);
 
-            return taskScheduler.stop()
+            taskScheduler.stop()
             .then(function() {
                 streamCompletedWrapper(observable, done, function() {
                     expect(taskScheduler.checkGraphSucceeded).to.not.have.been.called;
