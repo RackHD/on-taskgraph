@@ -96,7 +96,7 @@ describe("Task Runner", function() {
         });
 
         it('should mark itself running', function(done) {
-            return runner.start()
+            runner.start()
             .then(asyncAssertWrapper(done, function() {
                 expect(runner.isRunning()).to.equal(true);
             }));
@@ -104,14 +104,14 @@ describe("Task Runner", function() {
 
         it('should initialize its pipelines', function(done) {
             this.sandbox.stub(store, 'heartbeatTasksForRunner');
-            return runner.start()
+            runner.start()
             .then(asyncAssertWrapper(done, function() {
                 expect(runner.initializePipeline).to.have.been.calledOnce;
             }));
         });
 
         it('should subscribe to a task messenger', function(done) {
-            return runner.start()
+            runner.start()
             .then(asyncAssertWrapper(done, function() {
                 expect(runner.subscribeRunTask).to.have.been.calledOnce;
             }));

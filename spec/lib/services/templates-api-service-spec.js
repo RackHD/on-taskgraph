@@ -99,7 +99,7 @@ describe('Http.Api.Templates', function () {
             };
 
             getNodeByIdentifierStub.resolves();
-            return templatesApiService.templatesGetByName(req, res)
+            templatesApiService.templatesGetByName(req, res)
                 .then(function () {
                     throw new Error('Should throw errors');
                 })
@@ -118,7 +118,7 @@ describe('Http.Api.Templates', function () {
 
         it('should throw no node found error', function (done) {
             getNodeByIdentifierStub.resolves();
-            return templatesApiService.templatesGetByName(req, res)
+            templatesApiService.templatesGetByName(req, res)
                 .then(function () {
                     throw new Error('Should throw errors');
                 })
@@ -140,7 +140,7 @@ describe('Http.Api.Templates', function () {
             };
             getNodeByIdentifierStub.resolves({id: nodeId});
             findActiveGraphForTargetStub.resolves();
-            return templatesApiService.templatesGetByName(req, res)
+            templatesApiService.templatesGetByName(req, res)
                 .then(function () {
                     throw new Error('Should throw errors');
                 })
