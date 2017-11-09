@@ -198,7 +198,9 @@ describe('Task Scheduler', function() {
         });
 
         it('start', function() {
-            var stub = sinon.stub();
+            var stub = {
+                dispose: sinon.stub().resolves()
+            };
             this.sandbox.stub(taskScheduler, 'subscribeRunTaskGraph').resolves(stub);
             this.sandbox.stub(taskScheduler, 'subscribeTaskFinished').resolves(stub);
             this.sandbox.stub(taskScheduler, 'subscribeCancelGraph').resolves(stub);
@@ -209,6 +211,8 @@ describe('Task Scheduler', function() {
                 expect(LeaseExpirationPoller.create).to.have.been.calledOnce;
                 expect(taskScheduler.leasePoller.start).to.have.been.calledOnce;
                 expect(taskScheduler.subscriptions).to.deep.equal([stub, stub, stub]);
+            }).then(function() {
+                taskScheduler.stop(); // Stop taskScheduler or mocha will not exit properly
             });
         });
 
