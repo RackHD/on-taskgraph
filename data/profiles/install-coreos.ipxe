@@ -1,3 +1,4 @@
+# Copyright 2017, Dell EMC, Inc.
 echo Starting CoreOS Stable installer
 
 <% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
