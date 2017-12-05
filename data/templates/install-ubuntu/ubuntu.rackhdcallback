@@ -1,6 +1,19 @@
 #! /bin/bash
+# Copyright 2015-2017, Dell EMC, Inc.
+
+#### BEGIN INIT INFO
+# Provides:          RackHDCallback
+# Required-Start:    $all
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: RackHD callback
+# Description:       RackHD callback to give RackHD feedback that reboot is done.
+##### END INIT INFO
 
 echo "Attempting to call back to RackHD Ubuntu installer"
 wget --retry-connrefused --waitretry=1 -t 300 --post-data '{"nodeId":"<%=nodeId%>"}' --header='Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification
-# Delete file
-rm $0
+
+# remove file
+rm /etc/init.d/RackHDCallback
+update-rc.d RackHDCallback remove
