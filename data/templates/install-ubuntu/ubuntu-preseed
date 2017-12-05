@@ -1,3 +1,4 @@
+### Copyright 2015-2017, Dell EMC, Inc.
 #### Contents of the preconfiguration file (for squeeze)
 ### Localization
 d-i debian-installer/locale string en_US.UTF-8
@@ -224,12 +225,13 @@ in-target vconfig add ip.device <%=vid%>; \
         <%_ } _%>
     <%_ } _%>
 <%_ }); _%>
-wget http://<%=server%>:<%=port%>/api/current/templates/ubuntu-interfaces?nodeId=<%=nodeId%> -O /etc/network/interfaces; \
+in-target wget http://<%=server%>:<%=port%>/api/current/templates/ubuntu-interfaces?nodeId=<%=nodeId%> -O /etc/network/interfaces; \
 <%_ } _%>
 in-target wget http://<%=server%>:<%=port%>/api/current/templates/post-install-ubuntu.sh?nodeId=<%=nodeId%> -O ./post-install.sh; \
 in-target chmod +x ./post-install.sh; \
 in-target ./post-install.sh; \
 in-target wget http://<%=server%>:<%=port%>/api/current/templates/ubuntu-sources?nodeId=<%=nodeId%> -O /etc/apt/sources.list; \
-in-target wget http://<%=server%>:<%=port%>/api/current/templates/<%=rackhdCallbackScript%>?nodeId=<%=nodeId%> -O /etc/rc2.d/S99callback; \
-in-target chmod +x /etc/rc2.d/S99callback; \
+in-target wget http://<%=server%>:<%=port%>/api/current/templates/<%=rackhdCallbackScript%>?nodeId=<%=nodeId%> -O /etc/init.d/RackHDCallback; \
+in-target chmod +x /etc/init.d/RackHDCallback; \
+in-target update-rc.d RackHDCallback defaults; \
 in-target curl -X POST -H 'Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification?nodeId=<%=nodeId%>
