@@ -1,3 +1,4 @@
+# Copyright 2017, DELL, Inc.
 install
 #text
 graphical
@@ -84,6 +85,7 @@ sudo
 perl
 libselinux-python
 net-tools
+
 <% if( typeof kvm !== 'undefined' && kvm ) { %>
     <% if (version === "6.5") { %>
         kvm
@@ -98,6 +100,12 @@ net-tools
         @virtualization-tools
     <% } %>
 <% } %>
+
+<% if (typeof packages !== 'undefined') { %>
+<%   for (var i = 0, len = packages.length; i < len; i++) { %>
+<%= packages[i] %>
+<%   } %>
+<% } %>
 %end
 
 %pre
@@ -107,6 +115,7 @@ net-tools
     # the url may contain query, the symbol '&' will mess the command line logic, so the whole url need be wrapped in quotation marks
     /usr/bin/curl -X POST -H 'Content-Type:application/json' "http://<%=server%>:<%=port%><%-progressMilestones.preConfigUri%>" || true
 <% } %>
+
 %end
 
 %post --log=/root/install-post.log
@@ -147,6 +156,58 @@ export PATH
     <% } %>
 <% } %>
 
+# Setup BOND Configuration
+<% if (typeof bonds !== 'undefined') { %> 
+
+<% bonds.forEach(function(n) { %>
+     echo "Configuring bond <%=n.name%>"
+     <% var bondname = n.name %>
+     echo DEVICE=<%=bondname%> > /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo NAME=<%=bondname%> >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo TYPE=bond  >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo BONDING_MASTER=yes >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo BONDING_OPTS="mode=802.3ad miimon=10 lacp_rate=1"  >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo USERCTL=no >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo NM_CONTROLLED=no >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo BOOTPROTO=none >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo ONBOOT=yes >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo IPADDR="<%=n.ipv4.ipAddr%>" >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo NETMASK="<%=n.ipv4.netmask%>" >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     <% if ( undefined != n.ipv4.gateway) { %>
+          echo GATEWAY="<%=n.ipv4.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     <% } %>
+     echo DEFROUTE=yes >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo PEERDNS=yes >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+
+     <% if ( undefined != n.ipv4.dns1) { %>
+        echo DNS1="<%=n.ipv4.dns1%>" >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     <% } %>
+     <% if ( undefined != n.ipv4.dns2) { %>
+        echo DNS2="<%=n.ipv4.dns2%>" >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     <% } %>
+
+     echo IPV4_FAILURE_FATAL="no" >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     echo IPV6INIT="no" >> /etc/sysconfig/network-scripts/ifcfg-<%=n.name%>
+     <% if (typeof n.nics !== 'undefined') { %>
+      <%   for (var i = 0, len = n.nics.length; i < len; i++) { %>
+        <% var device=n.nics[i]%>
+        echo DEVICE=<%=device%> > /etc/sysconfig/network-scripts/ifcfg-<%=device%>
+        echo NAME=<%=bondname%>-slave >> /etc/sysconfig/network-scripts/ifcfg-<%=device%>
+        echo MASTER=<%=bondname%> >> /etc/sysconfig/network-scripts/ifcfg-<%=device%>
+        echo TYPE=Ethernet >> /etc/sysconfig/network-scripts/ifcfg-<%=device%>
+        echo BOOTPROTO=none >> /etc/sysconfig/network-scripts/ifcfg-<%=device%>
+        echo ONBOOT=yes >> /etc/sysconfig/network-scripts/ifcfg-<%=device%>
+        echo NM_CONTROLLED=no >> /etc/sysconfig/network-scripts/ifcfg-<%=device%>
+        echo SLAVE=yes >> /etc/sysconfig/network-scripts/ifcfg-<%=device%>
+      <%   } %>
+      <% } %>     
+  <%}) %>
+  
+  systemctl stop NetworkManager
+  modprobe --first-time bonding
+  systemctl restart network
+<%} %>
+
 # Setup static network configuration
 <%_ var macRegex = /(..:*){6}/i; _%>
 <% if (typeof networkDevices !== 'undefined') { %>
@@ -182,7 +243,13 @@ export PATH
         echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface
         echo "IPADDR=<%=n.ipv4.ipAddr%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
         echo "NETMASK=<%=n.ipv4.netmask%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
-        echo "GATEWAY=<%=n.ipv4.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        <% if ( undefined != n.ipv4.gateway) { %>
+          echo "GATEWAY=<%=n.ipv4.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        <% } %>
+        <% if ( undefined != n.ipv4.mtu) { %>
+          echo "MTU=<%=n.ipv4.mtu%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        <% } %>
+
       <% } %>
     <% } %>
     <% if( undefined != n.ipv6 ) { %>
@@ -238,6 +305,20 @@ chmod +x /etc/rc.d/init.d/<%=rackhdCallbackScript%>
 # Enable the above service, it should auto-disable after running once
 chkconfig <%=rackhdCallbackScript%> on
 echo "RackHD POST script chkconfig callback script complete"
+
+# Enable Services
+<% if (typeof enableServices !== 'undefined') { %>
+<%   for (var i = 0, len = enableServices.length; i < len; i++) { %>
+systemctl enable <%=enableServices[i]%>
+<%   } %>
+<% } %>
+
+# Disable Services
+<% if (typeof disableServices !== 'undefined') { %>
+<%   for (var i = 0, len = disableServices.length; i < len; i++) { %>
+systemctl disable <%=disableServices[i]%>
+<%   } %>
+<% } %>
 
 #signify ORA the installation completed
 for retry in $(seq 1 5);
