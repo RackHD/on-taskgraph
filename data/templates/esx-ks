@@ -1,9 +1,19 @@
 accepteula
-<% if (installDisk === "firstdisk") { %>
+<% if (typeof clearDisk === 'undefined') { %>
+<%   clearDisk = installDisk %>
+<% } %>
+
+<% if (clearDisk === 'firstdisk') { %>
   clearpart --firstdisk --overwritevmfs
+<% } else if (clearDisk === 'alldrives') { %>
+  clearpart --alldrives --overwritevmfs
+<% } else { %>
+  clearpart --drives=<%=clearDisk%> --overwritevmfs
+<% } %>
+
+<% if (installDisk === "firstdisk") { %>
   install --firstdisk --overwritevmfs
 <% } else { %>
-  clearpart --drives=<%=installDisk%> --overwritevmfs
   install --disk=<%=installDisk%> --overwritevmfs
 <% } %>
 rootpw <%=rootPlainPassword%>
