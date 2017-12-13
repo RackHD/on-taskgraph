@@ -225,7 +225,11 @@ in-target vconfig add ip.device <%=vid%>; \
         <%_ } _%>
     <%_ } _%>
 <%_ }); _%>
+<%_ if (typeof version !== 'undefined' && version === 'artful') { _%>
+in-target wget http://<%=server%>:<%=port%>/api/current/templates/ubuntu-netplan-interfaces?nodeId=<%=nodeId%> -O  /etc/netplan/01-netcfg.yaml; \
+<%_ } else { _%>
 in-target wget http://<%=server%>:<%=port%>/api/current/templates/ubuntu-interfaces?nodeId=<%=nodeId%> -O /etc/network/interfaces; \
+<%_ } _%>
 <%_ } _%>
 in-target wget http://<%=server%>:<%=port%>/api/current/templates/post-install-ubuntu.sh?nodeId=<%=nodeId%> -O ./post-install.sh; \
 in-target chmod +x ./post-install.sh; \
