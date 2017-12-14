@@ -29,7 +29,7 @@
     "es6-shim": "^0.22.2",
     "express": "~4.13.4",
     "express-urlrewrite": "~1.2.0",
-    "grpc": "^1.0.0",
+    "grpc": "~1.7.0",
     "lodash": "^3.10.1",
     "lru-cache": "^2.5.0",
     "minimist": "^1.2.0",
