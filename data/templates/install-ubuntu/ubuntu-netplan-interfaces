@@ -1,3 +1,4 @@
+<!-- ### Copyright 2017, Dell EMC, Inc. -->
 <%_ if (typeof networkDevices !== 'undefined' && networkDevices.length > 0) { _%>
 <%_ var vlans={} _%>
 network:
