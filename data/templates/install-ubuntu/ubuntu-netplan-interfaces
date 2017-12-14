@@ -19,21 +19,54 @@ network:
                 <%_ vlan["device"] = n.device _%>
                 <%_ vlan["id"] = vid _%>
                 <%_ if (!("addr" in vlan)) vlan["addr"] = [] _%>
-                <%_ vlan["addr"].push(ip.ipAddr+"/"+ip.netmask) _%>
                 <%_ if ('ipv4' === p) { _%>
-                   <%_ vlan["gw4"] = ip.gateway _%>
+                    <%_ vlan["gw4"] = ip.gateway _%>
+                    <%_ if( undefined != ip.netmask ) { _%>
+                        <%_ cidr_bits = 0 _%>
+                        <%_ ip.netmask.split('.').forEach(function(octet) { _%>
+                            <%_ cidr_bits+=((octet >>> 0).toString(2).match(/1/g)||[]).length; _%>
+                        <%_ }); _%>
+                        <%_ vlan["addr"].push(ip.ipAddr+"/"+cidr_bits) _%>
+                    <%_ } else { _%>
+                        <%_ vlan["addr"].push(ip.ipAddr+"/24") _%>
+                    <%_ } _%>
                 <%_ } _%>
                 <%_ if ('ipv6' === p) { _%>
                     <%_ vlan["gw6"] = ip.gateway _%>
+                    <%_ if( undefined != ip.netmask ) { _%>
+                        <%_ cidr_bits = 0 _%>
+                        <%_ ip.netmask.split('.').forEach(function(octet) { _%>
+                            <%_ cidr_bits+=((parseInt(octet, 16) >>> 0).toString(2).match(/1/g)||[]).length; _%>
+                        <%_ }); _%>
+                        <%_ vlan["addr"].push(ip.ipAddr+"/"+cidr_bits) _%>
+                    <%_ } else { _%>
+                        <%_ vlan["addr"].push(ip.ipAddr+"/48") _%>
+                    <%_ } _%>
                 <%_ } _%>
-
             <%_ }); _%>
         <%_ } else { _%>
-            <%_ addresses.push(ip.ipAddr+"/"+ip.netmask) _%>
             <%_ if ('ipv4' === p) { _%>
-               <%_ gw4 = ip.gateway _%>
+                <%_ if( undefined != ip.netmask ) { _%>
+                    <%_ cidr_bits = 0 _%>
+                    <%_ ip.netmask.split('.').forEach(function(octet) { _%>
+                        <%_ cidr_bits+=((octet >>> 0).toString(2).match(/1/g)||[]).length; _%>
+                    <%_ }); _%>
+                    <%_ addresses.push(ip.ipAddr+"/"+cidr_bits) _%>
+                <%_ } else { _%>
+                    <%_ addresses.push(ip.ipAddr+"/24") _%>
+                <%_ } _%>
+                <%_ gw4 = ip.gateway _%>
             <%_ } _%>
             <%_ if ('ipv6' === p) { _%>
+                <%_ if( undefined != ip.netmask ) { _%>
+                    <%_ cidr_bits = 0 _%>
+                    <%_ ip.netmask.split('.').forEach(function(octet) { _%>
+                        <%_ cidr_bits+=((parseInt(octet, 16) >>> 0).toString(2).match(/1/g)||[]).length; _%>
+                    <%_ }); _%>
+                    <%_ addresses.push(ip.ipAddr+"/"+cidr_bits) _%>
+                <%_ } else { _%>
+                    <%_ addresses.push(ip.ipAddr+"/48") _%>
+                <%_ } _%>
                <%_ gw6 = ip.gateway _%>
             <%_ } _%>
         <%_ } _%>
@@ -83,8 +116,8 @@ network:
       nameservers:
         addresses: [<%=dnsServers.join(',')%>]
 <% } -%>
+
         <%_ } _%>
     <%_ } _%>
   <%_ } _%>
-
 <%_ } _%>

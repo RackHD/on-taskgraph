@@ -205,7 +205,7 @@ in-target curl -X POST -H 'Content-Type:application/json' 'http://<%=server%>:<%
 <%_ } _%>
 
 #enable root ssh
-in-target sed -i 's/PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config; \
+in-target sed -i 's/.*PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config; \
 
 #Enable Network standards that supports VLANs
 #Load the 8021q module into the kernel
