@@ -1,7 +1,7 @@
 #! /bin/bash
 # Copyright 2015-2017, Dell EMC, Inc.
 
-#### BEGIN INIT INFO
+### BEGIN INIT INFO
 # Provides:          RackHDCallback
 # Required-Start:    $all
 # Required-Stop:
@@ -9,7 +9,7 @@
 # Default-Stop:      0 1 6
 # Short-Description: RackHD callback
 # Description:       RackHD callback to give RackHD feedback that reboot is done.
-##### END INIT INFO
+### END INIT INFO
 
 echo "Attempting to call back to RackHD Ubuntu installer"
 wget --retry-connrefused --waitretry=1 -t 300 --post-data '{"nodeId":"<%=nodeId%>"}' --header='Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification
