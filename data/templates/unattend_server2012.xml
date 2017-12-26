@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright © 2017 Dell Inc. or its subsidiaries. All Rights Reserved. -->
 <unattend xmlns="urn:schemas-microsoft-com:unattend">
     <settings pass="windowsPE">
         <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -154,6 +155,9 @@
             <% dhcp_ipv6 = false %>
             <% ipAddress = 0 %>
             <% gateWay = 0 %>
+            <% ipv6_cidr_bits = 0 %>
+            <% ipv6_ipAddress = 0 %>
+            <% ipv6_gateWay = 0 %>
 
             <% if( undefined != n.ipv4 ) { %>
             <% if( undefined != n.ipv4.netmask ) { %>
@@ -172,24 +176,23 @@
             <% gateWay  =n.ipv4.gateway %>
             <% } %>
 
-           <% } %>
-
+            <%} %>
 
             <% if( undefined != n.ipv6 ) { %>
             <% if( undefined != n.ipv6.netmask ) { %>
-            <% n.ipv6.netmask.split('.').forEach(function(octet) {%>
-            <%cidr_bits+=((octet >>> 0).toString(2).match(/1/g)||[]).length;%>
-            <%});%>
+            <% n.ipv6.netmask.split(':').forEach(function(octet) {%>
+            <%   ipv6_cidr_bits+=((parseInt(octet, 16) >>> 0).toString(2).match(/1/g)||[]).length;%>
+            <% });%>
             <% } %>
 
             <% if( undefined != n.ipv6.ipAddr ) { %>
-            <% ipAddress =n.ipv6.ipAddr %>
+            <% ipv6_ipAddress = n.ipv6.ipAddr %>
             <% } else { %>
             <% dhcp_ipv6 = true %>
             <% } %>
 
             <% if( undefined != n.ipv6.gateway ) { %>
-            <% gateWay  =n.ipv6.gateway %>
+            <% ipv6_gateWay = n.ipv6.gateway %>
             <% } %>
 
             <% } %>
@@ -208,18 +211,32 @@
                         <Metric>10</Metric>
                         <RouterDiscoveryEnabled>false</RouterDiscoveryEnabled>
                     </Ipv6Settings>
-                    <% if (ipAddress !== 0 ) { %>
+                    <% if (ipAddress !== 0 || ipv6_ipAddress !== 0 ) { %>
                     <UnicastIpAddresses>
+                        <% if (ipAddress !== 0 ) {%>
                         <IpAddress wcm:action="add"wcm:keyValue="1"><%=ipAddress%>/<%= cidr_bits%></IpAddress>
+                        <% } %>
+                        <% if (ipv6_ipAddress !== 0 ) {%>
+                        <IpAddress wcm:action="add"wcm:keyValue="2"><%=ipv6_ipAddress%>/<%= ipv6_cidr_bits%></IpAddress>
+                        <% } %>
                     </UnicastIpAddresses>
                     <% } %>
-                    <% if (gateWay !== 0 ) { %>
+                    <% if (gateWay !== 0 || ipv6_gateWay !== 0) { %>
                     <Routes>
+                        <% if (gateWay !== 0) { %>
                         <Route wcm:action="add">
                             <Identifier>0</Identifier>
                             <NextHopAddress><%=gateWay%></NextHopAddress>
                             <Prefix>0.0.0.0/0</Prefix>
                         </Route>
+                        <% } %>
+                        <% if (ipv6_gateWay !== 0) { %>
+                        <Route wcm:action="add">
+                            <Identifier>2</Identifier>
+                            <NextHopAddress><%=ipv6_gateWay%></NextHopAddress>
+                            <Prefix>0.0.0.0/0</Prefix>
+                        </Route>
+                        <% } %>
                     </Routes>
                     <% } %>
                 </Interface>
