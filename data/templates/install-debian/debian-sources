@@ -1,5 +1,5 @@
 # Copyright 2017, Dell EMC, Inc.
-<% if (osName === 'ubuntu' || osName === 'Ubuntu') { %>
+<% if ( osName === 'ubuntu' ) { %>
 # See http://help.ubuntu.com/community/UpgradeNotes for how to upgrade to
 # newer versions of the distribution.
 deb http://us.archive.ubuntu.com/ubuntu/ <%=version%> main restricted

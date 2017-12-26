@@ -1,5 +1,5 @@
 #### Copyright 2017, Dell EMC, Inc.
-#### Contents of the preconfiguration file (for jessie/xenial)
+#### Contents of the preconfiguration file. 
 ### Localization
 # Preseeding only locale sets language, country and locale.
 d-i debian-installer/locale string en_US
@@ -43,6 +43,8 @@ d-i netcfg/wireless_wep string
 # If you select ftp, the mirror/country string does not need to be set.
 #d-i mirror/protocol string ftp
 d-i mirror/country string manual
+
+# Get server:port from repo
 <% var repoHostname = repo.match(/^(https?:\/\/)?([a-zA-Z0-9\.:-]+)/)[2] -%>
 d-i mirror/http/hostname string <%=repoHostname%>
 <% var repoDirectory = repo.replace(/^(https?:\/\/)?([a-zA-Z0-9\.:-]+)/g,"") -%>
@@ -52,6 +54,20 @@ d-i preseed/early_command string \
 wget 'http://<%=server%>:<%=port%><%-progressMilestones.preConfigUri%>' || true; \
 <%_ } _%>
 umount /media || true;
+
+<% if ( osName === 'ubuntu' ) { %>
+### Setting up Ubuntu APT 
+d-i apt-setup/restricted boolean false
+d-i mirror/http/proxy string
+d-i apt-setup/universe boolean false
+d-i apt-setup/backports boolean false
+d-i apt-setup/proposed boolean false
+d-i apt-setup/security_host string
+d-i apt-setup/local0/repository string deb <%=repo%> <%=version%> main restricted universe multiverse
+d-i apt-setup/local0/source boolean false
+d-i debian-installer/allow_unauthenticated boolean true
+<% } %>
+
 ### Clock and time zone setup
 # Controls whether or not the hardware clock is set to UTC.
 d-i clock-setup/utc boolean true
@@ -83,10 +99,38 @@ d-i partman-auto-lvm/new_vg_name string debian
 d-i partman-lvm/confirm boolean true
 d-i partman/alignment string "optimal"
 d-i partman-auto-lvm/guided_size string max
+d-i partman/default_filesystem string ext4
+
 <% if (typeof installPartitions === 'undefined' || installPartitions.length < 2) { %>
 d-i partman-auto/choose_recipe select atomic
 <% } else {   %>
-d-i partman-auto/expert_recipe string boot-root :: 1 1 1 free $iflabel{ gpt } $reusemethod{ } method{ biosgrub } . <% installPartitions.forEach(function(partition,idx) { %><% if(partition.mountPoint === '/boot') { %> 256 512 <%=partition.size%> <%=partition.fsType%> $defaultignore{ } $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ <%=partition.fsType%> } mountpoint{ <%=partition.mountPoint%> } . <% } else  if(partition.mountPoint === 'swap') { %><%=partition.size%> 512 200% linux-swap $reusemethod{ } method{ swap } format{ }  $lvmok{ } . <% } else { %> <% if (partition.size === "auto") { %> 2000 10000 -1 <%=partition.fsType%> $lvmok{ } method{ format } format{ } use_filesystem{ } filesystem{ <%=partition.fsType%> } mountpoint{ <%=partition.mountPoint%> } . <% } else { %> <%=partition.size%> 512 <%=partition.size%> <%=partition.fsType%> $lvmok{ } method{ format } format{ } use_filesystem{ } filesystem{ <%=partition.fsType%> } mountpoint{ <%=partition.mountPoint%> } . <% } %> <% }}) %> 
+d-i partman-auto/expert_recipe string \
+				boot-root :: 1 1 1 free \
+				$iflabel{ gpt } $reusemethod{ } method{ biosgrub } . \
+		<% installPartitions.forEach(function(partition,idx) { %>
+			<% if(partition.mountPoint === '/boot') { %> 
+				256 512 <%=partition.size%> <%=partition.fsType%> \
+				$defaultignore{ } $bootable{ } \
+				method{ format } format{ } \
+				use_filesystem{ } filesystem{ <%=partition.fsType%> }\
+				mountpoint{ <%=partition.mountPoint%> } . \
+			<% } else  if(partition.mountPoint === 'swap') { %> \
+				<%=partition.size%> 512 200% linux-swap \
+				$reusemethod{ } method{ swap } \
+				format{ }  $lvmok{ } . \
+			<% } else { %>
+			<% if (partition.size === "auto") { %> 
+				2000 10000 -1 <%=partition.fsType%> \
+				$lvmok{ } method{ format } \ 
+				format{ } use_filesystem{ } \
+				filesystem{ <%=partition.fsType%> } mountpoint{ <%=partition.mountPoint%> } . \
+			<% } else { %>
+				<%=partition.size%> 512 <%=partition.size%> <%=partition.fsType%> \
+				$lvmok{ } method{ format } \
+				format{ } use_filesystem{ } \
+				filesystem{ <%=partition.fsType%> } mountpoint{ <%=partition.mountPoint%> } . \
+			<% } %>
+		 <% }}) %> 
 <% } %>
 
 d-i partman-lvm/confirm_nooverwrite boolean true
@@ -101,7 +145,7 @@ d-i passwd/make-user boolean false
 d-i passwd/root-password-crypted password <%=rootEncryptedPassword%>
 
 ### Package selection
-<% if (osName === 'ubuntu' || osName === 'Ubuntu') { %>
+<% if ( osName === 'ubuntu' ) { %>
 tasksel tasksel/first multiselect ubuntu-server
 <% } else { %>
 tasksel tasksel/first multiselect standard, ssh-server
@@ -177,7 +221,7 @@ in-target su -c 'echo "8021q" >> /etc/modules'; \
         <%_ if (['ipv4','ipv6'].indexOf(p) === -1 || undefined == ip) continue; _%>
         <%_ if (undefined !== ip.vlanIds) { _%>
             <%_ ip.vlanIds.forEach(function(vid) { _%>
-in-target vconfig add ip.device <%=vid%>;
+in-target vconfig add ip.device <%=vid%>; \
             <%_ }); _%>
         <%_ } _%>
     <%_ } _%>
