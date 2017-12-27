@@ -1,3 +1,4 @@
+# Copyright 2017, Dell EMC, Inc.
 echo Starting Debian/Ubuntu x64 installer for ${hostidentifier}
 
 <% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
