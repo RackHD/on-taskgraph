@@ -214,8 +214,6 @@ d-i pkgsel/install-language-support boolean false
 # "unattended-upgrades" (install security updates automatically), or
 # "landscape" (manage system with Landscape).
 d-i pkgsel/update-policy select none
-# This is fairly safe to set, it makes grub install automatically to the MBR
-# if no other operating system is detected on the machine.
 
 ### Boot loader installation
 # Grub is the default boot loader (for x86). If you want lilo installed
@@ -237,6 +235,9 @@ d-i grub-installer/bootdev string <%=installDisk%>
 
 # Avoid that last message about the install being complete.
 d-i finish-install/reboot_in_progress note
+
+# Monitor autodetection is recommended.
+xserver-xorg xserver-xorg/autodetect_monitor boolean true
 
 #### Advanced options
 ### Running custom commands during the installation
