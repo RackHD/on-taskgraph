@@ -1,4 +1,5 @@
-echo Starting Ubuntu x64 installer for ${hostidentifier}
+# Copyright 2017, Dell EMC, Inc.
+echo Starting Debian/Ubuntu x64 installer for ${hostidentifier}
 
 <% if( typeof progressMilestones !== 'undefined' && progressMilestones.enterProfileUri ) { %>
     imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.enterProfileUri%> ||
@@ -8,7 +9,7 @@ echo Starting Ubuntu x64 installer for ${hostidentifier}
 set base-url <%=repo%>/<%=baseUrl%>
 kernel ${base-url}/linux
 initrd ${base-url}/initrd.gz
-imgargs linux auto=true url=<%=installScriptUri%> hostname=<%=hostname%> log_host=<%=server%> BOOTIF=01-<%=macaddress%> interface=<%=interface%> console=<%=comport%>,115200n8 console=tty0 <%=kargs%>
+imgargs linux auto=true nomodeset fb=false DEBIAN_FRONTEND=noninteractive url=<%=installScriptUri%> hostname=<%=hostname%> log_host=<%=server%> BOOTIF=01-<%=macaddress%> interface=<%=interface%> console=<%=comport%>,115200n8 console=tty0 raid=noautodetect <%=kargs%>
 
 <% if( typeof progressMilestones !== 'undefined' && progressMilestones.startInstallerUri ) { %>
     imgfetch --name fakedimage http://<%=server%>:<%=port%><%-progressMilestones.startInstallerUri%> ||
@@ -16,3 +17,4 @@ imgargs linux auto=true url=<%=installScriptUri%> hostname=<%=hostname%> log_hos
 <% } %>
 
 boot || prompt --key 0x197e --timeout 2000 Press F12 to investigate || exit shell
+

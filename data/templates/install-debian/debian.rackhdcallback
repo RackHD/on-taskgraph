@@ -11,7 +11,7 @@
 # Description:       RackHD callback to give RackHD feedback that reboot is done.
 ### END INIT INFO
 
-echo "Attempting to call back to RackHD Ubuntu installer"
+echo "Attempting to call back to RackHD Debian/Ubuntu installer"
 wget --retry-connrefused --waitretry=1 -t 300 --post-data '{"nodeId":"<%=nodeId%>"}' --header='Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification
 
 # remove file
