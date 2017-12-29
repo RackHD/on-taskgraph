@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+# Copyright 2017, Dell EMC, Inc.
+
 hddArr=<%- JSON.stringify(hddArr) || [] %>
 ssdStoragePoolArr=<%- JSON.stringify(ssdStoragePoolArr) || [] %>
 ssdCacheCadeArr=<%- JSON.stringify(ssdCacheCadeArr) || [] %>
@@ -18,22 +21,13 @@ function create_vd_for_hdd()
         convertedDrivesList=(<%=value.drives.replace(/[[\],]/g,' ')%>)
         for i in "${convertedDrivesList[@]}"
             do
-               echo Assesing drive $i for Ugood state
-               cmdReturn=$(sudo /opt/MegaRAID/storcli/storcli64 /c0 /eall /sall show | grep <%=value.enclosure%>:$i)
-               stateInfo=(${cmdReturn})
-               if [[ ${stateInfo[2]} == "Onln" ]]; then
-                   echo "Given disk is online, changing into Ugood State"
-                   #Using |grep followed by |cut with delimiters / and " " to get the number after the DG/
-                   vdMatch1=$(sudo /opt/MegaRAID/storcli/storcli64 /c0 /vall show | grep ${stateInfo[3]}\/ |cut -d / -f2 |cut -d " " -f1)
-                   # split on / and call delete
-                   delete_individual_vd $vdMatch1
-               fi
+                ensure_ugood_drive_state "<%=value.enclosure%>:$i" "vd"
             done
+
         echo running: $path /c$controller add vd type=<%=value.type%> drives=<%=value.enclosure%>:<%=value.drives.replace(/[[\]]/g,'')%> direct wb ra pdcache=off
         $path /c$controller add vd type=<%=value.type%> drives=<%=value.enclosure%>:<%=value.drives.replace(/[[\]]/g,'')%> direct wb ra pdcache=off
     <% }); %>
     echo "Done Creating Virtual Disks For Hard Drives"
-
 }
 
 function create_vd_for_ssd_sp()
@@ -43,17 +37,9 @@ function create_vd_for_ssd_sp()
         convertedDrivesList=(<%=value.drives.replace(/[[\],]/g,' ')%>)
         for i in "${convertedDrivesList[@]}"
             do
-               echo Accessing drive $i for Ugood state
-               cmdReturn=$(sudo /opt/MegaRAID/storcli/storcli64 /c0 /eall /sall show | grep <%=value.enclosure%>:$i)
-               stateInfo=(${cmdReturn})
-               if [[ ${stateInfo[2]} == "Onln" ]]; then
-                   echo "Given disk is online, changing into Ugood State"
-                   #Using |grep followed by |cut with delimiters / and " " to get the number after the DG/
-                   vdMatch1=$(sudo /opt/MegaRAID/storcli/storcli64 /c0 /vall show | grep ${stateInfo[3]}\/ |cut -d / -f2 |cut -d " " -f1)
-                   # split on / and call delete
-                   delete_individual_vd $vdMatch1
-               fi
+                ensure_ugood_drive_state "<%=value.enclosure%>:$i" "vd"
             done
+
         echo running: $path /c$controller add vd type=<%=value.type%> drives=<%=value.enclosure%>:<%=value.drives.replace(/[[\]]/g,'')%> direct wt ra
         $path /c$controller add vd type=<%=value.type%> drives=<%=value.enclosure%>:<%=value.drives.replace(/[[\]]/g,'')%> direct wt ra
     <% }); %>
@@ -69,27 +55,36 @@ function create_sp_for_ssd_cache()
         convertedDrivesList=(<%=value.drives.replace(/[[\],]/g,' ')%>)
         for i in "${convertedDrivesList[@]}"
             do
-               echo Assesing drive $i for Ugood state
-               cmdReturn=$(sudo /opt/MegaRAID/storcli/storcli64 /c0 /eall /sall show | grep <%=value.enclosure%>:$i)
-               stateInfo=(${cmdReturn})
-               if [[ ${stateInfo[2]} == "Onln" ]]; then
-                   echo "Given disk is online, changing into Ugood State"
-                   #Using |grep followed by |cut with delimiters / and " " to get the number after the DG/
-                   vdMatch1=$(sudo /opt/MegaRAID/storcli/storcli64 /c0 /vall show | grep ${stateInfo[3]}\/ |cut -d / -f2 |cut -d " " -f1)
-                   # split on / and call delete
-                   delete_individual_ssd_cc $vdMatch1
-               fi
+                ensure_ugood_drive_state "<%=value.enclosure%>:$i" "ssd_cc"
             done
+
         echo running: $path /c$controller add vd cc type=<%=value.type%> drives=<%=value.enclosure%>:<%=value.drives.replace(/[[\]]/g,'')%> WB
         $path /c$controller add vd cc type=<%=value.type%> drives=<%=value.enclosure%>:<%=value.drives.replace(/[[\]]/g,'')%> WB
         #Currently only Cac0 exists
-        ssdVD=$(sudo /opt/MegaRAID/storcli/storcli64 /c0 /vall show | grep 'Cac0' |cut -d / -f2 |cut -d " " -f1)
+        ssdVD=$(sudo $path /c$controller /vall show | grep 'Cac0' |cut -d / -f2 |cut -d " " -f1)
         #Disabling read ahead cache (nora) on the VD that was created above
         echo running: $path  /c$controller/v$ssdVD  set rdcache=nora
         $path  /c$controller/v$ssdVD  set rdcache=nora
     <% }); %>
     echo "Done creating Virtual Disks for Solid  State Drives For Cache Cade"
+}
 
+function ensure_ugood_drive_state()
+{
+   echo Assesing drive $1 for Ugood state
+   cmdReturn=$(sudo $path /c$controller /eall /sall show | grep $1)
+   stateInfo=(${cmdReturn})
+   if [[ ${stateInfo[2]} == "Onln" ]]; then
+       echo "Given disk is online, changing into Ugood State"
+       #Using |grep followed by |cut with delimiters / and " " to get the number after the DG/
+       vdMatch1=$(sudo $path /c$controller /vall show | grep ${stateInfo[3]}\/ |cut -d / -f2 |cut -d " " -f1)
+       # split on / and call delete
+       if [[ $2 == "vd" ]]; then
+           delete_individual_vd $vdMatch1
+       elif [[ $2 == "ssd_cc" ]]; then
+           delete_individual_ssd_cc $vdMatch1
+       fi
+   fi
 }
 
 function delete_individual_vd()
