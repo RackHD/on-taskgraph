@@ -6,7 +6,7 @@ write_files:
     content: |
       #!/bin/bash
       modprobe ipmi_devintf
-      wget -O /tmp/micro.tar.xz <%= file.server %>/common/discovery.docker.tar.xz
+      wget -O /tmp/micro.tar.xz <%= dockerUri %>
       while [ $(docker images | grep -c micro) == "0" ]; do
          xz -cd /tmp/micro.tar.xz | docker load
       done
