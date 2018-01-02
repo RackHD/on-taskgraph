@@ -218,7 +218,7 @@ export PATH
       interface=`grep -i /sys/class/net/*/address -e  $interface | cut -d "/" -f 5`
     <%_ } _%>
     <% if( undefined != n.ipv4 ) { %>
-      <% if( undefined != n.ipv4.vlanIds ) { %>
+      <% if( undefined != n.ipv4.vlanIds && n.ipv4.vlanIds.length > 0 ) { %>
         <% n.ipv4.vlanIds.forEach(function(vid) { %>
           echo "Configuring vlan <%=vid%> on $interface"
           sed -i '/^BOOTPROTO=/d' /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
