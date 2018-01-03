@@ -1,4 +1,5 @@
 #cloud-config
+# Copyright 2017, Dell EMC, Inc.
 write_files:
   - path: /etc/rc.local
     permissions: "0755"
