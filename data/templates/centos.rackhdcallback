@@ -1,4 +1,5 @@
 #! /bin/bash
+# Copyright © 2018 Dell Inc. or its subsidiaries. All Rights Reserved.
 #
 # centos.rackhdcallback       callback to rackhd post installation API hook
 #
@@ -26,6 +27,7 @@
 # Nothing wrong with set -e here since we're not doing anything complex
 set -e
 echo "Attempting to call back to RackHD CentOS installer"
-wget --retry-connrefused --waitretry=1 -t 300 --post-data '{"nodeId":"<%=nodeId%>"}' --header='Content-Type:application/json' http://<%=server%>:<%=port%>/api/current/notification
+curl -X POST -H 'Content-Type:application/json'  --max-time 1000 --connect-timeout 9 --retry-delay 1 --retry 100 'http://<%=server%>:<%=port%>/api/current/notification?nodeId=<%=nodeId%>'
+
 # Only run this once to verify the OS was installed, then disable it forever
 chkconfig centos.rackhdcallback off

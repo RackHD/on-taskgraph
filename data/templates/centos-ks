@@ -1,4 +1,7 @@
-# Copyright 2017, DELL, Inc.
+# Copyright © 2017-2018 Dell Inc. or its subsidiaries. All Rights Reserved.
+# For more details on CentOS/RHEL kickstart configurations, please refer to below link:
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/installation_guide/sect-kickstart-syntax
+
 install
 #text
 graphical
@@ -73,7 +76,7 @@ clearpart --all --drives=<%=installDisk%>
 reboot
 
 # Package Selection
-%packages --nobase --excludedocs
+%packages --nobase --excludedocs --ignoremissing
 @core
 -*firmware
 -iscsi*
@@ -298,8 +301,9 @@ export PATH
 <% } %>
 
 # Download the service to callback to RackHD after OS installation/reboot completion
-echo "RackHD POST script wget started"
-/usr/bin/wget http://<%=server%>:<%=port%>/api/current/templates/<%=rackhdCallbackScript%>?nodeId=<%=nodeId%> -O /etc/rc.d/init.d/<%=rackhdCallbackScript%>
+echo "RackHD POST script curl started"
+/bin/curl http://<%=server%>:<%=port%>/api/current/templates/<%=rackhdCallbackScript%>?nodeId=<%=nodeId%> > /etc/rc.d/init.d/<%=rackhdCallbackScript%>
+
 echo "RackHD POST script chmod callback script"
 chmod +x /etc/rc.d/init.d/<%=rackhdCallbackScript%>
 # Enable the above service, it should auto-disable after running once
