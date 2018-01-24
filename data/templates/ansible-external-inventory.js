@@ -14,7 +14,7 @@ switch (command) {
                         'hostvars': {
                             '<%=ipaddress%>': {
                                 'ansible_ssh_user': '<%=username%>',
-                                'ansible_sudo_pass': '<%=password%>'
+                                'ansible_sudo_pass': '<%-password%>'
                             }
                         }
                     },

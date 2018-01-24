@@ -1,4 +1,5 @@
 accepteula
+<!-- # Copyright 2016-2018, Dell EMC, Inc. -->
 <% if (typeof clearDisk === 'undefined') { %>
 <%   clearDisk = installDisk %>
 <% } %>
@@ -16,7 +17,7 @@ accepteula
 <% } else { %>
   install --disk=<%=installDisk%> --overwritevmfs
 <% } %>
-rootpw <%=rootPlainPassword%>
+rootpw <%-rootPlainPassword%>
 
 # Search the networkDevices and set the first device (if defined) up.
 # Use kargs if set to override the default kickstart network device
@@ -93,7 +94,7 @@ rm /vmfs/volumes/datastore1/rackhd_create_sshkeys
 <% if( typeof users !== 'undefined' ) { %>
 <% users.forEach(function(user) { %>
     /usr/lib/vmware/auth/bin/adduser -s /bin/sh -G root -h / -D <%=user.name%>
-    echo <%=user.plainPassword%> | passwd <%=user.name%> --stdin
+    echo <%-user.plainPassword%> | passwd <%=user.name%> --stdin
     <% if (typeof user.sshKey !== 'undefined') { %>
         echo "mkdir /etc/ssh/keys-<%=user.name%>" >> /vmfs/volumes/datastore1/rackhd_create_sshkeys
         echo "echo <%=user.sshKey%> > /etc/ssh/keys-<%=user.name%>/authorized_keys" >> /vmfs/volumes/datastore1/rackhd_create_sshkeys

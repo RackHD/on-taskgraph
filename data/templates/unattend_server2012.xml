@@ -85,13 +85,13 @@
             </OOBE>
             <UserAccounts>
                 <AdministratorPassword>
-                    <Value><%=password%></Value>
+                    <Value><%-password%></Value>
                     <PlainText>true</PlainText>
                 </AdministratorPassword>
                 <LocalAccounts>
                     <LocalAccount wcm:action="add">
                         <Password>
-                            <Value><%=password%></Value>
+                            <Value><%-password%></Value>
                             <PlainText>true</PlainText>
                         </Password>
                         <Description>Local Administrator</Description>
@@ -131,7 +131,7 @@
             </FirstLogonCommands>
             <AutoLogon>
                 <Password>
-                    <Value><%=password%></Value>
+                    <Value><%-password%></Value>
                     <PlainText>true</PlainText>
                 </Password>
                 <Enabled>true</Enabled>

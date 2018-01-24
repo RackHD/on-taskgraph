@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Copyright 2016-2018, Dell EMC, Inc.
 
 usernames=(<%= users.join(" ") %>)
 

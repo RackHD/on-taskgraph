@@ -1,11 +1,12 @@
 {
+    <!-- # Copyright 2016-2018, Dell EMC, Inc. -->
     <%_ if (typeof hostname !== 'undefined') { _%>
     "hostname": "<%=hostname%>",
     <%_ } _%>
     "password":
         {
             "crypted": false,
-            "text": "<%=rootPassword%>"
+            "text": "<%-rootPassword%>"
         },
     "disk": "<%=installDisk%>",
     "type": "<%=installType%>",

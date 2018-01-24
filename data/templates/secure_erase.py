@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2016, EMC, Inc.
+# Copyright 2016-2018, Dell EMC, Inc.
 
 # -*- coding: UTF-8 -*-
 

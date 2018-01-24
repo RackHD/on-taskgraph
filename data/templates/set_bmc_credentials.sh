@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Copyright 2016-2018, DELL EMC, Inc.
+
 channel=''
 function set_channel()
 {
@@ -40,7 +42,7 @@ for x in $cmdReturn; do
    userNumber=${myarray[$(($i-1))]}
    echo "Username already present, overwriting existing user"
    ipmitool user set name $userNumber <%=user%>
-   ipmitool user set password $userNumber <%=password%>
+   ipmitool user set password $userNumber <%-password%>
    ipmitool channel setaccess $channel $userNumber callin=on ipmi=on link=on privilege=4
    ipmitool user enable $userNumber
    check=$((check + 1))
@@ -77,7 +79,7 @@ if [ $check == 0 ]; then
  echo "Creating a new user"
  get_newUserNumber
  ipmitool user set name $newUserNumber <%=user%>
- ipmitool user set password $newUserNumber <%=password%>
+ ipmitool user set password $newUserNumber <%-password%>
  ipmitool channel setaccess $channel $newUserNumber callin=on ipmi=on link=on privilege=4
  ipmitool user enable $newUserNumber
 exit

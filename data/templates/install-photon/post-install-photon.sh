@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright 2016-2018, Dell EMC, Inc.
 
 <%_ if ('undefined' !== typeof networkDevices) { _%>
 ## Set network interfaces
@@ -82,9 +83,9 @@ sed -i "${line}i 127.0.0.1\t<%=hostname%>.<%=domain%>\t<%=hostname%>" /etc/hosts
 # Set user info
     <%_ users.forEach(function(user) { _%>
         <%_ if ('uid' in user) { _%>
-useradd -m '<%=user.name%>' -p '<%=user.encryptedPassword%>' -u <%=user.uid%>
+useradd -m '<%=user.name%>' -p '<%-user.encryptedPassword%>' -u <%=user.uid%>
         <%_ } else { _%>
-useradd -m '<%=user.name%>' -p '<%=user.encryptedPassword%>'
+useradd -m '<%=user.name%>' -p '<%-user.encryptedPassword%>'
         <%_ } _%>
         <%_ if ('sshKey' in user) { _%>
 mkdir /home/<%=user.name%>/.ssh
