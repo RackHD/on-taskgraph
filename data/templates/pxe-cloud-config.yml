@@ -1,4 +1,5 @@
 #cloud-config
+# Copyright 2016-2018, Dell EMC, Inc.
 coreos:
   update:
     reboot-strategy: best-effort
@@ -50,7 +51,7 @@ hostname: <%=hostname%>
   <% users.forEach(function(user) { %>
 users:
   - name: "<%=user.name%>"
-    passwd: "<%=user.encryptedPassword%>"
+    passwd: "<%-user.encryptedPassword%>"
 <% if ( user.sshKey) { %>
     ssh-authorized-keys:
       - "<%=user.sshKey%>"

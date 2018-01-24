@@ -1,3 +1,4 @@
+# Copyright 2016-2018, Dell EMC, Inc.
 # The progress notification is just something nice-to-have, so progress notification failure should
 # never impact the normal installation process
 <% if( typeof progressMilestones !== 'undefined' && progressMilestones.startInstallerUri ) { %>
@@ -12,7 +13,7 @@ catch
 }
 <% } %>
 $repo = "<%=smbRepo%>"
-$smb_passwd = "<%=smbPassword%>"
+$smb_passwd = "<%-smbPassword%>"
 $smb_user = "<%=smbUser%>"
 Start-Sleep -s 2
 net use w: ${repo} ${smb_passwd} /user:${smb_user}

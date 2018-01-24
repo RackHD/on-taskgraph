@@ -194,7 +194,7 @@ d-i passwd/root-login boolean true
 d-i passwd/make-user boolean false
 # Root password, either in clear text
 # or encrypted using an MD5 hash.
-d-i passwd/root-password-crypted password <%=rootEncryptedPassword%>
+d-i passwd/root-password-crypted password <%-rootEncryptedPassword%>
 
 ### Package selection
 # Individual additional packages to install

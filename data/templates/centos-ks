@@ -1,4 +1,4 @@
-# Copyright 2017, DELL, Inc.
+# Copyright 2016-2018, DELL EMC, Inc.
 install
 #text
 graphical
@@ -26,15 +26,15 @@ services --enabled=NetworkManager,sshd
 authconfig --enableshadow --passalgo=sha512 --enablefingerprint
 
 #Set the root account
-rootpw --iscrypted <%=rootEncryptedPassword%>
+rootpw --iscrypted <%-rootEncryptedPassword%>
 
 #create all users
 <% if (typeof users !== 'undefined') { %>
 <% users.forEach(function(user) { %>
 <%_  if( typeof user.uid !== 'undefined' ) { _%>
-        user --name=<%=user.name%> --uid=<%=user.uid%> --iscrypted --password <%=user.encryptedPassword%>
+        user --name=<%=user.name%> --uid=<%=user.uid%> --iscrypted --password <%-user.encryptedPassword%>
 <%_  } else { _%>
-        user --name=<%=user.name%>  --iscrypted --password <%=user.encryptedPassword%>
+        user --name=<%=user.name%>  --iscrypted --password <%-user.encryptedPassword%>
 <%_ }}) _%>
 <% } %>
 
