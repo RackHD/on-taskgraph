@@ -11,6 +11,16 @@ write_files:
       while [ $(docker images | grep -c micro) == "0" ]; do
          xz -cd /tmp/micro.tar.xz | docker load
       done
+      # Run the script in background to enable sshd,
+      # because sshd is enabled after /etc/rc.local is finished.
+      /etc/rackhd-micro.sh &
+
+  - path: /etc/rackhd-micro.sh
+    permissions: "0755"
+    owner: root
+    content: |
+      #!/bin/bash
+      wait-for-docker
       docker run  \
           -e SERVER='<%= server %>' \
           -e PORT='<%= port %>' \
