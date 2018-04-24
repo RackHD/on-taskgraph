@@ -1,3 +1,5 @@
+# Copyright 2015-2018, Dell EMC, Inc.
+
 language: node_js
 
 node_js:
@@ -16,6 +18,9 @@ addons:
 services:
  - mongodb
  - rabbitmq
+
+before_install:
+ - npm i -g npm@5.6.0
 
 after_success:
  - ./extra/make-testcoveralls.sh
