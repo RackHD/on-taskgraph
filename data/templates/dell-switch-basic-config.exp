@@ -1,0 +1,150 @@
+#!/usr/bin/expect
+#/DELL-FORCE10
+# Copyright 2018, Dell EMC, Inc.
+
+############FUNCTIONS############
+#access the switch CLI via Dell 'f10do' shell command and execute FTOS command
+proc execFtosCommand {cmd_str} {
+ set str [exec f10do "$cmd_str"]
+ print_output $str
+}
+########Logging Functions########
+#print to terminal and to log file
+proc print_output {str {fd ""}} {
+ puts $str
+ if {$fd != ""} {
+ puts $fd $str
+ }
+}
+#starts logging status
+proc startLogging {} {
+ global status_file
+ global fp
+ set status_file "/tmp/rackhd.log"
+ #open status file
+ set fp [open $status_file w]
+}
+#stop logging status
+proc stopLogging {} {
+ global fp
+ print_output "========================================\n" $fp
+ close $fp
+}
+#####Prereq Check Functions######
+#resets watchdog timer
+proc resetTimer {} {
+ print_output [exec rstimer 30]
+ print_output "\nReset Timer Complete!\n"
+}
+########Config Functions#########
+#write changes to startup-config
+proc doWrite {} {
+ execFtosCommand "write"
+ #wait 2 seconds
+ after 2000
+}
+#configures management interface with IP address
+proc setManagement {} {
+ global fp
+ print_output "Configuring ManagementEthernet <%=mgmtPort%> ...\n" $fp
+ execFtosCommand "configure terminal"
+ execFtosCommand "interface managementEthernet <%=mgmtPort%>"
+ execFtosCommand "ip address <%=ipAddr%>"
+ execFtosCommand "no shut"
+ execFtosCommand "end"
+}
+#enable ssh
+proc enableSsh {} {
+  global fp
+  print_output "Configuring ssh ...\n" $fp
+  execFtosCommand "configure terminal"
+  execFtosCommand "ip ssh server enable"
+  execFtosCommand "end"
+}
+#create an account
+proc createAccount {} {
+  global fp
+  print_output "Create an new account ...\n" $fp
+  execFtosCommand "configure terminal"
+  execFtosCommand "username <%=username%> password <%=userPassword%>"
+  execFtosCommand "end"
+}
+#set admin password
+proc updateAdminPassword {} {
+  global fp
+  print_output "update admin password ...\n" $fp
+  execFtosCommand "configure terminal"
+  execFtosCommand "enable password  level 15 0 <%=adminPassword%>"
+  execFtosCommand "end"
+}
+
+#################################
+#translate CR and LF correctly
+fconfigure stdout -translation crlf
+fconfigure stderr -translation crlf
+#flag variables to confirm if initial check and configuration pass/succeed
+set checkFail 0
+set configFail 0
+#name to set the switch to
+set hostname <%=hostname%>"
+print_output "!!!Executing Config Script!!!\n"
+#set Unix watchdog timer to 30 minutes
+if [catch resetTimer] {
+ print_output "Error encountered during watchdog timer reset!\n"
+ set checkFail 1
+ exit 2
+}
+#start logging
+if [catch startLogging] {
+ print_output "Error encountered during start of logging!\n"
+} else {
+ print_output "Status logging for bmp successfully started!\n" $fp
+}
+print_output "========================================\n" $fp
+print_output " Status: $hostname\n" $fp
+print_output "========================================\n" $fp
+#set the management IP address
+if [catch setManagement] {
+ print_output "Error configuring management!\n" $fp
+ set configFail 1
+}
+#Enable SSH
+if [catch enableSsh] {
+  print_output "Error enabling ssh"
+  set configFail 1
+}
+#create a new account
+if [catch createAccount] {
+  print_output "Error creating a new account"
+  set configFail 1
+}
+#updating admin password
+if [catch updateAdminPassword] {
+  print_output "Error updaing admin password"
+  set configFail 1
+}
+#write the configuration to startup-config
+if [catch doWrite] {
+ print_output "Error saving configuration!\n" $fp
+ set configFail 1
+}
+
+#NOTIFY IF CONFIGURATION FAILED OR PASSED
+if {$configFail} {
+ print_output "\n!!!!!Errors were encountered during configuration - check log file!!!!!\n" $fp
+} else {
+ print_output "\n!!!!!Configuration Successfully Applied!!!!!\n" $fp
+}
+
+#stop logging to status file
+if [catch stopLogging] {
+ print_output "Error upon stopping logging!\n" $fp
+ exit 2
+}
+#IF CONFIGURATION FAILED, EXIT ON ERROR, OR, IF PASSED, EXIT ON SUCCESS
+if {$configFail} {
+ exit 2
+} else {
+ exit 0
+}
+

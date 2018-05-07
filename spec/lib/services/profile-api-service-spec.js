@@ -449,6 +449,53 @@ describe("Http.Services.Api.Profiles", function () {
                 });
         });
 
+        it("render profile pass when having active graph and render succeed with dell bmp", function () {
+            var node = {id: 'test', type: 'switch'};
+            var graph = {context: {}, injectableName: "Graph.Switch.Discovery.Dell.Bmp"};
+
+            this.sandbox.stub(workflowApiService, 'findActiveGraphForTarget').resolves(graph);
+            this.sandbox.stub(taskProtocol, 'requestProfile').resolves('profile');
+            this.sandbox.stub(taskProtocol, 'requestProperties').resolves({});
+
+            return profileApiService.getProfileFromTaskOrNode(node)
+                .then(function (result) {
+                    expect(workflowApiService.findActiveGraphForTarget).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProfile).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProperties).to.have.been.calledOnce;
+                    expect(result).to.deep.equal({
+                        context: {},
+                        options: {
+                            identifier: "test",
+                            switchVendor: "dell"
+                        },
+                        profile: "profile"
+                    });
+                });
+        });
+
+        it("render profile pass when having active graph and render succeed with dell", function () {
+            var node = {id: 'test', type: 'switch'};
+            var graph = {context: {}, injectableName: "Graph.Switch.Discovery.Dell.Onie"};
+
+            this.sandbox.stub(workflowApiService, 'findActiveGraphForTarget').resolves(graph);
+            this.sandbox.stub(taskProtocol, 'requestProfile').resolves('profile');
+            this.sandbox.stub(taskProtocol, 'requestProperties').resolves({});
+
+            return profileApiService.getProfileFromTaskOrNode(node)
+                .then(function (result) {
+                    expect(workflowApiService.findActiveGraphForTarget).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProfile).to.have.been.calledOnce;
+                    expect(taskProtocol.requestProperties).to.have.been.calledOnce;
+                    expect(result).to.deep.equal({
+                        context: {},
+                        options: {
+                            identifier: "test",
+                            switchVendor: "onie"
+                        },
+                        profile: "profile"
+                    });
+                });
+        });
 
         it("render profile pass when having active graph and render succeed", function () {
             var node = {id: 'test', type: 'switch'};
