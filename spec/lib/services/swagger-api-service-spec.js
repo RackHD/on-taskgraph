@@ -105,31 +105,31 @@ describe('Services.Http.Swagger', function() {
                         sort: {
                         },
                         firstName: {
-                            parameterObject: {
+                            schema: {
                                 in: 'query',
                                 type: 'string',
-                                definition: { name: 'firstName' }
+                                name: 'firstName'
                             },
                             value: 'Rack'
                         },
                         lastName: {
-                            parameterObject: {
+                            schema: {
                                 in: 'query',
                                 type: 'string',
-                                definition: { name: 'lastName' }
+                                name: 'lastName'
                             },
                             value: 'HD'
                         },
                         undefinedName: {
-                            parameterObject: {
+                            schema: {
                                 in: 'query',
                                 type: 'string',
-                                definition: { name: 'undefinedName' }
+                                name: 'undefinedName'
                             },
                             value: undefined
                         },
                         inBody: {
-                            parameterObject: {
+                            schema: {
                                 in: 'body',
                                 type: 'string',
                             },
