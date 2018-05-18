@@ -1,7 +1,7 @@
 {
   "//": "Copyright 2018, Dell EMC, Inc.",
   "name": "on-taskgraph",
-  "version": "2.60.2",
+  "version": "2.60.3",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
