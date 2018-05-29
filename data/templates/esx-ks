@@ -30,7 +30,7 @@ rootpw <%-rootPlainPassword%>
     <% if(typeof n.ipv4 !== 'undefined') { %>
       <% ipopts = '--ip=' + n.ipv4.ipAddr + ' --gateway=' + n.ipv4.gateway + ' --netmask=' + n.ipv4.netmask %>
       <% if (typeof n.ipv4.vlanIds !== 'undefined' ) { %>
-        <% ipopts += ' --vlandid=' + n.ipv4.vlanIds[0] %>
+        <% ipopts += ' --vlanid=' + n.ipv4.vlanIds[0] %>
       <% } %>
       network --bootproto=static --device=<%=n.device%> <%=ipopts%>
     <% } else { %>
