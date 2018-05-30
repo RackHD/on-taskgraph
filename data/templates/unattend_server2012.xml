@@ -149,6 +149,7 @@
         </component>
         <component name="Microsoft-Windows-TCPIP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             <% if( typeof networkDevices !== 'undefined' ) { %>
+            <Interfaces>
             <% networkDevices.forEach(function(n) { %>
             <% cidr_bits = 0 %>
             <% dhcp_ipv4 = false %>
@@ -198,7 +199,6 @@
             <% } %>
 
 
-            <Interfaces>
                 <Interface wcm:action="add">
                     <Identifier><%= n.device%></Identifier>
                     <Ipv4Settings>
@@ -240,8 +240,8 @@
                     </Routes>
                     <% } %>
                 </Interface>
-            </Interfaces>
             <% }); %>
+            </Interfaces>
             <% } %>
         </component>
 
