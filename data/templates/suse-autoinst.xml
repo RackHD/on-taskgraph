@@ -98,7 +98,7 @@
           <startmode>auto</startmode>
           <device><%=n.device%>.<%=vid%></device>
           <ipaddr><%=n.ipv6.ipAddr%></ipaddr>
-          <netmask><%=n.ipv6.netmask%></netmask>
+          <prefixlen><%=n.ipv6.prefixlen%></prefixlen>
           <gateway><%=n.ipv6.gateway%></gateway>
           <vlan>yes</vlan>
         </interface>
@@ -109,7 +109,7 @@
           <startmode>auto</startmode>
           <device><%=n.device%></device>
           <ipaddr><%=n.ipv6.ipAddr%></ipaddr>
-          <netmask><%=n.ipv6.netmask%></netmask>
+          <prefixlen><%=n.ipv6.prefixlen%></prefixlen>
           <gateway><%=n.ipv6.gateway%></gateway>
         </interface>
         <% ipv6 = 1 %>

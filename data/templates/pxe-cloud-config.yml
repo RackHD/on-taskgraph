@@ -35,6 +35,12 @@ coreos:
 <% } %>
         Address=<%=networkDevice.ipv4.ipAddr%>/<%=cidr_bits%>
         Gateway=<%=networkDevice.ipv4.gateway%>
+
+<% if( undefined !== networkDevice.ipv6) { %>
+        Address=<%=networkDevice.ipv6.ipAddr%>/<%=networkDevice.ipv6.prefixlen%>
+        Gateway=<%=networkDevice.ipv6.gateway%>
+<% } %>
+
     - name: down-interfaces.service
       command: start
       content: |

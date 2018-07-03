@@ -216,6 +216,7 @@ export PATH
   <%}) %>
   
   systemctl stop NetworkManager
+  systemctl disable NetworkManager
   modprobe --first-time bonding
   systemctl restart network
 <%} %>
@@ -274,8 +275,8 @@ export PATH
           echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
           echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
           echo "IPV6INIT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
-          echo "IPV6ADDR=<%=n.ipv6.ipAddr%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
-          echo "IPV6_DEFAULTGW=<%=n.ipv6.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "IPV6ADDR=<%=n.ipv6.ipAddr%>/<%=n.ipv6.prefixlen%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
+          echo "IPV6_DEFAULTGW=<%=n.ipv6.gateway%>/<%=n.ipv6.prefixlen%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
           echo "VLAN=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface.<%=vid%>
           <% ipv6 = 1 %>
         <% }); %>
@@ -287,14 +288,15 @@ export PATH
         echo "BOOTPROTO=none" >> /etc/sysconfig/network-scripts/ifcfg-$interface
         echo "ONBOOT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface
         echo "IPV6INIT=yes" >> /etc/sysconfig/network-scripts/ifcfg-$interface
-        echo "IPV6ADDR=<%=n.ipv6.ipAddr%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
-        echo "IPV6_DEFAULTGW=<%=n.ipv6.gateway%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "IPV6ADDR=<%=n.ipv6.ipAddr%>/<%=n.ipv6.prefixlen%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
+        echo "IPV6_DEFAULTGW=<%=n.ipv6.gateway%>/<%=n.ipv6.prefixlen%>" >> /etc/sysconfig/network-scripts/ifcfg-$interface
         <% ipv6 = 1 %>
       <% } %>
     <% } %>
   <% }); %>
   <% if( ipv6 ) { %>
     grep -q -F 'NETWORKING_IPV6=yes' /etc/sysconfig/network || echo "NETWORKING_IPV6=yes" >> /etc/sysconfig/network
+    grep -q -F 'IPV6_AUTOCONF=no' /etc/sysconfig/network || echo "IPV6_AUTOCONF=no" >> /etc/sysconfig/network
   <% } %>
 <% } %>
 
