@@ -290,6 +290,8 @@ in-target vconfig add ip.device <%=vid%>; \
 <%_ }); _%>
 <%_ if (typeof version !== 'undefined' && version === 'artful') { _%>
 in-target wget http://<%=server%>:<%=port%>/api/current/templates/ubuntu-netplan-interfaces?nodeId=<%=nodeId%> -O  /etc/netplan/01-netcfg.yaml; \
+<%_ } else if (typeof version !== 'undefined' && version === 'trusty') { _%>
+wget http://<%=server%>:<%=port%>/api/current/templates/debian-interfaces?nodeId=<%=nodeId%> -O /etc/network/interfaces; \
 <%_ } else { _%>
 in-target wget http://<%=server%>:<%=port%>/api/current/templates/debian-interfaces?nodeId=<%=nodeId%> -O /etc/network/interfaces; \
 <%_ } _%>

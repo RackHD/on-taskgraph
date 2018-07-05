@@ -27,7 +27,7 @@ chmod 644 /etc/systemd/network/<%=d.device%>-static.network
                     <%_ if ('ipv4' === conf) { _%>
                         <%_ cidr += ((parseInt(i, 10).toString(2)).match(/1/g) || []).length; _%>
                     <%_ } else { _%>
-                        <%_ cidr += ((parseInt(i, 16).toString(2)).match(/1/g) || []).length; _%>
+                        <%_ cidr = i _%>
                     <%_ } _%>
                 <%_ }); _%>
 echo "Address=<%=ipconfig.ipAddr%>/<%=cidr%>" >> /etc/systemd/network/<%=d.device%>-static.network

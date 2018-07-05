@@ -9,29 +9,42 @@ auto lo
 iface lo inet loopback
 
 <%_ if (typeof networkDevices !== 'undefined' && networkDevices.length > 0) { _%>
-<%_ networkDevices.forEach(function(n) { _%>
-    <%_ for (p in n) { _%>
-        <%_ ip = n[p]; _%>
-        <%_ if (['ipv4', 'ipv6'].indexOf(p) === -1 || undefined == ip) continue; _%>
-        <%_ if (undefined !== ip.vlanIds) { _%>
-            <%_ ip.vlanIds.forEach(function(vid) { _%>
+    <%_ networkDevices.forEach(function(n) { _%>
+        <%_ for (p in n) { _%>
+            <%_ ip = n[p]; _%>
+            <%_ if (['ipv4', 'ipv6'].indexOf(p) === -1 || undefined == ip) continue; _%>
+            <%_ if (undefined !== ip.vlanIds) { _%>
+                <%_ ip.vlanIds.forEach(function(vid) { _%>
+                    <%_ if (p === 'ipv4') { _%>
 auto <%=n.device%>.<%=vid%>
 iface <%=n.device%>.<%=vid%> inet static
 address <%=ip.ipAddr%>
 netmask <%=ip.netmask%>
+                    <%_ } else { _%>
+auto <%=n.device%>.<%=vid%>
+iface <%=n.device%>.<%=vid%> inet6 static
+address <%=ip.ipAddr%>
+netmask <%=ip.prefixlen%>
+                    <%_ } _%>
 gateway <%=ip.gateway%>
 vlan-raw-device <%=n.device%>
-            <%_ }); _%>
-        <%_ } else { _%>
+                <%_ }); _%>
+            <%_ } else { _%>
+                     <%_ if (p === 'ipv4') { _%>
 auto <%=n.device%>
 iface <%=n.device%> inet static
 address <%=ip.ipAddr%>
 netmask <%=ip.netmask%>
+                    <%_ } else { _%>
+auto <%=n.device%>
+iface <%=n.device%> inet6 static
+address <%=ip.ipAddr%>
+netmask <%=ip.prefixlen%>
+                    <%_ } _%>
 gateway <%=ip.gateway%>
-
+            <%_ } _%>
         <%_ } _%>
-    <%_ } _%>
-<%_ }); _%>
+    <%_ }); _%>
 <%_ } _%>
 
 <% if (typeof dnsServers !== 'undefined' && dnsServers.length > 0) { -%>

@@ -180,20 +180,18 @@
             <%} %>
 
             <% if( undefined != n.ipv6 ) { %>
-            <% if( undefined != n.ipv6.netmask ) { %>
-            <% n.ipv6.netmask.split(':').forEach(function(octet) {%>
-            <%   ipv6_cidr_bits+=((parseInt(octet, 16) >>> 0).toString(2).match(/1/g)||[]).length;%>
-            <% });%>
+            <% if( undefined != n.ipv6.prefixlen ) { %>
+                <% ipv6_cidr_bits = n.ipv6.prefixlen %>
             <% } %>
 
             <% if( undefined != n.ipv6.ipAddr ) { %>
-            <% ipv6_ipAddress = n.ipv6.ipAddr %>
+                <% ipv6_ipAddress = n.ipv6.ipAddr %>
             <% } else { %>
-            <% dhcp_ipv6 = true %>
+                <% dhcp_ipv6 = true %>
             <% } %>
 
             <% if( undefined != n.ipv6.gateway ) { %>
-            <% ipv6_gateWay = n.ipv6.gateway %>
+                <% ipv6_gateWay = n.ipv6.gateway %>
             <% } %>
 
             <% } %>

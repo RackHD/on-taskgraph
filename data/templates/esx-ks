@@ -198,13 +198,18 @@ createVmk () {
         <% n.ipv6.vlanIds.forEach(function(vid) { %>
           <% vmkname = 'vmk' + vmkid++ %>
           createVmk <%=vmkname%> $currdev.<%=vid%> $esxSwitchName
-          esxcli network ip interface ipv6 address add -i <%=vmkname%> -I <%=n.ipv6.ipAddr%>
+          esxcli network ip interface ipv6 address add -i <%=vmkname%> -I <%=n.ipv6.ipAddr%>/<%=n.ipv6.prefixlen%>
+          <% if(undefined !== n.ipv6.gateway) { %>
+          esxcli network interface ipv6 set -i <%=vmkname%> -d off -r off
+          esxcli network ip interface ipv6 set -i <%=vmkname%> -g <%=n.ipv6.gateway%>
+          <% } %>
           esxcli network vswitch standard portgroup set -p $currdev.<%=vid%> -v <%=vid %>
         <% }); %>
       <% } else { %>
         <% vmkname = 'vmk' + vmkid++ %>
         createVmk <%=vmkname%> $currdev $esxSwitchName
-        esxcli network ip interface ipv6 address add -i <%=vmkname%> -I <%=n.ipv6.ipAddr%>
+        esxcli network ip interface ipv6 address add -i <%=vmkname%> -I <%=n.ipv6.ipAddr%>/<%=n.ipv6.prefixlen%>
+        esxcli network ip interface ipv6 set -i <%=vmkname%> -g <%=n.ipv6.gateway%>
       <% } %>
     <% } %>
     <% if( (undefined === n.ipv6) && (undefined === n.ipv4) ) { %>
