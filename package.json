@@ -1,7 +1,7 @@
 {
   "//": "Copyright 2017, Dell EMC, Inc.",
   "name": "on-taskgraph",
-  "version": "2.60.6",
+  "version": "2.60.7",
   "description": "",
   "main": "lib",
   "scripts": {
