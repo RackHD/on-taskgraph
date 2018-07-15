@@ -39,7 +39,7 @@
     "on-tasks": "git+https://github.com/RackHD/on-tasks.git",
     "rewire": "^2.5.2",
     "rx": "^2.3.22",
-    "swagger-tools": "0.8.*",
+    "swagger-tools": "^0.10.3",
     "tv4": "~1.2.7"
   },
   "devDependencies": {
