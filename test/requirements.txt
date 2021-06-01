@@ -14,7 +14,7 @@ pika==0.10.0
 pymongo==3.4.0
 requests==2.9.0
 setuptools==33.1.1
-urllib3==1.19.1
+urllib3==1.26.5
 ucsmsdk==0.9.2.0
 exrex==0.10.4
 pyOpenSSL==17.0.0
